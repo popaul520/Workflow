@@ -1,0 +1,7 @@
+
+spring:
+  ldap:
+    urls: ldaps://10.15.4.10:636
+    base: dc=entreprise,dc=local
+    username: cn=ldap-reader,ou=service-accounts,dc=entreprise,dc=local
+    password: MOT_DE_PASSE_COMPTE_TECH
