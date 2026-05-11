@@ -8,35 +8,24 @@
     int nEtape = (Integer) request.getAttribute("numEtape");
     int derniereEtape = (request.getAttribute("derniereEtape") != null) ? (Integer) request.getAttribute("derniereEtape") : 0;
 
-    boolean isClosed = (wf != null && wf.getDateFinalisation() != null);
-    boolean isAdmin = (user != null && "PATRON".equalsIgnoreCase(user.getRole()));
-    boolean userHasRole = (user != null && user.canAccessStep(nEtape));
-
-    boolean canEdit = false;
-    if (isAdmin) {
-        canEdit = true;
-    } else if (!isClosed) {
-        canEdit = userHasRole;
-    } else {
-        if (nEtape == 7 && derniereEtape == 7 && userHasRole) {
-            canEdit = true; 
-        } else if (nEtape == 10 && userHasRole) {
-            canEdit = true; 
-        }
-    }
-
+    boolean isAdmin = (Boolean) request.getAttribute("isAdmin");
+    boolean hasAccess = (Boolean) request.getAttribute("hasAccess");
+    boolean canEdit = (Boolean) request.getAttribute("canEdit");
+    boolean isClosed = (Boolean) request.getAttribute("isClosed");
+    
     List<?> listeDonnees = (List<?>) request.getAttribute("donneesEtape");
     boolean hasData = (listeDonnees != null && !listeDonnees.isEmpty());
 %>
 
 <div class="visu-container" style="padding: 20px; font-family: 'Segoe UI', sans-serif;">
 
+    <%-- Bannière de statut --%>
     <% if (isClosed) { %>
         <div class="status-banner" style="background-color: <%= isAdmin ? "#ebf8ff" : "#fff5f5" %>; border: 1px solid <%= isAdmin ? "#90cdf4" : "#feb2b2" %>; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center;">
             <span style="font-size: 24px; margin-right: 15px;"><%= isAdmin ? "🔓" : "🔒" %></span>
             <div>
                 <strong style="color: <%= isAdmin ? "#2c5282" : "#c53030" %>;">
-                    <%= isAdmin ? "Mode Maintenance Administrateur" : "Dossier Clôturé" %>
+                    <%= isAdmin ? "Mode Maintenance Patron (Admin)" : "Dossier Clôturé" %>
                 </strong><br>
                 <small style="color: #4a5568;">Finalisé le : ${wf.dateFinalisation}</small>
             </div>

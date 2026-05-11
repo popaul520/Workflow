@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*, model.Workflow" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ page import="dao.RoleDAO" %>
+
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -55,9 +57,7 @@
 
         h2 { color: var(--primary); border-left: 5px solid var(--accent); padding-left: 15px; margin-bottom: 20px; }
     </style>
-</head> fskfpsosfp s
- 
-
+</head>
 <body>
 
     <div class="sidebar">
@@ -88,8 +88,21 @@
                 <% } %>
             </div>
         </div>
+<%
+    // On récupère le statut envoyé par le contrôleur
+    String currentStatus = (String) request.getAttribute("currentStatus");
+    String titreAffiche = "Tous les dossiers"; // Par défaut
+    
+    if ("en_cours".equals(currentStatus)) {
+        titreAffiche = "Dossiers en cours";
+    } else if ("termine".equals(currentStatus)) {
+        titreAffiche = "Dossiers terminés";
+    } else if ("annule".equals(currentStatus)) {
+        titreAffiche = "Dossiers annulés";
+    }
+%>
 
-        <h2>Dossiers en cours</h2>
+<h2><%= titreAffiche %></h2>
         <div class="box">
             <table>
                 <thead>
@@ -180,7 +193,7 @@
             </table>
         </div>
 
-<h2>⚠️ En attente de votre action</h2>
+<h2>⚠️ En attente de votre action  </h2>
 <div class="box">
     <table style="border-left: 5px solid #e74c3c;">
         <thead>
@@ -204,7 +217,7 @@
                                     ÉTAPE SUIVANTE
                                 </span>
                             </td>
-                            <td>
+                            <td> 
                                 <a href="details?id=${wfAction.id}" class="btn-view" style="background: #e74c3c; color: white; border: none;">
                                     Compléter
                                 </a>
@@ -223,7 +236,7 @@
         </tbody>
     </table>
 </div>
-    <div class="sidebar">
+<div class="sidebar">
     <h3>Workflow</h3>
     <ul>
         <li class="${currentStatus == 'tous' ? 'active' : ''}">
@@ -236,8 +249,23 @@
             <a href="home?status=termine">✅ Terminé</a>
         </li>
         <li class="${currentStatus == 'annule' ? 'active' : ''}">
-            <a href="home?status=annule">❌ Annulé</a>
+            <a href="home?status=annule">❌ Annulé </a>
         </li>
+
+        <%-- 1. SEUL L'ADMIN (ID 11) VOIT LA GESTION DES RÔLES --%>
+        <c:if test="${roleDAO.canAccessEtape(user.role, 11)}">
+            <li style="background: #2d3748; margin-top: 10px; border-radius: 4px;">
+                <a href="admin-roles" style="color: #63b3ed; font-weight: bold;">⚙️ Gestion rôle</a>
+            </li>
+        </c:if>
+        
+        <%-- 2. SEUL LE RÔLE 1 ET L'ADMIN PEUVENT CRÉER --%>
+        <c:if test="${roleDAO.canAccessEtape(user.role, 1) || roleDAO.canAccessEtape(user.role, 11)}">
+            <li style="margin-top: 30px;">
+                <a href="creer-workflow" style="color: var(--success); font-weight: bold;">➕ Créer Workflow</a>
+            </li>
+        </c:if>
+
     </ul>
 </div>
 </body>

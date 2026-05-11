@@ -1,6 +1,9 @@
 package dao;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
 import model.Utilisateur;
 
 public class UtilisateurDAO {
@@ -28,7 +31,7 @@ public class UtilisateurDAO {
                 
                 // --- TRÈS IMPORTANT : Récupérer le rôle ---
                 // C'est cette ligne qui permet à user.canAccessStep() de fonctionner
-                u.setRole(rs.getString("role"));
+                u.setRole(rs.getInt("role"));
                 return u;
             }
 
@@ -65,6 +68,35 @@ public class UtilisateurDAO {
 
 
     
+    public Utilisateur findByid(int id) {
+
+        String sql = "SELECT * FROM utilisateur WHERE id = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Utilisateur u = new Utilisateur();
+                    u.setId(rs.getInt("id"));
+                    u.setLogin(rs.getString("login"));
+                    u.setNom(rs.getString("nom"));
+                    u.setPrenom(rs.getString("prenom"));
+                    u.setMail(rs.getString("mail"));
+                    u.setRole(rs.getInt("role"));
+                    return u;
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erreur findByLogin : " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    
     public Utilisateur findByLogin(String login) {
 
         String sql = "SELECT * FROM utilisateur WHERE login = ?";
@@ -74,7 +106,6 @@ public class UtilisateurDAO {
 
             ps.setString(1, login);
             try (ResultSet rs = ps.executeQuery()) {
-
                 if (rs.next()) {
                     Utilisateur u = new Utilisateur();
                     u.setId(rs.getInt("id"));
@@ -82,7 +113,7 @@ public class UtilisateurDAO {
                     u.setNom(rs.getString("nom"));
                     u.setPrenom(rs.getString("prenom"));
                     u.setMail(rs.getString("mail"));
-                    u.setRole(rs.getString("role"));
+                    u.setRole(rs.getInt("role"));
                     return u;
                 }
             }
@@ -111,7 +142,7 @@ public class UtilisateurDAO {
             ps.setString(2, u.getNom());
             ps.setString(3, u.getPrenom());
             ps.setString(4, u.getMail());
-            ps.setString(5, u.getRole());
+            ps.setInt(5, u.getRole());
 
             return ps.executeUpdate() > 0;
 
@@ -139,7 +170,7 @@ public class UtilisateurDAO {
             ps.setString(1, u.getNom());
             ps.setString(2, u.getPrenom());
             ps.setString(3, u.getMail());
-            ps.setString(4, u.getRole());
+            ps.setInt(4, u.getRole());
             ps.setString(5, u.getLogin());
 
             return ps.executeUpdate() > 0;
@@ -151,7 +182,26 @@ public class UtilisateurDAO {
         }
     }
     
-    
+    public List<Integer> getEtapesByUserId(int id_user) {
+        List<Integer> etapes = new ArrayList<>();
+        String sql = "SELECT d.etape " +
+                     "FROM utilisateur u " +
+                     "JOIN droit d ON u.role = d.role " +
+                     "WHERE u.id = ?";
 
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id_user);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    etapes.add(rs.getInt("etape"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur getEtapesByUserId : " + e.getMessage());
+            e.printStackTrace();
+        }
+        return etapes;
+    }
 
 }

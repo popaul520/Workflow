@@ -25,7 +25,7 @@ public class SessionFilter implements Filter {
             guest.setId(-1);
             guest.setNom("Invite");
             guest.setPrenom("Visiteur");
-            guest.setRole("GUEST"); // Rôle restreint
+            guest.setRole(12); // Rôle restreint
             guest.setLogin("guest");
             
             // On le place en session

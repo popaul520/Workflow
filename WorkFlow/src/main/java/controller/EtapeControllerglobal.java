@@ -60,12 +60,21 @@ public class EtapeControllerglobal extends HttpServlet {
 	    // 2. Initialisation des DAOs
 	    dao.WorkflowDAO wfDao = new dao.WorkflowDAO();
 	    dao.DonneeDAO donneeDao = new dao.DonneeDAO();
+	    dao.RoleDAO roleDao = new dao.RoleDAO(); // Instance du nouveau DAO
 	    dao.ValidationDAO valDao = new dao.ValidationDAO(); // Instance du DAO
 
 	    // 3. Récupération des objets métier
 	    model.Workflow wf = wfDao.getById(idWf);
 	    HttpSession session = request.getSession();
 	    model.Utilisateur user = (model.Utilisateur) session.getAttribute("user");
+	    
+	    boolean isAdmin = (user != null && user.getRole() == 11 || roleDao.canAccessEtape(user.getRole(), 11)); // 11 = PATRON
+	    boolean hasAccess = false;
+	    if (user != null) {
+	        // On vérifie si une ligne existe dans la table 'droit' pour ce rôle et cette étape
+	        hasAccess = roleDao.canAccessEtape(user.getRole(), n) || user.getRole() == n;
+	        
+	    }
 
 	    // 4. Chargement des référentiels pour les listes (optionsAvis, optionsBool, etc.)
 	    chargerReferentiels(request);
@@ -79,7 +88,7 @@ public class EtapeControllerglobal extends HttpServlet {
 	    }
 
 	    boolean isClosed = (wf != null && wf.getDateFinalisation() != null);
-	    boolean canEdit = (user != null && user.canAccessStep(n));
+	    boolean canEdit = isAdmin || (hasAccess && !isClosed);
 
 	    // 6. On force la création de l'étape si elle n'existe pas (pour avoir les labels)
 	    donneeDao.creerEtapeWorkflow(idWf, n);
@@ -93,6 +102,10 @@ public class EtapeControllerglobal extends HttpServlet {
 	    request.setAttribute("id_workflow", idWf);
 	    request.setAttribute("donneesEtape", donneesEtape);
 	    request.setAttribute("derniereEtape", etapeMax);
+	    request.setAttribute("isAdmin", isAdmin);
+	    request.setAttribute("hasAccess", hasAccess);
+	    request.setAttribute("canEdit", canEdit);
+	    request.setAttribute("isClosed", isClosed);
 
 	    // 9. LOGIQUE DE ROUTAGE :
 	    // On va vers la VISUALISATION si :

@@ -116,8 +116,12 @@
         <h3>Actions</h3>
         <ul>
             <li><a href="home">🏠 Retour Accueil</a></li>
+            
+             <%-- a faire comme page modif / .... pour rendu propre  --%>
+            
             <li><a href="workflow?action=edit&id=${wf.id}">📝 Modifier le titre</a></li>
             <li><a href="workflow?action=delete&id=${wf.id}" style="color: var(--danger);">🗑️ Supprimer</a></li>
+            
         </ul>
     </div>
 
@@ -204,11 +208,10 @@
             }
         %>
         	<button type="button" 
-        	    onclick="<%= isLocked && !"PATRON".equalsIgnoreCase(user.getRole()) ? "" : "chargerEtape(" + iValue + "," + wf.getId() + ")" %>"
+        	    onclick="<%= isLocked ? "" : "chargerEtape(" + iValue + "," + wf.getId() + ")" %>"
                 class="<%= cssClass %>">
         	<div class="step-number">ÉTAPE <%= iValue %></div>
             <div class="step-role"><%= model.Utilisateur.getRole(iValue) %></div>
-        
         </button>
     </c:forEach>
 </div>

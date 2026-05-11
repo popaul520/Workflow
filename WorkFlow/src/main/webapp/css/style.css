@@ -262,3 +262,89 @@ input:focus { border-color: var(--accent); }
     font-size: 1em;
     font-weight: 600;
 }
+
+/* --- Conteneur Global --- */
+.header-workflow {
+    background-color: #ffffff;
+    border: 1px solid #e1e4e8;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+/* --- Résumé des étapes (Grid) --- */
+.info-step-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-step-summary p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #4a5568;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+}
+
+.info-step-summary p strong {
+    color: #2d3748;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* --- Bannière de Statut --- */
+.status-banner {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 6px solid;
+    position: relative;
+}
+
+.status-banner h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-banner p {
+    margin: 5px 0;
+    font-size: 1rem;
+}
+
+.status-banner em {
+    display: block;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    font-style: italic;
+    opacity: 0.85;
+}
+
+/* --- Couleurs Dynamiques --- */
+.status-valide {
+    background-color: #f0fff4; /* Vert très clair */
+    color: #22543d;
+    border-color: #38a169;
+}
+
+.status-rejete {
+    background-color: #fff5f5; /* Rouge très clair */
+    color: #822727;
+    border-color: #e53e3e;
+}
+
+/* Petit ajustement pour le "Verdict Final" */
+.status-banner p strong {
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}

@@ -14,16 +14,16 @@ public class LdapUserMapper {
 
         UtilisateurDAO dao = new UtilisateurDAO();
 
-        // 🔎 1. Recherche en base
+        // Recherche en base
         Utilisateur u = dao.findByLogin(login);
 
         if (u != null) {
-            // ✅ UTILISATEUR DÉJÀ EN BASE
+            // UTILISATEUR DÉJÀ EN BASE
             System.out.println("Utilisateur trouvé en base : " + login);
             return u;
         }
 
-        // ✅ 2. Sinon → création depuis l'AD
+        //  2. Sinon création depuis l'AD
         System.out.println("Création utilisateur depuis AD : " + login);
 
         u = new Utilisateur();
@@ -32,17 +32,17 @@ public class LdapUserMapper {
         u.setPrenom((String) adData.get("prenom"));
         u.setMail((String) adData.get("mail"));
 
-        // 🔐 Jamais de mot de passe
+        //  Jamais de mot de passe
         u.setMdp(null);
 
-        // 🎭 Rôle via groupes AD
+        //  Rôle via groupes AD
         Attribute groups = (Attribute) adData.get("groups");
-        u.setRole(mapRoleFromGroups(groups));
+        //u.setRole(mapRoleFromGroups(groups)); ne sert à rien on ne connais le role
 
-        // 💾 Insertion DB
+        // Insertion DB
         dao.insert(u);
 
-        // 🔁 Recharge depuis DB pour avoir l'ID
+        //  Recharge depuis DB pour avoir l'ID
         return dao.findByLogin(login);
     }
 

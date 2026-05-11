@@ -4,9 +4,11 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.List;
 
 import dao.DonneeDAO;
+import dao.ValidationDAO;
 import dao.WorkflowDAO;
 import model.Donnee;
 import model.Workflow;
@@ -128,6 +130,14 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
                 }
             }
         }
+        ValidationDAO valDao = new ValidationDAO();
+        
+		try {
+			valDao.validerEtape(wf.getId(), wf.getCreateur().getId(), 1);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
         // 6. Redirection finale vers l'accueil ou le détail
         response.sendRedirect(request.getContextPath() + "/home");
@@ -138,7 +148,7 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
         request.getRequestDispatcher("/View/creer-workflow.jsp").forward(request, response);
     }
 }
-    
+
 	private void chargerReferentiels(HttpServletRequest request) {
 	    dao.DonneeDAO donneeDao = new dao.DonneeDAO();
 	    

@@ -59,4 +59,58 @@ public class RoleDAO {
             ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
+    
+ // Récupère le nom du rôle par son ID
+    public String getRoleNameById(int roleId) {
+        String name = "";
+        String sql = "SELECT role FROM role WHERE id = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, roleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) name = rs.getString("role");
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return name;
+    }
+    
+    public Map<Integer, String> getAllRoleNames() {
+        Map<Integer, String> roles = new HashMap<>();
+        String sql = "SELECT id, role FROM role ORDER BY id";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                roles.put(rs.getInt("id"), rs.getString("role"));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return roles;
+    }
+    
+    public static boolean canAccessEtape(int roleId, int etape) {
+    	
+    	if(roleId == etape) {
+    		return true;
+    	}
+        boolean access = false;
+        // On compte s'il existe une occurrence
+        String sql = "SELECT EXISTS(SELECT 1 FROM droit WHERE role = ? AND etape = ?)";
+        
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setInt(1, roleId);
+            ps.setInt(2, etape);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    access = rs.getBoolean(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return access;
+    }
+
 }
