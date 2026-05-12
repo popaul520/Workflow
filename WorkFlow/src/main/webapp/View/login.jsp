@@ -57,6 +57,13 @@
     </style>
 </head>
 <body>
+<%-- Ajoute l'import du DAO pour charger les rôles au chargement de la page --%>
+<%@ page import="dao.RoleDAO, java.util.Map" %>
+<%
+    RoleDAO roleDao = new RoleDAO();
+    Map<Integer, String> roles = roleDao.getAllRoleNames();
+    request.setAttribute("listeRoles", roles);
+%>
 
 <div class="login-box">
     <h2>Connexion</h2>
@@ -64,12 +71,23 @@
     <form action="${pageContext.request.contextPath}/login" method="post">
         <input type="text" name="login" placeholder="Identifiant" required>
         <input type="password" name="mdp" placeholder="Mot de passe" required>
-        <button type="submit">Se connecter</button>
+        
+        <select name="roleId" required style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dddfe2; border-radius: 6px;">
+            <c:forEach var="r" items="${listeRoles}">
+                <option value="${r.key}">${r.value}</option>
+            </c:forEach>
+        </select>
+
+        <button type="submit" name="action" value="connect">Se connecter</button>
+        
+        <button type="submit" name="action" value="guest" 
+                style="margin-top: 10px; background: #6c757d; border: none;" 
+                formnovalidate>
+            Accéder en tant qu'invité
+        </button>
     </form>
 
-    <div class="error">
-        ${error}
-    </div>
+    <div class="error">${error}</div>
 </div>
 
 </body>

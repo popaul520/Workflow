@@ -14,7 +14,7 @@
     <meta charset="UTF-8">
     <title>Mon Profil</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/inte.css" />
-    <style>
+    <style>'
         .profile-card {
             background: white;
             padding: 20px;

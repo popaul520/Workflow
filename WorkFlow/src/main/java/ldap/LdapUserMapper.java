@@ -32,8 +32,6 @@ public class LdapUserMapper {
         u.setPrenom((String) adData.get("prenom"));
         u.setMail((String) adData.get("mail"));
 
-        //  Jamais de mot de passe
-        u.setMdp(null);
 
         //  Rôle via groupes AD
         Attribute groups = (Attribute) adData.get("groups");

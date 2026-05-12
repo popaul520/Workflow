@@ -27,6 +27,30 @@ public class RoleDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
+    
+    public boolean checkUserHasRole(String login, int roleId) {
+        boolean exists = false;
+        String sql = "SELECT 1 FROM utilisateur_role WHERE login_utilisateur = ? AND id_role = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, login);
+            ps.setInt(2, roleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                exists = rs.next();
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return exists;
+    }
+    
+    public void updateUserRole(String login, int roleId) {
+        String sql = "UPDATE utilisateur SET role = ? WHERE login = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, roleId);
+            ps.setString(2, login);
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
 
     public List<Integer> getEtapesByRole(int roleId) {
         List<Integer> etapes = new ArrayList<>();
@@ -87,21 +111,18 @@ public class RoleDAO {
         return roles;
     }
     
+    
     public static boolean canAccessEtape(int roleId, int etape) {
-    	
-    	if(roleId == etape) {
+    	    	if(roleId == etape) {
     		return true;
     	}
         boolean access = false;
         // On compte s'il existe une occurrence
         String sql = "SELECT EXISTS(SELECT 1 FROM droit WHERE role = ? AND etape = ?)";
-        
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            
             ps.setInt(1, roleId);
             ps.setInt(2, etape);
-            
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     access = rs.getBoolean(1);
@@ -112,5 +133,4 @@ public class RoleDAO {
         }
         return access;
     }
-
 }

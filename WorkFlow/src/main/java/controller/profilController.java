@@ -18,5 +18,4 @@ public class profilController extends HttpServlet {
             request.getRequestDispatcher("View/profil.jsp").forward(request, response);
         }
     }
-    
 }
