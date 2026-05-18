@@ -1,44 +1,51 @@
 package model;
 
-import java.sql.Date;
+import java.io.Serializable;
 
-import org.eclipse.tags.shaded.org.apache.xpath.operations.Bool;
+public class template_donnee implements Serializable {
+    private int id;
+    private int idTemplateEtape;
+    private String nomChamp;
+    private String typeComposant;
+    private int ordreAffichage;
+    private boolean aCommentaire;
+    private boolean aDate;
+    private boolean estObligatoire; 
+    private String refContrainte;
 
-public class template_donnee {
-    private Long idDonne;
-    private Etape etape;
-    private String type;
-    private Bool attribut;
-    private Bool commentaire;
-    private Date date;
-    private String idTypeContraint;
-    private Bool est_obligatoire;
-    private int type_contraint; 
+    public template_donnee() {}
+
+    // --- PROPRIÉTÉ : aCommentaire ---
+    public boolean isACommentaire() { return aCommentaire; }
+    public boolean getACommentaire() { return aCommentaire; } // Crucial pour Tomcat 10
+    public void setACommentaire(boolean aCommentaire) { this.aCommentaire = aCommentaire; }
+
+    // --- PROPRIÉTÉ : aDate ---
+    public boolean isADate() { return aDate; }
+    public boolean getADate() { return aDate; } // Crucial pour Tomcat 10
+    public void setADate(boolean aDate) { this.aDate = aDate; }
+
+    // --- PROPRIÉTÉ : estObligatoire ---
+    public boolean isEstObligatoire() { return estObligatoire; }
+    public boolean getEstObligatoire() { return estObligatoire; } // Crucial pour Tomcat 10
+    public void setEstObligatoire(boolean estObligatoire) { this.estObligatoire = estObligatoire; }
+
+    // --- AUTRES GETTERS / SETTERS ---
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
     
+    public int getIdTemplateEtape() { return idTemplateEtape; }
+    public void setIdTemplateEtape(int idTemplateEtape) { this.idTemplateEtape = idTemplateEtape; }
     
-    public template_donnee() {
-    }
-
-    public Long getIdDonne() { return idDonne; }
-    public void setIdDonne(Long idDonne) { this.idDonne = idDonne; }
-
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-
-    public Bool getAttribut() { return attribut; }
-    public void setAttribut(Bool attribut) { this.attribut = attribut; }
-
-    public Bool getCommentaire() { return commentaire; }
-    public void setCommentaire(Bool commentaire) { this.commentaire = commentaire; }
-
-    public Date getDate() { return date; }
-    public void setDate(Date date) { this.date = date; }
-
-    public Etape getEtape() { return etape; }
-    public void setEtape(Etape etape) { this.etape = etape; }
+    public String getNomChamp() { return nomChamp; }
+    public void setNomChamp(String nomChamp) { this.nomChamp = nomChamp; }
     
-    public String getRefTypeContraint() {return idTypeContraint;}
-    public void setRefTypeContraint(String idTypeContraint) {
-        this.idTypeContraint = idTypeContraint;
-    }
+    public String getTypeComposant() { return typeComposant; }
+    public void setTypeComposant(String typeComposant) { this.typeComposant = typeComposant; }
+    
+    public int getOrdreAffichage() { return ordreAffichage; }
+    public void setOrdreAffichage(int ordreAffichage) { this.ordreAffichage = ordreAffichage; }
+    
+    public String getRefContrainte() { return refContrainte; }
+    public void setRefContrainte(String refContrainte) { this.refContrainte = refContrainte; }
 }

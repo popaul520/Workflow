@@ -13,7 +13,7 @@ import dao.WorkflowDAO;
 import model.Donnee;
 import model.Workflow;
 
-@WebServlet(urlPatterns = { "/creer-workflow", "/details"})
+@WebServlet(urlPatterns = { })
 public class WorkflowController extends HttpServlet {
     private WorkflowDAO dao = new WorkflowDAO();
 

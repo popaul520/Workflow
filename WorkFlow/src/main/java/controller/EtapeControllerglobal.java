@@ -122,7 +122,6 @@ public class EtapeControllerglobal extends HttpServlet {
 	        request.getRequestDispatcher("/View/etape/Etape" + n + suffixe + ".jsp").forward(request, response);
 	    }
 	}
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
     	

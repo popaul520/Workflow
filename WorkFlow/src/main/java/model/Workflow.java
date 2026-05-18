@@ -10,7 +10,8 @@ public class Workflow {
     private Date dateFinalisation;
     private String commentaire;
     private String idUtilisateur;
-
+    private int id_template_workflow;
+    private String statut;
     public Workflow() {
     }
     
@@ -46,4 +47,10 @@ public class Workflow {
     public void setIdUtilisateur(String idUtilisateur) { 
         this.idUtilisateur = idUtilisateur; 
     }
+    
+    public int getIdTemplateWorkflow() { return id_template_workflow; }
+    public void setIdTemplateWorkflow(int id_template_workflow) { this.id_template_workflow = id_template_workflow; }
+    
+    public String getStatut() { return statut; }
+    public void setStatut(String createur) { this.statut = statut; }
 }

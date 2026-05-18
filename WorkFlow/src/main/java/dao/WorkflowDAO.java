@@ -102,7 +102,7 @@ public class WorkflowDAO {
 	
 public int create(model.Workflow wf) {
     // On n'utilise que les colonnes qui existent vraiment dans ta table : titre et date_creation
-    String sql = "INSERT INTO workflow (titre, date_creation) VALUES (?, ?)";
+    String sql = "INSERT INTO workflow (titre, date_creation, id_template_workflow) VALUES (?, ?, ?)";
     int generatedId = -1;
 
     try (Connection con = DBConnection.getConnection();
@@ -114,6 +114,7 @@ public int create(model.Workflow wf) {
         // Paramètre 2 : date_creation
         ps.setTimestamp(2, new java.sql.Timestamp(wf.getDateCreation().getTime()));
 
+        ps.setInt(3, wf.getIdTemplateWorkflow());
         ps.executeUpdate();
 
         try (ResultSet rs = ps.getGeneratedKeys()) {

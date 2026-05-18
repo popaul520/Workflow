@@ -14,6 +14,7 @@ public class AppContextListener implements ServletContextListener {
         System.out.println("********** INITIALISATION DU DAO **********");
         // On l'enregistre sous le nom exact "roleDAO"
         sce.getServletContext().setAttribute("roleDAO", new RoleDAO());
+        
 
     }
 
