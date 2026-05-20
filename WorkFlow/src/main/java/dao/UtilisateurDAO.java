@@ -47,15 +47,12 @@ public class UtilisateurDAO {
         try {
             Connection con = DBConnection.getConnection();
 
-            String sql = "INSERT INTO utilisateur(login, mdp, nom, prenom, mail) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO utilisateur(login , nom, prenom, mail) VALUES (? , ?, ?, ?)";
             PreparedStatement ps = con.prepareStatement(sql);
-
             ps.setString(1, u.getLogin());
-            ps.setString(2, u.getMdp());
-            ps.setString(3, u.getNom());
-            ps.setString(4, u.getPrenom());
-            ps.setString(5, u.getMail());
-
+            ps.setString(2, u.getNom());
+            ps.setString(3, u.getPrenom());
+            ps.setString(4, u.getMail());
             ps.executeUpdate();
             return true;
 
@@ -203,5 +200,13 @@ public class UtilisateurDAO {
         }
         return etapes;
     }
-
+    public void updateUserRole(String login, int roleId) {
+        String sql = "UPDATE utilisateur SET role = ? WHERE login = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, roleId);
+            ps.setString(2, login);
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
 }

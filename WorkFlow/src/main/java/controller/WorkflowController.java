@@ -13,7 +13,7 @@ import dao.WorkflowDAO;
 import model.Donnee;
 import model.Workflow;
 
-@WebServlet(urlPatterns = { "/creer-workflow", "/details"})
+@WebServlet(urlPatterns = { })
 public class WorkflowController extends HttpServlet {
     private WorkflowDAO dao = new WorkflowDAO();
 
@@ -55,11 +55,9 @@ public class WorkflowController extends HttpServlet {
         
         else  {
     	    chargerReferentiels(request);
-
             request.getRequestDispatcher("View/creerWorkflow.jsp").forward(request, response);
         } 
     }
-
 protected void doPost(HttpServletRequest request, HttpServletResponse response) 
         throws ServletException, IOException {
     
