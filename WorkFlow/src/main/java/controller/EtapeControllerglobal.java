@@ -147,7 +147,7 @@ public class EtapeControllerglobal extends HttpServlet {
                     d.setCommentaire(valComm);
                     
                     // =========================================================================
-                    // ATTRIBUTION DE LA DATE ACTUELLE POUR LES ÉTAPES 7 ET 10
+                    // 🆕 ATTRIBUTION DE LA DATE ACTUELLE POUR LES ÉTAPES 7 ET 10
                     // =========================================================================
                     if ((nbEtape == 7 || nbEtape == 10) && "avis".equals(suffixe)) {
                         // Injection forcée de la date système actuelle (SQL Date)
