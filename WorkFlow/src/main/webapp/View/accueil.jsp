@@ -262,14 +262,19 @@
         <%-- 2. SEUL LE RÔLE 1 ET LE PATRON PEUVENT CRÉER --%>
         <c:if test="${roleDAO.canAccessEtape(user.role, 1) || roleDAO.canAccessEtape(user.role, 11)}">
             <li style="margin-top: 30px;">
-                <a href="creer-workflow" style="color: var(--success); font-weight: bold;">➕ Créer Workflow</a>
+                <a href="creer-workflowV1" style="color: var(--success); font-weight: bold;">➕ Créer Workflow</a>
             </li>
             <li style="margin-top: 30px;">
+            <li style="margin-top: 30px;">
+                <a href="admin-roles" style="color: var(--success); font-weight: bold;"> gestion des rôles </a>
+            </li>
+            <p>V2 en production testable sous réserve de bugs et problème (pas beaucoup mais un peu)</p>
                 <a href="template-list" style="color: var(--success); font-weight: bold;"> Liste de template </a>
             </li>
             <li style="margin-top: 30px;">
                 <a href="creer-workflow" style="color: var(--success); font-weight: bold;"> Creation workflow-template </a>
             </li>
+
         </c:if>
     </ul>
 </div>

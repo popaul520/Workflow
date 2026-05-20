@@ -68,7 +68,7 @@
                 </div>
 
                 <div class="template-info">
-                    <strong>💡 Fonctionnement dynamique :</strong> Dès la validation de ce formulaire, le moteur applicatif va charger l'étape 1 configurée pour ce modèle et affichera les champs correspondants pour enregistrer les données techniques.
+                    <strong>💡 info utile :</strong> dormir c'est bien 
                 </div>
 
                 <div class="button-group">

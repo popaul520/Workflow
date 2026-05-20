@@ -22,40 +22,51 @@
         <a href="template-list" class="btn btn-outline-secondary btn-sm">Retour à la liste</a>
     </div>
 
-    <div class="card mb-4 shadow-sm border-primary">
-        <div class="card-header bg-primary text-white d-flex justify-content-between">
-            <span id="etape-form-title">Ajouter une étape</span>
-            <button class="btn btn-sm btn-light" onclick="resetEtapeForm()" id="btn-reset-etape" style="display:none;">Annuler la modification</button>
-        </div>
-        <div class="card-body">
-            <form action="workflow-design" method="post" class="row g-3">
-                <input type="hidden" name="type" value="etape">
-                <input type="hidden" name="id_workflow" value="${workflow.id}">
-                <input type="hidden" name="id_etape" id="id_etape" value="0">
-                <div class="col-md-4">
-                    <label class="form-label small fw-bold">Nom de l'étape</label>
-                    <input type="text" name="nom_etape" id="nom_etape" class="form-control" required>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold">Ordre (Place)</label>
-                    <input type="number" name="place" id="place" class="form-control" value="${fn:length(etapes) + 1}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Rôle Responsable</label>
-                    <select name="role_associe" id="role_associe" class="form-select">
-                        <c:forEach var="r" items="${roles}"><option value="${r.key}">${r.value}</option></c:forEach>
-                    </select>
-                </div>
-                <div class="col-md-1 text-center">
-                    <label class="form-label small fw-bold">Finale</label><br>
-                    <input type="checkbox" name="est_finale" id="est_finale" class="form-check-input">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Enregistrer</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
+	<div class="card mb-4 shadow-sm border-primary">
+	    <div class="card-header bg-primary text-white d-flex justify-content-between">
+	        <span id="etape-form-title">Ajouter une étape</span>
+	        <button class="btn btn-sm btn-light" onclick="resetEtapeForm()" id="btn-reset-etape" style="display:none;">Annuler la modification</button>
+	    </div>
+	    <div class="card-body">
+	        <form action="workflow-design" method="post" class="row g-3">
+	            <input type="hidden" name="type" value="etape">
+	            <input type="hidden" name="id_workflow" value="${workflow.id}">
+	            <input type="hidden" name="id_etape" id="id_etape" value="0">
+	            
+	            <div class="col-md-3">
+	                <label class="form-label small fw-bold">Nom de l'étape</label>
+	                <input type="text" name="nom_etape" id="nom_etape" class="form-control" required>
+	            </div>
+	            <div class="col-md-2">
+	                <label class="form-label small fw-bold">Ordre (Place)</label>
+	                <input type="number" name="place" id="place" class="form-control" value="${fn:length(etapes) + 1}" min="1" max="${fn:length(etapes) + 1}">
+	            </div>
+	            <div class="col-md-2">
+	                <label class="form-label small fw-bold">Rôle Responsable</label>
+	                <select name="role_associe" id="role_associe" class="form-select">
+	                    <c:forEach var="r" items="${roles}"><option value="${r.key}">${r.value}</option></c:forEach>
+	                </select>
+	            </div>
+	            <div class="col-md-3">
+	                <label class="form-label small fw-bold">Attendre l'étape (Optionnel)</label>
+	                <select name="attente_place" id="attente_place" class="form-select">
+	                    <option value="-1">-- Déroulement linéaire --</option>
+	                    <c:forEach var="prev" items="${etapes}">
+	                        <option value="${prev.place}">Étape ${prev.place} : ${prev.nomEtape}</option>
+	                    </c:forEach>
+	                </select>
+	            </div>
+	            <div class="col-md-1 text-center">
+	                <label class="form-label small fw-bold">Finale</label><br>
+	                <input type="checkbox" name="est_finale" id="est_finale" class="form-check-input">
+	            </div>
+	            <div class="col-md-1 d-flex align-items-end">
+	                <button type="submit" class="btn btn-primary w-100">Enregistrer</button>
+	            </div>
+	        </form>
+	    </div>
+	</div>
 
     <div class="accordion" id="workflowAccordion">
         <c:forEach var="e" items="${etapes}">
@@ -234,6 +245,34 @@ function resetDonneeForm(idEtape, nextOrder) {
     document.getElementById('btn_submit_donnee_' + idEtape).innerText = "Ajouter champ";
     document.getElementById('btn_submit_donnee_' + idEtape).classList.replace('btn-warning', 'btn-dark');
     document.getElementById('btn_cancel_donnee_' + idEtape).style.display = "none";
+}
+
+function prepareEditEtape(id, nom, place, role, finale, attentePlace) {
+    document.getElementById('id_etape').value = id;
+    document.getElementById('nom_etape').value = nom;
+    document.getElementById('place').value = place;
+    document.getElementById('role_associe').value = role;
+    document.getElementById('est_finale').checked = finale;
+    
+    // Assigner la valeur d'attente si présente, sinon remettre sur -1
+    var selectAttente = document.getElementById('attente_place');
+    if(attentePlace && attentePlace !== 'null' && attentePlace !== '') {
+        selectAttente.value = attentePlace;
+    } else {
+        selectAttente.value = "-1";
+    }
+
+    document.getElementById('etape-form-title').innerText = "Modifier l'étape : " + nom;
+    document.getElementById('btn-reset-etape').style.display = "block";
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function resetEtapeForm() {
+    document.getElementById('id_etape').value = "0";
+    document.getElementById('nom_etape').value = "";
+    document.getElementById('attente_place').value = "-1";
+    document.getElementById('btn-reset-etape').style.display = "none";
+    document.getElementById('etape-form-title').innerText = "Ajouter une étape";
 }
 </script>
 </body>

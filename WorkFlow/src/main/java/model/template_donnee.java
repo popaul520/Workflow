@@ -15,22 +15,18 @@ public class template_donnee implements Serializable {
 
     public template_donnee() {}
 
-    // --- PROPRIÉTÉ : aCommentaire ---
     public boolean isACommentaire() { return aCommentaire; }
     public boolean getACommentaire() { return aCommentaire; } // Crucial pour Tomcat 10
     public void setACommentaire(boolean aCommentaire) { this.aCommentaire = aCommentaire; }
 
-    // --- PROPRIÉTÉ : aDate ---
     public boolean isADate() { return aDate; }
     public boolean getADate() { return aDate; } // Crucial pour Tomcat 10
     public void setADate(boolean aDate) { this.aDate = aDate; }
 
-    // --- PROPRIÉTÉ : estObligatoire ---
     public boolean isEstObligatoire() { return estObligatoire; }
     public boolean getEstObligatoire() { return estObligatoire; } // Crucial pour Tomcat 10
     public void setEstObligatoire(boolean estObligatoire) { this.estObligatoire = estObligatoire; }
 
-    // --- AUTRES GETTERS / SETTERS ---
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     

@@ -13,7 +13,7 @@ import dao.WorkflowDAO;
 import model.Donnee;
 import model.Workflow;
 
-@WebServlet(urlPatterns = { })
+@WebServlet(urlPatterns = {"/creer-workflowV1" })
 public class WorkflowController extends HttpServlet {
     private WorkflowDAO dao = new WorkflowDAO();
 
@@ -65,8 +65,7 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
     
     // 1. Récupération des informations de base
     String titre = request.getParameter("titre");
-    // On récupère le client pour l'objet Workflow (si votre table le permet) 
-    // ou simplement pour l'avoir sous la main
+    // On récupère le client pour l'objet Workflow 
     String clientPrincipal = request.getParameter("attr_client"); 
 
     // 2. Création de l'objet Workflow
@@ -82,14 +81,12 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
     if (idWf > 0) {
         dao.DonneeDAO donneeDao = new dao.DonneeDAO();
 
-        // 3. INITIALISATION DES ÉTAPES (Suivi des rôles)
-        // On crée les 8 étapes vides dans la table 'etape' ou 'workflow_etape'
+        // 3. INITIALISATION ETAPE
         for (int i = 1; i <= 10; i++) {
             donneeDao.creerEtapeWorkflow(idWf, i);
         }
 
-        // 4. ENREGISTREMENT DES DONNÉES TECHNIQUES (Table donnee)
-        // On utilise l'énumération des paramètres pour ne rien oublier
+        // 4. ENREGISTREMENT DES DONNÉES TECHNIQUES
         java.util.Enumeration<String> parameterNames = request.getParameterNames();
         
         while (parameterNames.hasMoreElements()) {

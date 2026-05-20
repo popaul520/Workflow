@@ -77,7 +77,7 @@ public class WorkflowDAO {
 	public static Workflow getById(int id) {
 	    Workflow wf = null;
 	    // Ajout de date_finalisation dans la requête SQL
-	    String sql = "SELECT id, titre, date_creation, date_finalisation, commentaire, id_utilisateur FROM workflow WHERE id = ?"; 
+	    String sql = "SELECT id, titre, date_creation, date_finalisation, commentaire, id_utilisateur, id_template_workflow FROM workflow WHERE id = ?"; 
 	    
 	    try (Connection con = DBConnection.getConnection();
 	         PreparedStatement ps = con.prepareStatement(sql)) {
@@ -92,6 +92,8 @@ public class WorkflowDAO {
 	                wf.setDateFinalisation(rs.getDate("date_finalisation")); 
 	                wf.setCommentaire(rs.getString("commentaire"));
 	                wf.setIdUtilisateur(rs.getString("id_utilisateur")); 
+	             // DANS WorkflowDAO.java (méthode de mapping ou getById)
+	               wf.setIdTemplateWorkflow((rs.getInt("id_template_workflow")));; // Vérifie le nom exact de ta colonne SQL
 	            }
 	        }
 	    } catch (Exception e) {

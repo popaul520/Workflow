@@ -1,5 +1,5 @@
 package dao;
-
+//permet la connection à la base de donnée
 import java.sql.Connection;
 import java.sql.DriverManager;
 //setup /Host:postgres User Name: postgres Password:1234 port:5432 

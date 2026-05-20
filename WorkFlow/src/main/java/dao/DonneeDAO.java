@@ -9,6 +9,7 @@ import java.util.List;
 
 import model.Donnee;
 import model.Etape;
+import model.template_donnee;
 
 public class DonneeDAO {
 
@@ -187,7 +188,6 @@ public void creerEtapeWorkflow(int idWorkflow, int nbEtape) {
     }
 
     // 2. La requête SQL 
-    // Il y a 5 points au total.
     String sql = "INSERT INTO etape (id_workflow, nb_etape, role) " +
                  "SELECT ?, ?, ? WHERE NOT EXISTS (" +
                  "SELECT 1 FROM etape WHERE id_workflow = ? AND nb_etape = ?)";
@@ -237,5 +237,62 @@ public void creerEtapeWorkflow(int idWorkflow, int nbEtape) {
 	    
 	    // On retourne une chaîne vide si rien n'est trouvé, pour éviter les NullPointerException dans la JSP
 	    return (valeur != null) ? valeur : "";
+	}
+	
+	public List<template_donnee> getDonneesSaisie(int idWorkflow, int idTemplateWorkflow, int numEtape) {
+	    List<template_donnee> liste = new ArrayList<>();
+	    
+	    // Cette requête récupère TOUS les champs prévus par le template, 
+	    // et cherche s'il y a déjà une saisie correspondante dans 'donnee'
+	    String sql = "SELECT " +
+	                 "  dt.id AS id_template_donnee, " +
+	                 "  dt.nom_champ, " +
+	                 "  dt.type_composant, " +
+	                 "  dt.a_commentaire, " +
+	                 "  dt.a_date, " +
+	                 "  dt.est_obligatoire, " +
+	                 "  dt.ref_contrainte, " +
+	                 "  d.id_donne, " +
+	                 "  d.attribut, " +
+	                 "  d.commentaire, " +
+	                 "  d.date " +
+	                 "FROM donnee_template dt " +
+	                 "LEFT JOIN donnee d ON dt.id = d.id_template_donnee AND d.id_workflow = ? " +
+	                 "WHERE dt.id_template_etape = (" +
+	                 "    SELECT te.id FROM template_etape te WHERE te.id_template_workflow = ? AND te.attente_place = ?" +
+	                 ") " +
+	                 "ORDER BY dt.ordre_affichage";
+
+	    try (Connection conn = DBConnection.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        
+	        ps.setInt(1, idWorkflow);
+	        ps.setInt(2, idTemplateWorkflow);
+	        ps.setInt(3, numEtape);
+	        
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                template_donnee df = new template_donnee();
+	                df.setIdTemplateEtape(rs.getInt("id_template_donnee"));
+	                df.setNomChamp(rs.getString("nom_champ"));
+	                df.setTypeComposant(rs.getString("type_composant"));
+	                df.setACommentaire(rs.getBoolean("a_commentaire"));
+	                df.setADate(rs.getBoolean("a_date"));
+	                df.setEstObligatoire(rs.getBoolean("est_obligatoire"));
+	                df.setRefContrainte(rs.getString("ref_contrainte"));
+	                
+	                // Données de saisie (vaudront 0 ou null au premier affichage)
+	                df.setId(rs.getInt("id_donne")); 
+	                // df.setAttribut(rs.getString("attribut"));
+	                df.setACommentaire(rs.getBoolean("commentaire"));
+	                df.setADate(rs.getBoolean("date"));
+	                
+	                liste.add(df);
+	            }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return liste;
 	}
 }

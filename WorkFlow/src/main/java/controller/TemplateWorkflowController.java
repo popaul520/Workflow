@@ -50,9 +50,9 @@ public class TemplateWorkflowController extends HttpServlet {
         }
         if (idStr == null || idStr.isEmpty()) {
             int newId = dao.getLastGeneratedId(); 
-            response.sendRedirect("template-design?id_workflow=" + newId);
+            response.sendRedirect("workflow-design?id_workflow=" + newId);
         } else {
-            response.sendRedirect("template-design?id_workflow=" + idStr);
+            response.sendRedirect("workflow-design?id_workflow=" + idStr);
 
         }
     }

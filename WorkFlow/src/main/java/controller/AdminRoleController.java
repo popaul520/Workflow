@@ -33,23 +33,28 @@ public class AdminRoleController extends HttpServlet {
         	    String name = roleDao.getRoleNameById(id); 
 
         	    List<Integer> roleEtapes = roleDao.getEtapesByRole(id);
-        	    Map<Integer, String> allRolesMap = roleDao.getAllRoleNames(); // La correspondance ID -> NOM
-        	    
+        	    Map<Integer, String> allRolesMap = roleDao.getAllRoleNames(); 
+        	    allRolesMap.remove(id); // Enlève le rôle de la visualisation
+
         	    List<Integer> etapesDisponibles = new ArrayList<>();
-        	    for (int i = 1; i <= 12; i++) { // Jusqu'à 12 selon table role
-        	        if (!roleEtapes.contains(i) || !(user.getRole()== i) ) {
+        	    for (int i = 1; i <= 12; i++) { //pour le déroulant
+        	        if (i == id) {
+        	            continue; 
+        	        }
+        	        // Conditions filtrage
+        	        if (!roleEtapes.contains(i) || !(user.getRole() == i)) {
         	            etapesDisponibles.add(i);
         	        }
         	    }
-        	    
-        	   
+
         	    request.setAttribute("roleId", id);
         	    request.setAttribute("roleName", name);
         	    request.setAttribute("roleEtapes", roleEtapes);
         	    request.setAttribute("etapesDisponibles", etapesDisponibles);
-        	    request.setAttribute("allRolesMap", allRolesMap); // On envoie la map
+        	    request.setAttribute("allRolesMap", allRolesMap); 
         	    
         	    request.getRequestDispatcher("/View/modifierRole.jsp").forward(request, response);
+        	
         	}else {
                 // Mode liste globale
                 List<Map<String, Object>> roles = roleDao.getRolesWithSteps();

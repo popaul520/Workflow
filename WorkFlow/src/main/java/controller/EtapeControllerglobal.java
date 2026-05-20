@@ -40,6 +40,8 @@ public class EtapeControllerglobal extends HttpServlet {
 	    request.setAttribute("optionsnormalite",  donneeDao.getValeursContraintes("normalite"));
 	    request.setAttribute("optionsFinalite",   donneeDao.getValeursContraintes("finalite"));
 	    request.setAttribute("optionsDifficulte", donneeDao.getValeursContraintes("difficulte"));
+	    request.setAttribute("optionsSaisonalite", donneeDao.getValeursContraintes("saisonalite"));
+
 	}
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -76,7 +78,7 @@ public class EtapeControllerglobal extends HttpServlet {
 	        
 	    }
 
-	    // 4. Chargement des référentiels pour les listes (optionsAvis, optionsBool, etc.)
+	    // 4. Chargement des référentiels pour les listes optionsAvis, optionsBool, etc.
 	    chargerReferentiels(request);
 
 	    // 5. Calcul de l'état du workflow et des droits

@@ -22,7 +22,7 @@ public class DetailController extends HttpServlet {
         if (idStr == null || idStr.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/home");
             return;
-        }
+        } 
 
         try {
             int id = Integer.parseInt(idStr);

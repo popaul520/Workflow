@@ -1,9 +1,11 @@
 package dao;
 
-
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import model.templateWorkflow;
 import model.template_donnee;
 import model.template_etape;
@@ -67,7 +69,7 @@ public class TemplateDAO {
         return null;
     }
 
-    // 4. Lister tous les templates (pour la page de gestion)
+    // 4. Lister tous les templates
     public List<templateWorkflow> getAllTemplates() {
         List<templateWorkflow> list = new ArrayList<>();
         String sql = "SELECT * FROM template_workflow ORDER BY date_creation DESC";
@@ -85,7 +87,7 @@ public class TemplateDAO {
         return list;
     }
 
-    // 5. Supprimer un template (Attention aux cascades avec les étapes !)
+    // 5. Supprimer un template
     public void deleteTemplate(int id) {
         String sql = "DELETE FROM template_workflow WHERE id = ?";
         try (Connection con = DBConnection.getConnection();
@@ -99,7 +101,7 @@ public class TemplateDAO {
 
     // Utilitaire : Transformer une ligne SQL en objet Java
     private templateWorkflow mapResultSetToTemplate(ResultSet rs) throws SQLException {
-    	templateWorkflow t = new templateWorkflow();
+        templateWorkflow t = new templateWorkflow();
         t.setId(rs.getInt("id"));
         t.setTitre(rs.getString("nom"));
         t.setVersion(rs.getInt("version"));
@@ -110,36 +112,17 @@ public class TemplateDAO {
         return t;
     }
     
-    public templateWorkflow getTemplateById() {
-        String sql = "SELECT * FROM template_workflow  order by id  desc limit  ";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToTemplate(rs);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-    
-    
+    // 6. Récupérer le dernier ID de template généré
     public int getLastGeneratedId() {
         int id = 0;
-        // On utilise LASTVAL() qui retourne le dernier ID généré par une séquence 
-        // dans la SESSION actuelle (très important pour la sécurité multi-utilisateur)
-        String sql = "SELECT * FROM template_workflow   order by id  desc limit 1";
+        String sql = "SELECT id FROM template_workflow ORDER BY id DESC LIMIT 1";
         
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             
             if (rs.next()) {
-                id = rs.getInt(1);
+                id = rs.getInt("id");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -147,10 +130,9 @@ public class TemplateDAO {
         return id;
     }
     
- // Modifie le type de retour ici : template_etape
+    // 7. Récupérer la configuration d'une étape précise
     public template_etape getEtapeConfig(int idTemplate, int numEtape) {
         template_etape etape = null;
-        // On utilise "ordre" ou "attente_place" selon le nom exact dans ta base
         String sql = "SELECT * FROM template_etape WHERE id_template_workflow = ? AND place = ?";
         
         try (Connection conn = DBConnection.getConnection(); 
@@ -165,7 +147,6 @@ public class TemplateDAO {
                     etape.setId(rs.getInt("id"));
                     etape.setIdTemplateWorkflow(rs.getInt("id_template_workflow"));
                     etape.setNomEtape(rs.getString("nom_etape"));
-                    // Correction selon tes attributs :
                     etape.setAttentePlace(rs.getInt("place")); 
                     etape.setRoleAssocie(rs.getInt("role_associe")); 
                 }
@@ -173,16 +154,13 @@ public class TemplateDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return etape; // Retourne l'objet config de l'étape
+        return etape;
     }
     
-    
+    //  Récupérer toutes les étapes d'un template ordonnées
     public List<template_etape> getEtapesByTemplate(int idTemplate) {
-        List<template_etape> liste = new java.util.ArrayList<>();
-        // On récupère les étapes ordonnées par leur place dans le Workflow
-        String sql = "SELECT te.*, r.id FROM template_etape te " +
-                     "LEFT JOIN role r ON te.role_associe = r.id " +
-                     "WHERE te.id_template_workflow = ? ORDER BY te.place ASC";
+        List<template_etape> liste = new ArrayList<>();
+        String sql = "SELECT te.* FROM template_etape te WHERE te.id_template_workflow = ? ORDER BY te.place ASC";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -194,10 +172,8 @@ public class TemplateDAO {
                     etape.setId(rs.getInt("id"));
                     etape.setIdTemplateWorkflow(rs.getInt("id_template_workflow"));
                     etape.setNomEtape(rs.getString("nom_etape"));
-                    etape.setAttentePlace(rs.getInt("place"));
+                    etape.setAttentePlace(rs.getInt("place")); 
                     etape.setRoleAssocie(rs.getInt("role_associe"));
-                    // Optionnel : stocker le nom du rôle si tu as ajouté un attribut temporaire dans ton modèle
-                    // etape.setNomRoleDesignation(rs.getString("nom_role")); 
                     liste.add(etape);
                 }
             }
@@ -205,5 +181,54 @@ public class TemplateDAO {
             e.printStackTrace();
         }
         return liste; 
+    }
+    
+    /*
+     * Génère la structure des champs et les données associées pour une étape donnée.
+     */
+    public List<Map<String, Object>> getChampsEtDonnees(int idWorkflow, int idTemplateWorkflow, int numEtape) {
+        List<Map<String, Object>> liste = new ArrayList<>();
+        
+        String sql = "SELECT " +
+                     "  dt.id AS id_template_donnee, dt.nom_champ, dt.type_composant, " +
+                     "  dt.a_commentaire, dt.a_date, dt.est_obligatoire, dt.ref_contrainte, " +
+                     "  d.id_donne, d.attribut, d.commentaire, d.date " +
+                     "FROM template_donnee dt " +
+                     "LEFT JOIN donnee d ON dt.id = d.id_template_donnee AND d.id_workflow = ? " +
+                     "WHERE dt.id_template_etape = (" +
+                     "    SELECT te.id FROM template_etape te WHERE te.id_template_workflow = ? AND te.place = ?" +
+                     ") " +
+                     "ORDER BY dt.ordre_affichage";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idWorkflow);
+            ps.setInt(2, idTemplateWorkflow);
+            ps.setInt(3, numEtape);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    
+                    row.put("idTemplateDonnee", rs.getInt("id_template_donnee"));
+                    row.put("nomChamp", rs.getString("nom_champ"));
+                    row.put("typeComposant", rs.getString("type_composant"));
+                    row.put("aCommentaire", rs.getBoolean("a_commentaire"));
+                    row.put("aDate", rs.getBoolean("a_date"));
+                    row.put("estObligatoire", rs.getBoolean("est_obligatoire"));
+                    row.put("refContrainte", rs.getString("ref_contrainte"));
+
+                    row.put("idDonne", rs.getInt("id_donne")); 
+                    row.put("attribut", rs.getString("attribut"));
+                    row.put("commentaire", rs.getString("commentaire"));
+                    row.put("date", rs.getString("date"));
+                    liste.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return liste;
     }
 }

@@ -3,7 +3,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-
 <%
     // 1. Initialisation du DAO pour charger les référentiels
     DonneeDAO donneeDao = new DonneeDAO();
@@ -11,11 +10,13 @@
     // 2. Récupération des options basées sur la colonne 'type' de ta table type_contraint
     List<String> optionsBool = donneeDao.getValeursContraintes("Bool"); 
     List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
-    
+   //List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
+
     // 3. Mise à disposition pour JSTL
     request.setAttribute("optionsBool", optionsBool);
     request.setAttribute("optionsAvis", optionsAvis);
-%> aide moi a faire la recupération dans le dopost etapecontrollerglobal pour faire la sauvegarde en base de donnée car cela n'est pas enregistrer en donnée
+   // request.setAttribute("optionsSaisonalite", optionsSaisonalite);
+%>
 
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
@@ -81,6 +82,57 @@
             <label style="display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px;">Date de validation :</label>
             <input type="date" name="date_avis" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
+        <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
+    <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+        Étape 2 : Faisabilité Conditionnement
+    </h2>
+        
+    <form action="${pageContext.request.contextPath}/etapeController" method="post">     
+        <%-- Context ID --%>
+        <input type="hidden" name="id_workflow" value="${param.id_workflow}">
+        <input type="hidden" name="current_n" value="2">
+
+
+        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+            <input type="hidden" name="type_prev_lancement" value="Prévision lancement">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Volume de lancement prévu (Attribut) :</label>
+            <input type="number" name="attr_prev_lancement" min="0" placeholder="Ex: 50000" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+            <input type="hidden" name="type_saisonalite" value="Saisonalité"> 
+            <input type="hidden" name="ref_saisonalite" value="saisonalite"> 
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Saisonnalité forte attendue :</label>
+            <select name="attr_saisonalite" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">-- Choisir une saison --</option>
+                <c:forEach var="opt" items="${optionsSaisonalite}">
+                    <option value="${opt}">${opt}</option>
+                </c:forEach>
+            </select>
+        </div>
+
+        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+            <input type="hidden" name="type_prev_annuelle" value="Prévision annuelle">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Estimation volume annuel (Attribut) :</label>
+            <input type="number" name="attr_prev_annuelle" min="0" placeholder="Ex: 250000" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+            <input type="hidden" name="type_avis" value="avis production"> 
+            <input type="hidden" name="ref_avis" value="avis"> 
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Décision finale (Attribut) :</label>
+            <select name="attr_avis" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">-- Choisir un avis --</option>
+                <c:forEach var="opt" items="${optionsAvis}">
+                    <option value="${opt}">${opt}</option>
+                </c:forEach>
+            </select>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire de l'avis :</label>
+            <textarea name="comm_avis" style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+            <label style="display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px;">Date de validation :</label>
+            <input type="date" name="date_avis" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
 
         <%-- BOUTON DE VALIDATION --%>
         <div style="text-align: right; margin-top: 20px;">

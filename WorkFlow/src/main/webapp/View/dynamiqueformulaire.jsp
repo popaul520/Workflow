@@ -50,7 +50,7 @@
                     <c:choose>
                         <c:when test="${isValidated}">
                             <c:set var="cssClass" value="state-validated" />
-                        </c:when>
+                        </c:when> 
                         <c:when test="${etape.attentePlace == numEtapeActive}">
                             <c:set var="cssClass" value="state-modifiable" /> </c:when>
                         <c:when test="${isLocked}">

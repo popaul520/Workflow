@@ -27,7 +27,6 @@ public class TemplateWorkflowDesignController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idWfStr = request.getParameter("id_workflow");
         
-        // SÉCURITÉ : Si pas d'ID, on dégage vers la liste
         if (idWfStr == null || idWfStr.isEmpty()) {
             response.sendRedirect("template-list");
             return;
@@ -35,18 +34,19 @@ public class TemplateWorkflowDesignController extends HttpServlet {
         
         int idWorkflow = Integer.parseInt(idWfStr);
         String action = request.getParameter("action");
-
-        // Actions (Delete, etc.)
         if ("deleteEtape".equals(action)) {
             String idEtape = request.getParameter("id_etape");
-            if (idEtape != null && !idEtape.isEmpty()) etapeDAO.delete(Integer.parseInt(idEtape));
+            if (idEtape != null && !idEtape.isEmpty()) {
+                etapeDAO.delete(Integer.parseInt(idEtape), idWorkflow); 
+            }
         } 
         else if ("deleteDonnee".equals(action)) {
             String idDonnee = request.getParameter("id_donnee");
-            if (idDonnee != null && !idDonnee.isEmpty()) donneeDAO.deleteDonnee(Integer.parseInt(idDonnee));
+            if (idDonnee != null && !idDonnee.isEmpty()) {
+                donneeDAO.deleteDonnee(Integer.parseInt(idDonnee));
+            }
         }
 
-        // CHARGEMENT DES DONNÉES EN MAP
         request.setAttribute("workflow", workflowDAO.getTemplateById(idWorkflow));
         request.setAttribute("roles", roleDAO.getAllRoleNames());
         
@@ -85,13 +85,12 @@ public class TemplateWorkflowDesignController extends HttpServlet {
             return;
         }
         int idWorkflow = Integer.parseInt(idWfStr);
-
-        // --- LOGIQUE ENREGISTREMENT DONNÉE ---
+        // CAS 1 : GESTION DES DONNÉES (Glissement & Sauvegarde via le DAO)
         if ("donnee".equals(type)) {
-            template_donnee d = new template_donnee();
             String idDonneeStr = request.getParameter("id_donnee");
             int idDonnee = (idDonneeStr == null || idDonneeStr.isEmpty()) ? 0 : Integer.parseInt(idDonneeStr);
             
+            template_donnee d = new template_donnee();
             d.setId(idDonnee);
             d.setIdTemplateEtape(Integer.parseInt(request.getParameter("id_etape")));
             d.setNomChamp(request.getParameter("nom_champ"));
@@ -101,26 +100,30 @@ public class TemplateWorkflowDesignController extends HttpServlet {
             d.setADate(request.getParameter("a_date") != null);
             d.setEstObligatoire(request.getParameter("est_obligatoire") != null);
 
-            if (idDonnee == 0) {
-                donneeDAO.addDonnee(d);
-            } else {
-                donneeDAO.updateDonnee(d);
-            }
+            donneeDAO.ajusterPositionEtSauvegarder(d);
         } 
-        // --- LOGIQUE ENREGISTREMENT ÉTAPE ---
+        
+        // CAS 2 : GESTION DES ÉTAPES 
+
         else if ("etape".equals(type)) {
-            template_etape e = new template_etape();
             String idEtapeStr = request.getParameter("id_etape");
             int idEtape = (idEtapeStr == null || idEtapeStr.isEmpty()) ? 0 : Integer.parseInt(idEtapeStr);
             
+            template_etape e = new template_etape();
             e.setId(idEtape);
             e.setIdTemplateWorkflow(idWorkflow);
             e.setNomEtape(request.getParameter("nom_etape"));
             e.setPlace(Integer.parseInt(request.getParameter("place")));
             e.setRoleAssocie(Integer.parseInt(request.getParameter("role_associe")));
             e.setEstFinale(request.getParameter("est_finale") != null);
-            etapeDAO.saveOrUpdate(e); // Assure-toi que cette méthode existe dans ton DAO
             
+            String attenteStr = request.getParameter("attente_place");
+            if (attenteStr != null && !attenteStr.trim().isEmpty() && !"-1".equals(attenteStr)) {
+                e.setAttentePlace(Integer.parseInt(attenteStr));
+            } else {
+                e.setAttentePlace(0);
+            }
+            etapeDAO.ajusterPositionEtSauvegarder(e);
         }
 
         response.sendRedirect("workflow-design?id_workflow=" + idWorkflow);
