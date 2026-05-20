@@ -5,8 +5,8 @@ import java.util.Enumeration;
 import java.util.List;
 
 import dao.DonneeDAO;
-import dao.ValidationDAO; // Ajouté
-import dao.WorkflowDAO;   // Ajouté
+import dao.ValidationDAO;
+import dao.WorkflowDAO;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,114 +19,91 @@ import model.Utilisateur;
 @WebServlet("/etapeController")
 public class EtapeControllerglobal extends HttpServlet {
 
-	private void chargerReferentiels(HttpServletRequest request) {
-	    dao.DonneeDAO donneeDao = new dao.DonneeDAO();
-	    
-	    // --- TYPES STANDARDS (Blocs 1 à 6) ---
-	    request.setAttribute("optionsBool",       donneeDao.getValeursContraintes("Bool"));
-	    request.setAttribute("optionsClient",     donneeDao.getValeursContraintes("client"));
-	    request.setAttribute("optionsMarque",     donneeDao.getValeursContraintes("Marque"));
-	    request.setAttribute("optionsReponse",    donneeDao.getValeursContraintes("reponse"));
-	    request.setAttribute("optionsRayon",      donneeDao.getValeursContraintes("rayon"));
-	    request.setAttribute("optionsFamille",    donneeDao.getValeursContraintes("famille"));
-	    
-	    // --- TYPES TECHNIQUES (Logistique / DOP / Méthodes) ---
-	    request.setAttribute("optionsUO",         donneeDao.getValeursContraintes("unite oeuvre"));
-	    request.setAttribute("optionsRoutage",    donneeDao.getValeursContraintes("Routage machine"));
-	    request.setAttribute("optionsCapacitaire", donneeDao.getValeursContraintes("Capacitaire"));
-	    request.setAttribute("optionsFlux",       donneeDao.getValeursContraintes("flux/stock"));
-	    // --- TYPES DE VALIDATION (QHE / CDG / Final) ---
-	    request.setAttribute("optionsAvis",       donneeDao.getValeursContraintes("avis"));
-	    request.setAttribute("optionsnormalite",  donneeDao.getValeursContraintes("normalite"));
-	    request.setAttribute("optionsFinalite",   donneeDao.getValeursContraintes("finalite"));
-	    request.setAttribute("optionsDifficulte", donneeDao.getValeursContraintes("difficulte"));
-	}
+    private void chargerReferentiels(HttpServletRequest request) {
+        dao.DonneeDAO donneeDao = new dao.DonneeDAO();
+        
+        request.setAttribute("optionsBool",       donneeDao.getValeursContraintes("Bool"));
+        request.setAttribute("optionsClient",     donneeDao.getValeursContraintes("client"));
+        request.setAttribute("optionsMarque",     donneeDao.getValeursContraintes("Marque"));
+        request.setAttribute("optionsReponse",    donneeDao.getValeursContraintes("reponse"));
+        request.setAttribute("optionsRayon",      donneeDao.getValeursContraintes("rayon"));
+        request.setAttribute("optionsFamille",    donneeDao.getValeursContraintes("famille"));
+        request.setAttribute("optionsUO",         donneeDao.getValeursContraintes("unite oeuvre"));
+        request.setAttribute("optionsRoutage",    donneeDao.getValeursContraintes("Routage machine"));
+        request.setAttribute("optionsCapacitaire", donneeDao.getValeursContraintes("Capacitaire"));
+        request.setAttribute("optionsFlux",       donneeDao.getValeursContraintes("flux/stock"));
+        request.setAttribute("optionsAvis",       donneeDao.getValeursContraintes("avis"));
+        request.setAttribute("optionsnormalite",  donneeDao.getValeursContraintes("normalite"));
+        request.setAttribute("optionsFinalite",   donneeDao.getValeursContraintes("finalite"));
+        request.setAttribute("optionsDifficulte", donneeDao.getValeursContraintes("difficulte"));
+    }
 
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) 
-	        throws ServletException, IOException {
-	    
-	    // 1. Récupération sécurisée des paramètres
-	    String idWfStr = request.getParameter("id_workflow");
-	    String nStr = request.getParameter("n");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        
+        String idWfStr = request.getParameter("id_workflow");
+        String nStr = request.getParameter("n");
 
-	    if (idWfStr == null || nStr == null) {
-	        response.sendRedirect(request.getContextPath() + "/index.jsp");
-	        return;
-	    }
+        if (idWfStr == null || nStr == null) {
+            response.sendRedirect(request.getContextPath() + "/index.jsp");
+            return;
+        }
 
-	    int idWf = Integer.parseInt(idWfStr);
-	    int n = Integer.parseInt(nStr);
+        int idWf = Integer.parseInt(idWfStr);
+        int n = Integer.parseInt(nStr);
 
-	    // 2. Initialisation des DAOs
-	    dao.WorkflowDAO wfDao = new dao.WorkflowDAO();
-	    dao.DonneeDAO donneeDao = new dao.DonneeDAO();
-	    dao.RoleDAO roleDao = new dao.RoleDAO(); // Instance du nouveau DAO
-	    dao.ValidationDAO valDao = new dao.ValidationDAO(); // Instance du DAO
+        dao.WorkflowDAO wfDao = new dao.WorkflowDAO();
+        dao.DonneeDAO donneeDao = new dao.DonneeDAO();
+        dao.RoleDAO roleDao = new dao.RoleDAO();
+        dao.ValidationDAO valDao = new dao.ValidationDAO();
 
-	    // 3. Récupération des objets métier
-	    model.Workflow wf = wfDao.getById(idWf);
-	    HttpSession session = request.getSession();
-	    model.Utilisateur user = (model.Utilisateur) session.getAttribute("user");
-	    
-	    boolean isAdmin = (user != null && user.getRole() == 11 || roleDao.canAccessEtape(user.getRole(), 11)); // 11 = PATRON
-	    boolean hasAccess = false;
-	    if (user != null) {
-	        // On vérifie si une ligne existe dans la table 'droit' pour ce rôle et cette étape
-	        hasAccess = roleDao.canAccessEtape(user.getRole(), n) || user.getRole() == n;
-	        
-	    }
+        model.Workflow wf = wfDao.getById(idWf);
+        HttpSession session = request.getSession();
+        model.Utilisateur user = (model.Utilisateur) session.getAttribute("user");
+        
+        boolean isAdmin = (user != null && user.getRole() == 11 || roleDao.canAccessEtape(user.getRole(), 11));
+        boolean hasAccess = false;
+        if (user != null) {
+            hasAccess = roleDao.canAccessEtape(user.getRole(), n) || user.getRole() == n;
+        }
 
-	    // 4. Chargement des référentiels pour les listes (optionsAvis, optionsBool, etc.)
-	    chargerReferentiels(request);
+        chargerReferentiels(request);
 
-	    // 5. Calcul de l'état du workflow et des droits
-	    int etapeMax = 0;
-	    try {
-	        etapeMax = valDao.getDerniereEtapeValidee(idWf);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+        int etapeMax = 0;
+        try {
+            etapeMax = valDao.getDerniereEtapeValidee(idWf);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-	    boolean isClosed = (wf != null && wf.getDateFinalisation() != null);
-	    boolean canEdit = isAdmin || (hasAccess && !isClosed);
+        boolean isClosed = (wf != null && wf.getDateFinalisation() != null);
+        boolean canEdit = isAdmin || (hasAccess && !isClosed);
 
-	    // 6. On force la création de l'étape si elle n'existe pas (pour avoir les labels)
-	    donneeDao.creerEtapeWorkflow(idWf, n);
-	    
-	    // 7. Récupération des données après création potentielle
-	    List<model.Donnee> donneesEtape = donneeDao.getDonneesByEtape(idWf, n);
+        donneeDao.creerEtapeWorkflow(idWf, n);
+        List<model.Donnee> donneesEtape = donneeDao.getDonneesByEtape(idWf, n);
 
-	    // 8. Envoi des attributs à la JSP
-	    request.setAttribute("wf", wf);
-	    request.setAttribute("numEtape", n);
-	    request.setAttribute("id_workflow", idWf);
-	    request.setAttribute("donneesEtape", donneesEtape);
-	    request.setAttribute("derniereEtape", etapeMax);
-	    request.setAttribute("isAdmin", isAdmin);
-	    request.setAttribute("hasAccess", hasAccess);
-	    request.setAttribute("canEdit", canEdit);
-	    request.setAttribute("isClosed", isClosed);
+        request.setAttribute("wf", wf);
+        request.setAttribute("numEtape", n);
+        request.setAttribute("id_workflow", idWf);
+        request.setAttribute("donneesEtape", donneesEtape);
+        request.setAttribute("derniereEtape", etapeMax);
+        request.setAttribute("isAdmin", isAdmin);
+        request.setAttribute("hasAccess", hasAccess);
+        request.setAttribute("canEdit", canEdit);
+        request.setAttribute("isClosed", isClosed);
 
-	    // 9. LOGIQUE DE ROUTAGE :
-	    // On va vers la VISUALISATION si :
-	    // - L'étape est déjà remplie
-	    // - OU le workflow est terminé (isClosed)
-	    // - OU l'utilisateur n'a pas les droits d'édition
-	    if ( (donneesEtape != null && !donneesEtape.isEmpty()) || isClosed || !canEdit ) {
-	        request.getRequestDispatcher("/View/etape/visualisationDonnee.jsp").forward(request, response);
-	    } 
-	    // Sinon, on va vers le formulaire de saisie vierge
-	    else {
-	        String[] suffixes = {"", "_entre", "_condi", "_appro", "_supply", "_logistique", "_qhe", "_DOP", "_methodes", "_cdg", "_final"};
-	        String suffixe = (n >= 1 && n <= suffixes.length) ? suffixes[n] : "";
-	        request.getRequestDispatcher("/View/etape/Etape" + n + suffixe + ".jsp").forward(request, response);
-	    }
-	}
+        if ((donneesEtape != null && !donneesEtape.isEmpty()) || isClosed || !canEdit) {
+            request.getRequestDispatcher("/View/etape/visualisationDonnee.jsp").forward(request, response);
+        } else {
+            String[] suffixes = {"", "_entre", "_condi", "_appro", "_supply", "_logistique", "_qhe", "_DOP", "_methodes", "_cdg", "_final"};
+            String suffixe = (n >= 1 && n <= suffixes.length) ? suffixes[n] : "";
+            request.getRequestDispatcher("/View/etape/Etape" + n + suffixe + ".jsp").forward(request, response);
+        }
+    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
     	
-        // 1. Récupération des IDs de base
         String idWorkStr = request.getParameter("id_workflow");
         String nbEtapeStr = request.getParameter("current_n");
 
@@ -145,18 +122,15 @@ public class EtapeControllerglobal extends HttpServlet {
         HttpSession session = request.getSession();
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
-        // 2. NETTOYAGE : Sécurité pour éviter les doublons si l'utilisateur a cliqué deux fois
+        // Nettoyage sécurisé anti-doublons
         donneeDao.deleteDonneesByEtape(idWorkflow, nbEtape);
 
-        // 3. BOUCLE DYNAMIQUE sur les paramètres
-        // On cherche tous les paramètres qui commencent par "type_" pour identifier chaque ligne
         java.util.Enumeration<String> parameterNames = request.getParameterNames();
         
         while (parameterNames.hasMoreElements()) {
             String pName = parameterNames.nextElement();
             
             if (pName.startsWith("type_")) {
-                // On extrait le suffixe (ex: "machine", "essais", "avis")
                 String suffixe = pName.substring(5); 
 
                 String valType = request.getParameter("type_" + suffixe);
@@ -165,7 +139,6 @@ public class EtapeControllerglobal extends HttpServlet {
                 String valComm = request.getParameter("comm_" + suffixe);
                 String valDate = request.getParameter("date_" + suffixe);
 
-                // On n'insère que si l'attribut n'est pas vide
                 if (valAttr != null && !valAttr.trim().isEmpty()) {
                     model.Donnee d = new model.Donnee();
                     d.setType(valType);
@@ -173,8 +146,14 @@ public class EtapeControllerglobal extends HttpServlet {
                     d.setAttribut(valAttr.trim());
                     d.setCommentaire(valComm);
                     
-                    // Conversion de la date si elle existe
-                    if (valDate != null && !valDate.isEmpty()) {
+                    // =========================================================================
+                    // ATTRIBUTION DE LA DATE ACTUELLE POUR LES ÉTAPES 7 ET 10
+                    // =========================================================================
+                    if ((nbEtape == 7 || nbEtape == 10) && "avis".equals(suffixe)) {
+                        // Injection forcée de la date système actuelle (SQL Date)
+                        d.setDate(new java.sql.Date(System.currentTimeMillis()));
+                    } else if (valDate != null && !valDate.isEmpty()) {
+                        // Traitement classique si une date provient d'un formulaire
                         try {
                             d.setDate(java.sql.Date.valueOf(valDate));
                         } catch (Exception e) {
@@ -182,18 +161,16 @@ public class EtapeControllerglobal extends HttpServlet {
                         }
                     }
 
-                    // Insertion finale
+                    // Insertion en base de données
                     donneeDao.insertDonnee(d, idWorkflow, nbEtape);
                 }
             }
         }
 
-        // 4. VALIDATION ET CLÔTURE
+        // Validation fonctionnelle de l'étape et cloture
         try {
-            // Enregistre que l'utilisateur a fini cette étape
             valDao.validerEtape(idWorkflow, user.getId(), nbEtape);
 
-            // Vérification pour la clôture (DOP/DCD)
             String avisFinal = request.getParameter("attr_avis");
             if (avisFinal != null) {
                 boolean isDefavorable = avisFinal.equalsIgnoreCase("Non faisable") 
@@ -208,7 +185,5 @@ public class EtapeControllerglobal extends HttpServlet {
         }
         
         response.sendRedirect(request.getContextPath() + "/details?id=" + idWorkflow);
-
-
     }
 }

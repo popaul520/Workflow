@@ -24,7 +24,7 @@
         <input type="hidden" name="id_workflow" value="${param.id_workflow}">
         <input type="hidden" name="current_n" value="7">
 
-        <%-- --- BLOC 1 : AVIS D.O.P. (DISSOCIÉ : Nom=Avis D.O.P., Ref=avis) --- --%>
+        <%-- --- BLOC 1 : AVIS D.O.P. (La date est gérée automatiquement côté serveur) --- --%>
         <div class="bloc-donnee" style="margin-bottom: 25px; padding: 20px; border: 2px solid #c0392b; border-radius: 5px; background-color: #fdf2f2;">
             <input type="hidden" name="type_avis" value="Avis D.O.P."> 
             <input type="hidden" name="ref_avis" value="avis"> 
@@ -44,7 +44,6 @@
 
         <%-- --- BLOC 2 : ACTIONS À LEVER (Saisie Libre) --- --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
-            <%-- Ici, type = Action(s) à lever, saisie textuelle --%>
             <input type="hidden" name="type_actions" value="Action(s) à lever">
             
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Action(s) à lever (Attribut) :</label>

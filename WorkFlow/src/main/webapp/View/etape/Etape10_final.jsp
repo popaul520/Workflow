@@ -24,7 +24,7 @@
         <input type="hidden" name="id_workflow" value="${param.id_workflow}">
         <input type="hidden" name="current_n" value="10">
 
-        <%-- --- BLOC UNIQUE : AVIS D.C.D. --- --%>
+        <%-- --- BLOC UNIQUE : AVIS D.C.D. (La date est gérée automatiquement côté serveur) --- --%>
         <div class="bloc-donnee" style="margin-bottom: 25px; padding: 25px; border: 2px solid #2980b9; border-radius: 5px; background-color: #f0f7fc;">
             <input type="hidden" name="type_avis" value="Avis D.C.D."> 
             <input type="hidden" name="ref_avis" value="avis"> 
@@ -36,6 +36,7 @@
                     <option value="${opt}">${opt}</option>
                 </c:forEach>
             </select>
+            
             <label style="display: block; font-weight: bold; margin-bottom: 8px;">Commentaire(s) de clôture :</label>
             <textarea name="comm_avis" placeholder="Synthèse finale, conditions de mise en marché, ou raisons du refus..." 
                       style="width: 100%; padding: 12px; height: 150px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></textarea>
