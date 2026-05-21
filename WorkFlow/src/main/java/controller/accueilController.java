@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpSession;
 import dao.DonneeDAO;
 import dao.ValidationDAO;
 import dao.WorkflowDAO;
-import dao.RoleDAO; // Importation nécessaire
+import dao.RoleDAO; 
 import model.Workflow;
 import model.Utilisateur;
 
@@ -64,10 +64,10 @@ public class accueilController extends HttpServlet {
                 int lastStep = vDao.getDerniereEtapeValidee(wf.getId());
                 boolean isClosed = (wf.getDateFinalisation() != null);
 
-                // --- LOGIQUE A : ACTIONS EN ATTENTE ---
+                // ---  ACTIONS EN ATTENTE ---
                 if (!isClosed) {
                     
-                    // 1. BLOC PARALLÈLE (Étapes 2 à 6)
+                    // 1. BLOC  (Étapes 2 à 6)
                     // On ne peut commencer que si l'étape 1 est faite
                     if (etapesValidees.contains(1)) {
                         boolean bloc2to6Complet = true;
@@ -82,7 +82,7 @@ public class accueilController extends HttpServlet {
                         }
 
                         // 2. BLOC EN SÉRIE (Étapes 7 à 10)
-                        // Le verrou : l'étape 7 ne s'ouvre que si le bloc 1-6 est TOTALEMENT fini
+                        // Le verrou : l'étape 7 ne s'ouvre que si le bloc 1-6 est fait
                         if (bloc2to6Complet) {
                             int nextStep = (lastStep < 7) ? 7 : lastStep + 1;
                             

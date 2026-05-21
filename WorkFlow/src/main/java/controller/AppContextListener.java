@@ -6,13 +6,12 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import model.Utilisateur;
 
-@WebListener // <-- CETTE ANNOTATION EST OBLIGATOIRE
+@WebListener
 public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         System.out.println("********** INITIALISATION DU DAO **********");
-        // On l'enregistre sous le nom exact "roleDAO"
         sce.getServletContext().setAttribute("roleDAO", new RoleDAO());
         
 
@@ -20,6 +19,5 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        // Optionnel
     }
 }

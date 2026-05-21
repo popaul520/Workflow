@@ -28,9 +28,6 @@ public class UtilisateurDAO {
                 u.setNom(rs.getString("nom"));
                 u.setPrenom(rs.getString("prenom"));
                 u.setMail(rs.getString("mail"));
-                
-                // --- TRÈS IMPORTANT : Récupérer le rôle ---
-                // C'est cette ligne qui permet à user.canAccessStep() de fonctionner
                 u.setRole(rs.getInt("role"));
                 return u;
             }

@@ -147,8 +147,10 @@ public class TemplateDAO {
                     etape.setId(rs.getInt("id"));
                     etape.setIdTemplateWorkflow(rs.getInt("id_template_workflow"));
                     etape.setNomEtape(rs.getString("nom_etape"));
-                    etape.setAttentePlace(rs.getInt("place")); 
+                    etape.setPlace(rs.getInt("place")); 
+                    
                     etape.setRoleAssocie(rs.getInt("role_associe")); 
+                    etape.setEstFinale(rs.getBoolean("est_finale"));
                 }
             }
         } catch (SQLException e) {
@@ -172,7 +174,10 @@ public class TemplateDAO {
                     etape.setId(rs.getInt("id"));
                     etape.setIdTemplateWorkflow(rs.getInt("id_template_workflow"));
                     etape.setNomEtape(rs.getString("nom_etape"));
-                    etape.setAttentePlace(rs.getInt("place")); 
+                    
+                    // 🛠️ FIX ICI : Utilise setPlace pour que ${etape.place} fonctionne dans la JSP
+                    etape.setPlace(rs.getInt("place")); 
+                    
                     etape.setRoleAssocie(rs.getInt("role_associe"));
                     liste.add(etape);
                 }

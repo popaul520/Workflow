@@ -37,7 +37,7 @@ public class pdfController extends HttpServlet {
             int idWf = Integer.parseInt(idWfStr);
             DonneeDAO dao = new DonneeDAO();
             
-            // On récupère toutes les données du workflow (Assure-toi d'avoir cette méthode dans ton DAO)
+            // récupère toutes les données du workflow
             List<Donnee> listeComplete = dao.getAllDonneesByWorkflow(idWf);
 
             // 3. Appel de ta classe security.PdfDocument pour générer le byte[]

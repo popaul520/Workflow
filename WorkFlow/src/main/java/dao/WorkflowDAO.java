@@ -92,7 +92,6 @@ public class WorkflowDAO {
 	                wf.setDateFinalisation(rs.getDate("date_finalisation")); 
 	                wf.setCommentaire(rs.getString("commentaire"));
 	                wf.setIdUtilisateur(rs.getString("id_utilisateur")); 
-	             // DANS WorkflowDAO.java (méthode de mapping ou getById)
 	               wf.setIdTemplateWorkflow((rs.getInt("id_template_workflow")));; // Vérifie le nom exact de ta colonne SQL
 	            }
 	        }
@@ -104,19 +103,18 @@ public class WorkflowDAO {
 	
 public int create(model.Workflow wf) {
     // On n'utilise que les colonnes qui existent vraiment dans ta table : titre et date_creation
-    String sql = "INSERT INTO workflow (titre, date_creation, id_template_workflow) VALUES (?, ?, ?)";
+    String sql = "INSERT INTO workflow (titre, date_creation, id_template_workflow, commentaire) VALUES (?, ?, ?, ?)";
     int generatedId = -1;
 
     try (Connection con = DBConnection.getConnection();
          PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-        
-        // Paramètre 1 : titre
-        ps.setString(1, wf.getTitre());
-        
-        // Paramètre 2 : date_creation
+
+    	ps.setString(1, wf.getTitre());
         ps.setTimestamp(2, new java.sql.Timestamp(wf.getDateCreation().getTime()));
 
         ps.setInt(3, wf.getIdTemplateWorkflow());
+        ps.setString(4, wf.getCommentaire()); 
+
         ps.executeUpdate();
 
         try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -136,8 +134,6 @@ public int create(model.Workflow wf) {
 	 */
 	public void finaliserWorkflow(int idWf) {
 	    String sql = "UPDATE workflow SET date_finalisation = CURRENT_DATE WHERE id = ?";
-	    
-	    // Utilisation du try-with-resources pour fermer automatiquement la connexion
 	    try (java.sql.Connection conn = dao.DBConnection.getConnection(); 
 	         java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
 	        
@@ -152,7 +148,7 @@ public int create(model.Workflow wf) {
 	        e.printStackTrace();
 	    }
 	}
-	
+
 	// Récupère les dossiers finis (Clôturés)
 	public List<Workflow> getWorkflowsTermines() {
 	    List<Workflow> list = new ArrayList<>();
@@ -205,16 +201,14 @@ public int create(model.Workflow wf) {
 	private Workflow mapResultSetToWorkflow(ResultSet rs) throws SQLException {
 	    Workflow wf = new Workflow();
 	    
-	    // Mapping des colonnes de la table 'workflow' vers les attributs de l'objet
 	    wf.setId(rs.getInt("id"));
 	    wf.setTitre(rs.getString("titre"));
 	    
-	    // Gestion des dates (on utilise getTimestamp pour garder heure/minute si besoin)
-	    // java.sql.Timestamp est compatible avec java.util.Date
+	    // Gestion des dates 
+	    // java.sql.Timestamp
 	    wf.setDateCreation(rs.getTimestamp("date_creation"));
 	    wf.setDateFinalisation(rs.getTimestamp("date_finalisation"));
 	    
-	    // Si tu as d'autres colonnes comme 'description' ou 'id_createur' :
 	    // wf.setDescription(rs.getString("description"));
 	    
 	    return wf;
@@ -223,7 +217,7 @@ public int create(model.Workflow wf) {
 	
 	public List<Workflow> searchWorkflows(String query) {
 	    List<Workflow> list = new ArrayList<>();
-	    // On cherche si l'ID contient la chaîne OU si le titre contient la chaîne
+	    // On cherche si l'ID contient la chaîne ou si le titre contient la chaîne
 	    String sql = "SELECT * FROM workflow WHERE CAST(id AS CHAR) LIKE ? OR titre LIKE ? ORDER BY date_creation DESC";
 	    
 	    try (Connection con = DBConnection.getConnection();

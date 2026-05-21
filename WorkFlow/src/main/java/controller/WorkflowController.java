@@ -75,7 +75,7 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
     wf.setDateCreation(new java.util.Date());
     
     dao.WorkflowDAO wfDao = new dao.WorkflowDAO();
-    // La méthode create doit retourner l'ID généré (SERIAL)
+    // La méthode create retourne l'ID
     int idWf = wfDao.create(wf); 
 
     if (idWf > 0) {

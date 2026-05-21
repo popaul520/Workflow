@@ -23,7 +23,6 @@ public class EtapeDAO {
                 etape = new Etape();
                 etape.setNbEtape(rs.getInt("nb_etape"));
                 etape.setRole(rs.getString("role"));
-                // Tu peux charger l'objet Workflow ici si besoin
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -25,7 +25,7 @@ public class TemplateDonneeController extends HttpServlet {
             donneeDAO.deleteDonnee(Integer.parseInt(request.getParameter("id")));
         }
 
-        request.setAttribute("etape", etapeDAO.getEtapeById(idEtape)); // À ajouter dans ton EtapeDAO
+        request.setAttribute("etape", etapeDAO.getEtapeById(idEtape)); 
         request.setAttribute("donnees", donneeDAO.getDonneesByEtape(idEtape));
         request.getRequestDispatcher("/View/templateDonnee.jsp").forward(request, response);
     }

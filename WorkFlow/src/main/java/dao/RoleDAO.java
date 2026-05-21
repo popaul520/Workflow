@@ -113,7 +113,7 @@ public class RoleDAO {
     
     
     public static boolean canAccessEtape(int roleId, int etape) {
-    	    	if(roleId == etape) {
+    	if(roleId == etape) {
     		return true;
     	}
         boolean access = false;
@@ -123,6 +123,35 @@ public class RoleDAO {
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, roleId);
             ps.setInt(2, etape);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    access = rs.getBoolean(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return access;
+    }
+    
+    public static boolean canAccessEtape(int roleId, int idWorkflow, int numEtape) {
+        boolean access = false;
+        
+        // On va chercher si le rôle de l'utilisateur correspond au role_associe 
+        // défini dans le template d'étape lié à l'instance de ce workflow
+        String sql = "SELECT EXISTS(" +
+                     "  SELECT 1 FROM template_etape te " +
+                     "  JOIN workflow w ON w.id_template_workflow = te.id_template_workflow " +
+                     "  WHERE w.id = ? AND te.place = ? AND te.role_associe = ?" +
+                     ")";
+                     
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setInt(1, idWorkflow);
+            ps.setInt(2, numEtape);
+            ps.setInt(3, roleId);
+            
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     access = rs.getBoolean(1);

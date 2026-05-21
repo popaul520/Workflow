@@ -34,7 +34,7 @@ public class AdminRoleController extends HttpServlet {
 
         	    List<Integer> roleEtapes = roleDao.getEtapesByRole(id);
         	    Map<Integer, String> allRolesMap = roleDao.getAllRoleNames(); 
-        	    allRolesMap.remove(id); // Enlève le rôle de la visualisation
+        	    allRolesMap.remove(id); 
 
         	    List<Integer> etapesDisponibles = new ArrayList<>();
         	    for (int i = 1; i <= 12; i++) { //pour le déroulant
@@ -71,7 +71,7 @@ public class AdminRoleController extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Force l'encodage pour récupérer correctement les accents (ex: PRODUCTION)
+        // Force l'encodage pour récupérer les accents (ex: PRODUCTION)
         request.setCharacterEncoding("UTF-8");
         
         RoleDAO roleDao = new RoleDAO();

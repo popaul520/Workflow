@@ -5,8 +5,8 @@ import java.util.Enumeration;
 import java.util.List;
 
 import dao.DonneeDAO;
-import dao.ValidationDAO; // Ajouté
-import dao.WorkflowDAO;   // Ajouté
+import dao.ValidationDAO; 
+import dao.WorkflowDAO;    
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -46,9 +46,8 @@ public class EtapeControllerglobal extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) 
 	        throws ServletException, IOException {
-	    
-	    // 1. Récupération sécurisée des paramètres
-	    String idWfStr = request.getParameter("id_workflow");
+		//1. recupération parametre
+	 	    String idWfStr = request.getParameter("id_workflow");
 	    String nStr = request.getParameter("n");
 
 	    if (idWfStr == null || nStr == null) {
@@ -62,23 +61,23 @@ public class EtapeControllerglobal extends HttpServlet {
 	    // 2. Initialisation des DAOs
 	    dao.WorkflowDAO wfDao = new dao.WorkflowDAO();
 	    dao.DonneeDAO donneeDao = new dao.DonneeDAO();
-	    dao.RoleDAO roleDao = new dao.RoleDAO(); // Instance du nouveau DAO
-	    dao.ValidationDAO valDao = new dao.ValidationDAO(); // Instance du DAO
+	    dao.RoleDAO roleDao = new dao.RoleDAO(); 
+	    dao.ValidationDAO valDao = new dao.ValidationDAO();
 
 	    // 3. Récupération des objets métier
 	    model.Workflow wf = wfDao.getById(idWf);
 	    HttpSession session = request.getSession();
 	    model.Utilisateur user = (model.Utilisateur) session.getAttribute("user");
 	    
-	    boolean isAdmin = (user != null && user.getRole() == 11 || roleDao.canAccessEtape(user.getRole(), 11)); // 11 = PATRON
+	    boolean isAdmin = (user != null && user.getRole() == 11 || roleDao.canAccessEtape(user.getRole(), 11));   // 11 = ADMIN
 	    boolean hasAccess = false;
 	    if (user != null) {
-	        // On vérifie si une ligne existe dans la table 'droit' pour ce rôle et cette étape
+	        // On vérifie si une ligne existe dans la table 'droit'
 	        hasAccess = roleDao.canAccessEtape(user.getRole(), n) || user.getRole() == n;
 	        
 	    }
 
-	    // 4. Chargement des référentiels pour les listes optionsAvis, optionsBool, etc.
+	    // 4. Chargement pour les listes optionsAvis, optionsBool, etc.
 	    chargerReferentiels(request);
 
 	    // 5. Calcul de l'état du workflow et des droits
@@ -92,7 +91,7 @@ public class EtapeControllerglobal extends HttpServlet {
 	    boolean isClosed = (wf != null && wf.getDateFinalisation() != null);
 	    boolean canEdit = isAdmin || (hasAccess && !isClosed);
 
-	    // 6. On force la création de l'étape si elle n'existe pas (pour avoir les labels)
+	    // 6. On force la création de l'étape si elle n'existe pas
 	    donneeDao.creerEtapeWorkflow(idWf, n);
 	    
 	    // 7. Récupération des données après création potentielle

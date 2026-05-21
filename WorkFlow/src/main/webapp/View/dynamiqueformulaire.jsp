@@ -36,6 +36,7 @@
             <h1>Suivi & Saisie Dossier <span class="status-badge">#${workflow.id}</span></h1>
             <p class="text-muted">Projet en cours : <strong>${workflow.titre}</strong></p>
         </div>
+        
 
         <div class="navigation-etapes">
             <h3 style="border-left: 5px solid #3498db; padding-left: 15px;">Cycle de validation du modèle</h3>

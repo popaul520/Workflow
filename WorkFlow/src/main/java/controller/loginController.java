@@ -45,7 +45,7 @@ public class loginController extends HttpServlet {
                 guestUser.setNom("Visiteur");
                 guestUser.setLogin("guest_" + System.currentTimeMillis());
                 
-                // On définit l'ID du rôle invité (ex: 99)
+                // On définit l'ID du rôle invité 
                 int guestRoleId = 99; 
                 guestUser.setRole(guestRoleId);
 

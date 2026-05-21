@@ -44,4 +44,6 @@ public class template_donnee implements Serializable {
     
     public String getRefContrainte() { return refContrainte; }
     public void setRefContrainte(String refContrainte) { this.refContrainte = refContrainte; }
+    
+    
 }

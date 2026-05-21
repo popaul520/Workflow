@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ValidationDAO {
-	public void validerEtape(int idWf, int idUser, int nEtape) throws SQLException {
+	public static void validerEtape(int idWf, int idUser, int nEtape) throws SQLException {
 	    // Cette requête insère, et si le couple (id_workflow, etape) existe déjà, 
 	    // elle met simplement à jour la date et l'utilisateur.
 	    String sql = "INSERT INTO validation (id_workflow, id_personne, etape, date) " +

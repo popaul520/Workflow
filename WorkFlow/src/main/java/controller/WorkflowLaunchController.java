@@ -18,6 +18,7 @@ public class WorkflowLaunchController extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // On récupère les templates pour que l'utilisateur choisisse
+    	
         request.setAttribute("templates", templateDao.getAllTemplates());
         request.getRequestDispatcher("/View/choisirTemplate.jsp").forward(request, response);
     }
@@ -35,8 +36,7 @@ public class WorkflowLaunchController extends HttpServlet {
         int idGenere = workflowDao.create(newWf);
 
         if (idGenere > 0) {
-            // 2. Redirection DIRECTE vers le contrôleur de saisie pour l'étape 1
-            // On passe l'ID du workflow nouvellement créé
+            // 2. Redirection vers le contrôleur de saisie pour l'étape 1
             response.sendRedirect("saisie-etape?id_workflow=" + idGenere + "&num_etape=1");
         } else {
             response.sendRedirect("lancer-workflow?error=1");

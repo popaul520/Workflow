@@ -16,14 +16,12 @@ import model.Etape;
 import model.Utilisateur;
 import model.Workflow;
 
-@WebServlet("/etape") // Attention au nom, assure-toi qu'il matche tes appels Fetch/Form
+@WebServlet("/etape")
 public class etapeController extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        
-        // Ta logique actuelle pour charger le fragment d'étape...
-        // (Généralement tu récupères n et id_workflow ici pour charger les données)
+
         
         request.getRequestDispatcher("View/etape.jsp").forward(request, response);
     }
@@ -38,13 +36,13 @@ public class etapeController extends HttpServlet {
         int nbEtape = Integer.parseInt(nbEtapeStr);
         
         dao.DonneeDAO donneeDao = new dao.DonneeDAO();
-        dao.ValidationDAO valDao = new dao.ValidationDAO(); // Nouveau
-        dao.WorkflowDAO wfDao = new dao.WorkflowDAO();     // Nouveau
+        dao.ValidationDAO valDao = new dao.ValidationDAO();
+        dao.WorkflowDAO wfDao = new dao.WorkflowDAO();    
 
         HttpSession session = request.getSession();
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
-        // --- 1. SAUVEGARDE DES DONNÉES (Ton code existant) ---
+        // --- 1. SAUVEGARDE DES DONNÉES ---
         boolean isUpdateMode = request.getParameter("idDonne_0") != null;
         if (!isUpdateMode) {
             donneeDao.deleteDonneesByEtape(idWorkflow, nbEtape);
@@ -55,14 +53,11 @@ public class etapeController extends HttpServlet {
             String pName = params.nextElement();
             if (pName.startsWith("type_")) {
                 String suffixe = pName.substring(5); 
-                // ... (ton code de récupération valType, valAttr, etc.)
-                // ... (ton code de d.insertDonnee ou updateDonnee)
             }
         }
 
-        // --- 2. LOGIQUE DE VALIDATION ET PROGRESSION (Nouveau) ---
+        // --- 2. LOGIQUE DE VALIDATION ET PROGRESSION---
         try {
-            // On enregistre qui a validé cette étape et quand
             valDao.validerEtape(idWorkflow, user.getId(), nbEtape);
 
             // Cas particuliers pour la fin du workflow

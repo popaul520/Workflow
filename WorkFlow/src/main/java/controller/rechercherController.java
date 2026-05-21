@@ -25,7 +25,7 @@ public class rechercherController extends HttpServlet {
             results = wfDao.getAll(); // Si recherche vide, on montre tout
         }
 
-        // On renvoie vers a.jsp avec les résultats
+        // On renvoie vers a jsp avec result
         request.setAttribute("workflows", results);
         request.setAttribute("currentStatus", "Résultats de recherche pour : " + query);
         request.getRequestDispatcher("/View/accueil.jsp").forward(request, response);

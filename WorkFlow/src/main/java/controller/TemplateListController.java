@@ -26,7 +26,7 @@ public class TemplateListController extends HttpServlet {
             try {
                 int id = Integer.parseInt(idStr);
                 dao.deleteTemplate(id);
-                // On redirige pour nettoyer l'URL après suppression
+                // On redirige l'URL après suppression
                 response.sendRedirect("template-list");
                 return;
             } catch (NumberFormatException e) {

@@ -191,7 +191,7 @@
             // Mettre à jour le stepper (header)
             for(let i=1; i<=step; i++) {
                 document.getElementById('h-step-' + i).classList.add('active');
-            }
+            } 
         }
     </script>
 </body>

@@ -13,22 +13,18 @@ import model.Utilisateur;
 @WebServlet("/template-workflow")
 public class TemplateWorkflowController extends HttpServlet {
     
-    // GET : Affiche le formulaire (vide ou pré-rempli)
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParam = request.getParameter("id");
         
         if (idParam != null) {
-            // MODE MODIFICATION
             int id = Integer.parseInt(idParam);
             TemplateDAO dao = new TemplateDAO();
             request.setAttribute("template", dao.getTemplateById(id));
         }
-        // Sinon, requestAttribute "template" reste null -> MODE CRÉATION
         
         request.getRequestDispatcher("/View/templateWorkflow.jsp").forward(request, response);
     }
 
-    // POST : Traite l'enregistrement
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idStr = request.getParameter("id");
         String nom = request.getParameter("nom");
@@ -56,4 +52,6 @@ public class TemplateWorkflowController extends HttpServlet {
 
         }
     }
+    
+    
 }

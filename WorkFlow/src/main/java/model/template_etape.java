@@ -11,6 +11,7 @@ public class template_etape {
     private int attentePlace;
     private String nomEtape;
     private boolean estFinale;
+    private int ref_type_contrainte;
 
     // Getters et Setters
     public int getId() { return id; }
@@ -33,4 +34,7 @@ public class template_etape {
     
     public boolean isEstFinale() { return estFinale; }
     public void setEstFinale(boolean estFinale) { this.estFinale = estFinale; }
+    
+    public int gettype_contrainte() { return ref_type_contrainte; }
+    public void setType_contrainte(int type_contrainte) { this.ref_type_contrainte = ref_type_contrainte; }
 }
