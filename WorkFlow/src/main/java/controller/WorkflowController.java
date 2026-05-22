@@ -138,7 +138,6 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response)
 
         // 6. Redirection finale vers l'accueil ou le détail
         response.sendRedirect(request.getContextPath() + "/home");
-        
     } else {
         // Gestion d'erreur si le workflow n'a pas pu être créé
         request.setAttribute("erreur", "Impossible de créer le workflow.");

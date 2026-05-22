@@ -353,6 +353,9 @@
 				</c:otherwise>
 			</c:choose>
 		</div>
+		    <a href="${pageContext.request.contextPath}/downloadPdf?id=${wf.id}" class="btn-pdf">
+                📄 Télécharger le récapitulatif PDF
+            </a>
 	</div>
 
 	<script>
