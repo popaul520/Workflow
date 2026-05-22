@@ -166,17 +166,9 @@ input:focus, select:focus, textarea:focus {
 	border-left: 4px solid #dc3545;
 }
 
-
-
-@
-keyframes fadeIn {from { opacity:0;
-	transform: translateY(10px);
-}
-
-to {
-	opacity: 1;
-	transform: translateY(0);
-}
+@keyframes fadeIn {
+	from { opacity:0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
 }
 </style>
 </head>
@@ -194,9 +186,8 @@ to {
 		<div class="form-card">
 
 			<div class="stepper">
-				<span class="step-head active" id="h-step-1">1. SÉLECTION DU
-					MODÈLE</span> <span class="step-head" id="h-step-2">2.
-					CONFIGURATION INITIALE</span>
+				<span class="step-head active" id="h-step-1">1. SÉLECTION DU MODÈLE</span> 
+				<span class="step-head" id="h-step-2">2. CONFIGURATION INITIALE</span>
 			</div>
 
 			<c:if test="${not empty erreur}">
@@ -208,15 +199,13 @@ to {
 					<h2>1 - Spécifications de base du projet</h2>
 					<div class="grid-form">
 						<div class="form-group full">
-							<label>Libellé de l'article / Nom du Projet *</label> <input
-								type="text" name="titre" id="wf-titre" required
-								placeholder="Ex: Saucisson Sec 200g">
+							<label>Libellé de l'article / Nom du Projet *</label> 
+							<input type="text" name="titre" id="wf-titre" required placeholder="Ex: Saucisson Sec 200g">
 						</div>
 
 						<div class="form-group full">
-							<label>Modèle de cycle d'approbation (Template) *</label> <select
-								name="id_template" id="id_template" required
-								onchange="chargerChampsDynamiques(this.value)">
+							<label>Modèle de cycle d'approbation (Template) *</label> 
+							<select name="id_template" id="id_template" required onchange="chargerChampsDynamiques(this.value)">
 								<option value="">-- Choisir un modèle --</option>
 								<c:forEach var="t" items="${templates}">
 									<option value="${t.id}">${t.titre}</option>
@@ -226,29 +215,24 @@ to {
 
 						<div class="form-group full">
 							<label>Description / Objectif du projet</label>
-							<textarea name="commentaire_initial" rows="3"
-								placeholder="Notes complémentaires à l'ouverture..."></textarea>
+							<textarea name="commentaire_initial" rows="3" placeholder="Notes complémentaires à l'ouverture..."></textarea>
 						</div>
 					</div>
 
 					<div class="button-group">
 						<span></span>
-						<button type="button" class="btn btn-next" id="btn-passer-step2"
-							onclick="versEtapeSaisie()" disabled>Champs Étape 1 ➔</button>
+						<button type="button" class="btn btn-next" id="btn-passer-step2" onclick="versEtapeSaisie()" disabled>Champs Étape 1 ➔</button>
 					</div>
 				</div>
 
 				<div class="form-step" id="step-2">
-					<h2 id="titre-etape-dynamique">2 - Saisie des données
-						obligatoires (Étape 1)</h2>
+					<h2 id="titre-etape-dynamique">2 - Saisie des données obligatoires (Étape 1)</h2>
 
 					<div class="grid-form" id="conteneur-dynamique"></div>
 
 					<div class="button-group">
-						<button type="button" class="btn btn-prev"
-							onclick="changerEtapeVisuelle(1)">⬅ Retour</button>
-						<button type="submit" class="btn btn-submit">🚀 LANCER LE
-							WORKFLOW</button>
+						<button type="button" class="btn btn-prev" onclick="changerEtapeVisuelle(1)">⬅ Retour</button>
+						<button type="submit" class="btn btn-submit">🚀 LANCER LE WORKFLOW</button>
 					</div>
 				</div>
 
@@ -256,7 +240,7 @@ to {
 		</div>
 	</div>
 
-	<script>
+<script>
 let structureChamps = [];
 
 function chargerChampsDynamiques(idTemplate) {
@@ -270,16 +254,23 @@ function chargerChampsDynamiques(idTemplate) {
     fetch('creer-workflow?action=getChampsJson&id_template=' + idTemplate)
         .then(response => response.json())
         .then(data => {
-
-            console.log("DATA :", data); // DEBUG
-
+            console.log("DATA :", data);
             structureChamps = data;
 
-            // ✅ toujours reconstruire le formulaire
+            // Toujours reconstruire le formulaire dynamique
             construireFormulaireDynamique();
 
-            // ✅ activer bouton étape 2
+            // Activer le bouton de l'étape 2
             btn.disabled = false;
+            
+            // Si l'étape 1 est vide de données, on transforme le bouton en soumission directe
+            if (!structureChamps || structureChamps.length === 0) {
+                btn.innerHTML = "🚀 LANCER LE WORKFLOW DIRECTEMENT";
+                btn.className = "btn btn-submit";
+            } else {
+                btn.innerHTML = "Champs Étape 1 ➔";
+                btn.className = "btn btn-next";
+            }
         })
         .catch(err => {
             console.error("Erreur :", err);
@@ -291,32 +282,27 @@ function construireFormulaireDynamique() {
     conteneur.innerHTML = "";
 
     if (!structureChamps || structureChamps.length === 0) {
-        conteneur.innerHTML = "<p>Aucun champ pour cette étape.</p>";
-        conteneur.insertAdjacentHTML("beforeend",
-            `<input type="hidden" name="total_champs" value="0">`
-        );
+        conteneur.innerHTML = "<p class='full' style='color: #7f8c8d; font-style: italic;'>Aucun champ à renseigner pour ce modèle, vous pouvez lancer le projet directement.</p>";
+        conteneur.insertAdjacentHTML("beforeend", `<input type="hidden" name="total_champs" value="0">`);
         return;
     }
 
-    //  IMPORTANT
-    conteneur.insertAdjacentHTML("beforeend",
-        `<input type="hidden" name="total_champs" value="${structureChamps.length}">`
-    );
+    conteneur.insertAdjacentHTML("beforeend", `<input type="hidden" name="total_champs" value="${structureChamps.length}">`);
 
     structureChamps.forEach((champ, index) => {
-
+        // 🛠️ TOUS LES CHAMPS SONT OBLIGATOIRES : On affiche l'astérisque '*' d'office
         let html = `
             <div class="form-group">
-                <label>${champ.nomChamp} ${champ.estObligatoire ? '*' : ''}</label>
-				html += `<p>${champ.nomChamp}</p`
-                <input type="hidden" name="id_template_donnee_${index}" value="${champ.idTemplateDonnee}">
-                <input type="hidden" name="type_${index}" value="${champ.nomChamp}">
-                <input type="hidden" name="ref_${index}" value="${champ.refContrainte}">
+                <label>\${champ.nomChamp} *</label>				
+                <input type="hidden" name="id_template_donnee_${index}" value="\${champ.idTemplateDonnee}">
+                <input type="hidden" name="type_${index}" value="\${champ.nomChamp}">
+                <input type="hidden" name="ref_${index}" value="\${champ.refContrainte}">
         `;
-
+        
+        // 🛠️ TOUS LES INPUTS ET SELECTS ONT MAINTENANT L'ATTRIBUT 'required' EN DUR
         if (champ.refContrainte === 'Bool') {
             html += `
-                <select name="attr_${index}" ${champ.estObligatoire ? 'required' : ''}>
+                <select name="attr_${index}" required>
                     <option value="">-- Choisir --</option>
                     <option value="OUI">OUI</option>
                     <option value="NON">NON</option>
@@ -324,7 +310,7 @@ function construireFormulaireDynamique() {
             `;
         } else if (champ.refContrainte === 'avis') {
             html += `
-                <select name="attr_${index}" ${champ.estObligatoire ? 'required' : ''}>
+                <select name="attr_${index}" required>
                     <option value="">-- Choisir --</option>
                     <option value="Faisable">Faisable</option>
                     <option value="Non faisable">Non faisable</option>
@@ -333,28 +319,40 @@ function construireFormulaireDynamique() {
             `;
         } else {
             let typeInput = champ.typeComposant ? champ.typeComposant : "text";
-            html += `<input type="${typeInput}" name="attr_${index}" ${champ.estObligatoire ? 'required' : ''}>`;
+            html += `<input type="\${typeInput}" name="attr_${index}" required placeholder="Saisir la valeur...">`;
         }
 
+        // Si le champ demande un commentaire annexe, on le rend obligatoire aussi pour être cohérent
         if (champ.aCommentaire) {
-            html += `<input type="text" name="comm_${index}" placeholder="Commentaire...">`;
+            html += `<input type="text" name="comm_${index}" required placeholder="Commentaire obligatoire..." style="margin-top: 5px;">`;
         }
 
+        // Si le champ demande une date, elle devient obligatoire également
         if (champ.aDate) {
-            html += `<input type="date" name="date_${index}">`;
+            html += `<input type="date" name="date_${index}" required style="margin-top: 5px;">`;
         }
 
         html += `</div>`;
-
         conteneur.insertAdjacentHTML("beforeend", html);
     });
 }
 
 function versEtapeSaisie() {
-    if (!document.getElementById('wf-titre').value.trim()) {
-        alert("Veuillez saisir un titre");
+    // Validation native du Titre et du Modèle (Template) sur le premier écran
+    const titreField = document.getElementById('wf-titre');
+    const templateField = document.getElementById('id_template');
+
+    if (!titreField.reportValidity() || !templateField.reportValidity()) {
+        return; // Bloque si le titre ou le template n'est pas choisi
+    }
+
+    // Si aucune donnée dynamique, on traite directement l'envoi en base de données
+    if (!structureChamps || structureChamps.length === 0) {
+        document.getElementById('creationForm').submit();
         return;
     }
+
+    // Passage visuel à l'étape 2 (les champs dynamiques)
     changerEtapeVisuelle(2);
 }
 
@@ -365,7 +363,7 @@ function changerEtapeVisuelle(step) {
     document.getElementById('step-' + step).classList.add('active');
 
     for (let i = 1; i <= step; i++) {
-        			document.getElementById('h-step-' + i).classList.add('active');
+        document.getElementById('h-step-' + i).classList.add('active');
     }
 }
 </script>
