@@ -179,7 +179,7 @@
 
 
 <div class="grid-boutons">
-    <c:forEach var="i" begin="1" end="10">
+    <c:forEach var="i" begin="2" end="10">
         <%
             int iValue = (Integer) pageContext.getAttribute("i");
             

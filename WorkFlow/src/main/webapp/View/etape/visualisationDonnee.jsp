@@ -1,7 +1,31 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ page import="model.Utilisateur, model.Workflow, java.util.List" %>
+<style>
+/* On transforme le conteneur en grille à 4 colonnes pour plus de flexibilité */
+.grid-form-dispositif {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+}
 
+/* Les différentes tailles dynamiques */
+.champs-court {
+    grid-column: span 1;
+}
+.champs-moyen {
+    grid-column: span 2;
+}
+.champs-long {
+    grid-column: span 4;
+}
+
+/* Ajustement pour que la ligne s'aligne bien */
+.visu-row-grid {
+    display: contents; /* Permet aux enfants d'obéir directement à la grille parente */
+}
+</style>
 <%
     Workflow wf = (Workflow) request.getAttribute("wf");
     Utilisateur user = (Utilisateur) session.getAttribute("user");
@@ -60,10 +84,9 @@
                         <input type="hidden" name="idDonne_${status.index}" value="${d.idDonne}">
                         <input type="hidden" name="ref_${status.index}" value="${d.refTypeContraint}">
                         <input type="hidden" name="type_${status.index}" value="${d.type}">
-                        
+
                         <%-- Libellé --%>
                         <div style="flex: 1; font-weight: 600; color: #4a5568;">${d.type}</div>
-
                         <%-- Attribut --%>
                         <div style="flex: 1;">
                             <span class="view-mode">${not empty d.attribut ? d.attribut : '(Vide)'}</span>

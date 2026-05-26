@@ -84,7 +84,6 @@ public class AdminRoleController extends HttpServlet {
             if (roleIdStr != null && etapeStr != null) {
                 int roleId = Integer.parseInt(roleIdStr);
                 int etape = Integer.parseInt(etapeStr);
-
                 if ("add".equals(dbAction)) {
                     roleDao.addDroit(roleId, etape);
                 } else if ("delete".equals(dbAction)) {
