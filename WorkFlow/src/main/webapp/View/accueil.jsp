@@ -227,7 +227,7 @@
                 <c:otherwise>
                     <tr>
                         <td colspan="4" style="text-align: center; padding: 20px; color: #999;">
-                            ✅ Aucune action requise pour votre rôle (${sessionScope.user.role}).
+                             Aucune action requise pour votre rôle (${sessionScope.user.role}).
                         </td>
                     </tr>
                 </c:otherwise>

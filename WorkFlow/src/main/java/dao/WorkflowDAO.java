@@ -247,29 +247,52 @@ public class WorkflowDAO {
 
 	// PREMIÈRE FONCTION : Récupère les workflows en attente du rôle spécifié
 	public static List<Workflow> getWorkflowsEnAttenteParRole(int roleId) {
-		List<Workflow> liste = new ArrayList<>();
-		// On cherche le niveau d'avancement (Max etape validée + 1) égal au rôle de
-		// l'utilisateur
-		String sql = "SELECT w.* FROM workflow w " + "WHERE w.statut != 'Terminé' AND w.date_finalisation IS NULL "
-				+ "AND (SELECT COALESCE(MAX(CAST(v.etape AS INT)), 0) + 1 "
-				+ "     FROM validation v WHERE v.id_workflow = w.id) = ?";
+	    List<Workflow> liste = new ArrayList<>();
+	    
+	    // Une seule requête dynamique basée sur la table 'droit'
+	    String sql = 
+	        "SELECT DISTINCT w.id, w.titre, w.commentaire "
+	      + "FROM workflow w "
+	      + "JOIN droit d ON d.role = ? " // On récupère toutes les étapes associées à ce rôle
+	      + "WHERE (w.statut IS NULL OR LOWER(w.statut) NOT LIKE 'termin%') "
+	      + "  AND w.date_finalisation IS NULL "
+	      + "  -- RÈGLE DE BASE : L'étape du droit ne doit pas encore être validée -- "
+	      + "  AND NOT EXISTS (SELECT 1 FROM validation v WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) = CAST(d.etape AS INT)) "
+	      + "  AND ( "
+	      + "    (CAST(d.etape AS INT) BETWEEN 1 AND 6 "
+	      + "     AND (CAST(d.etape AS INT) = 1 OR EXISTS ( "
+	      + "         SELECT 1 FROM validation v "
+	      + "         WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) = CAST(d.etape AS INT) - 1 "
+	      + "     )) "
+	      + "    ) "
+	      + "    OR "
+	      + "    -- 2️⃣ CAS DES ÉTAPES EN SÉRIE (7 et plus) -- "
+	      + "    (CAST(d.etape AS INT) >= 7 "
+	      + "     AND (SELECT COUNT(DISTINCT CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) BETWEEN 1 AND 6) = 6 "
+	      + "     AND (SELECT COALESCE(MAX(CAST(v.etape AS INT)), 0) + 1 FROM validation v WHERE v.id_workflow = w.id) = CAST(d.etape AS INT) "
+	      + "    ) "
+	      + "  );";
 
-		try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-			ps.setInt(1, roleId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					Workflow w = new Workflow();
-					w.setId(rs.getInt("id"));
-					w.setTitre(rs.getString("titre"));
-					w.setCommentaire(rs.getString("commentaire"));
-					liste.add(w);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return liste;
+	    try (Connection conn = DBConnection.getConnection(); 
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        
+	        // Un seul paramètre à injecter : le rôle de l'utilisateur connecté
+	        ps.setInt(1, roleId);
+	        
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                Workflow w = new Workflow();
+	                w.setId(rs.getInt("id"));
+	                w.setTitre(rs.getString("titre")); 
+	                w.setCommentaire(rs.getString("commentaire"));
+	                liste.add(w);
+	            }
+	        }
+	    } catch (Exception e) {
+	        System.err.println("Erreur SQL lors de la récupération pour le rôle : " + roleId);
+	        e.printStackTrace();
+	    }
+	    return liste;
 	}
 
 	// DEUXIÈME FONCTION : Récupère les workflows terminés qui n'ont pas encore été
@@ -403,7 +426,7 @@ public class WorkflowDAO {
 	    return list;
 	}
 
-	// 2. ACTION : Enregistrer en BDD que l'étape de ce workflow a été annoncée
+	// 2. ACTION : Enregistrer en BDD que l'étape de ce workflow
 	public static void marquerAnnonceTerminee(int idWf) {
 	    String sql = "UPDATE workflow SET annonce_termine = 't' WHERE id = ?";
 	    

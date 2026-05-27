@@ -14,12 +14,12 @@ public class AppContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        Runnable task = new EmailTask();
-        long initialDelay = 5;
+        //Runnable task = new EmailTask();
+        long initialDelay = getDelayUntil8AM();
        // long period = 24 * 60 * 60; // 24h
-        long period = 60 *60  *24 ; // démarrage après 5 secondes
+        long period = 60 *60  *24 ; 
         System.out.println("Cela répond");
-        scheduler.scheduleAtFixedRate(task, initialDelay, period, TimeUnit.SECONDS);
+        //scheduler.scheduleAtFixedRate(task, initialDelay, period, TimeUnit.SECONDS);
     }
 
     @Override

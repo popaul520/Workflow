@@ -1,4 +1,3 @@
-
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -8,7 +7,6 @@
 <%@ page import="java.util.ArrayList" %>
 
 <%
-    // Récupération du Workflow depuis la requête
     model.Workflow wf = (model.Workflow) request.getAttribute("wf");
     Utilisateur user = (Utilisateur) session.getAttribute("user");
 
@@ -33,13 +31,11 @@
     
     boolean isFinalise = (wf != null && wf.getDateFinalisation() != null);
     
-    // Récupération des données pour l'affichage statique
     dao.DonneeDAO dDao = new dao.DonneeDAO();
     List<model.Donnee> dataE1 = dDao.getDonneesByEtape(wf.getId(), 1);
     List<model.Donnee> dataE7 = dDao.getDonneesByEtape(wf.getId(), 7);
     List<model.Donnee> dataE10 = dDao.getDonneesByEtape(wf.getId(), 10);
 
-    // RÉCUPÉRATION ET EXTRACTION DES AVIS DES ÉTAPES PRÉCÉDENTES (2 à 6 et 7)
     List<model.Donnee> tousLesAvisPrecedents = new ArrayList<>();
     if (wf != null) {
         for (int i = 2; i <= 7; i++) {
@@ -88,13 +84,12 @@
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
     }
     
-    /* 🛠️ AFFICHAGE DYNAMIQUE SELON LA TAILLE DU TEXTE */
     .table-avis-mini, .table-recap {
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
         font-size: 14px;
-        table-layout: fixed; /* Force le respect des dimensions des colonnes */
+        table-layout: fixed;
     }
     .table-avis-mini th, .table-recap th {
         text-align: left;
@@ -106,13 +101,11 @@
         padding: 10px 8px;
         border-bottom: 1px solid #f1f2f6;
         vertical-align: top;
-        /* Gestion dynamique du retour à la ligne automatique */
         white-space: normal;
         overflow-wrap: break-word;
         word-wrap: break-word;
         word-break: break-word; 
     }
-    /* Définition des largeurs de colonnes adaptatives */
     .col-xs { width: 10%; }
     .col-sm { width: 20%; }
     .col-md { width: 30%; }
@@ -143,7 +136,6 @@
         <h3>Actions</h3>
         <ul>
             <li><a href="home">🏠 Retour Accueil</a></li>
-            <%-- 🛠️ BLOCAGE DU MENU DE MODIFICATION SI LE WORKFLOW EST TERMINÉ --%>
             <c:if test="<%= !isFinalise %>">
                 <li><a href="workflow?action=edit&id=${wf.id}">📝 Modifier le titre</a></li>
                 <li><a href="workflow?action=delete&id=${wf.id}" style="color: var(--danger);">🗑️ Supprimer</a></li>
@@ -207,11 +199,11 @@
                         boolean isValidated = etapesValidees.contains(iValue);
                         boolean isLocked = false;
                         
-                        // 🛠️ CONDITION AJOUTÉE : Si le dossier est finalisé, on verrouille absolument TOUT
+                        // 🛠️ LOGIQUE CORRIGÉE : Si le dossier est clos, on ne verrouille QUE les étapes qui n'ont PAS été faites.
                         if (isFinalise) {
-                            isLocked = true;
+                            isLocked = !isValidated; 
                         } else {
-                            // Logique de verrouillage classique en cours de traitement
+                            // Logique normale si le dossier est toujours actif
                             if (iValue >= 2 && iValue <= 6) {
                                 isLocked = false; 
                             } else if (iValue == 7) {
@@ -234,7 +226,7 @@
                     %>
                     <button type="button" 
                             <%= isLocked ? "disabled='disabled'" : "" %>
-                            onclick="<%= isLocked ? "" : "chargerEtape(" + iValue + "," + wf.getId() + ")" %>"
+                            onclick="chargerEtape(<%= iValue %>, <%= wf.getId() %>)"
                             class="<%= cssClass %>">
                         <div class="step-number">ÉTAPE <%= iValue %></div>
                         <div class="step-role"><%= model.Utilisateur.getRole(iValue) %></div>
@@ -284,11 +276,9 @@
                 </table>
             </div>
 
-            <%-- On n'affiche la zone dynamique que si le workflow est encore actif --%>
-            <c:if test="<%= !isFinalise %>">
-                <h3 id="titre-etape" style="color: var(--primary); margin-top: 0;">Détails de l'étape</h3>
-                <div id="contenu-etape"></div>
-            </c:if>
+            <%-- 🛠️ CORRECTION : On laisse le bloc de détails accessible dans tous les cas pour afficher les étapes validées --%>
+            <h3 id="titre-etape" style="color: var(--primary); margin-top: 0;">Détails de l'étape</h3>
+            <div id="contenu-etape"></div>
         </div>
 
         <div class="visualisation-donnees" style="margin-top: 50px;">
@@ -322,7 +312,7 @@
             </c:choose>
             
             <a href="${pageContext.request.contextPath}/downloadPdf?id=${wf.id}" class="btn-pdf">
-                📄 Télécharger le récapitulatif PDF
+                Télécharger le récapitulatif PDF
             </a>
         </div>
     </div>
@@ -331,9 +321,6 @@
         let etapeOuverte = null;
 
         function chargerEtape(n, idWf, forceSaisie = false) {
-            // Sécurité additionnelle côté client si le dossier est clos
-            if (<%= isFinalise %>) return;
-
             const zone = document.getElementById('affichage-dynamique-etape');
             const contenu = document.getElementById('contenu-etape');
             const panneauAvis = document.getElementById('panneau-avis-recaps');
@@ -372,6 +359,7 @@
         }
 
         function activerEdition() {
+            // L'édition ne s'active pas du tout si le dossier est clos
             if (<%= isFinalise %>) return;
             const container = document.getElementById('affichage-dynamique-etape');
             if (container) {

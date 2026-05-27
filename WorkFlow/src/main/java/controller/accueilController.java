@@ -3,18 +3,15 @@ package controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import dao.DonneeDAO;
 import dao.ValidationDAO;
 import dao.WorkflowDAO;
-import dao.RoleDAO; // Importation nécessaire
 import model.Workflow;
 import model.Utilisateur;
 
@@ -33,9 +30,8 @@ public class accueilController extends HttpServlet {
         }
 
         WorkflowDAO wfDao = new WorkflowDAO();
-        ValidationDAO vDao = new ValidationDAO();
         DonneeDAO dDao = new DonneeDAO();
-        RoleDAO rDao = new RoleDAO();
+        ValidationDAO vDao = new ValidationDAO();
 
         String status = request.getParameter("status");
         String query = request.getParameter("q");
@@ -45,6 +41,8 @@ public class accueilController extends HttpServlet {
         }
 
         try {
+            // --- 1. FILTRAGE DU TABLEAU PRINCIPAL 
+        	
             List<Workflow> allWorkflows;
             if (query != null && !query.trim().isEmpty()) {
                 allWorkflows = wfDao.searchWorkflows(query.trim());
@@ -57,47 +55,14 @@ public class accueilController extends HttpServlet {
             }
 
             List<Workflow> workflowsFiltered = new ArrayList<>();
-            List<Workflow> pendingList = new ArrayList<>();
-
             for (Workflow wf : allWorkflows) {
-                List<Integer> etapesValidees = vDao.getListeEtapesValidees(wf.getId());
-                int lastStep = vDao.getDerniereEtapeValidee(wf.getId());
                 boolean isClosed = (wf.getDateFinalisation() != null);
 
-                // --- LOGIQUE A : ACTIONS EN ATTENTE ---
-                if (!isClosed) {
-                    
-                    // 1. BLOC PARALLÈLE (Étapes 2 à 6)
-                    // On ne peut commencer que si l'étape 1 est faite
-                    if (etapesValidees.contains(1)) {
-                        boolean bloc2to6Complet = true;
-                        for (int i = 2; i <= 6; i++) {
-                            if (!etapesValidees.contains(i)) {
-                                bloc2to6Complet = false;
-                                // Si l'utilisateur a le droit sur cette étape non faite, on l'ajoute
-                                if (rDao.canAccessEtape(user.getRole(), i)) {
-                                    if (!pendingList.contains(wf)) pendingList.add(wf);
-                                }
-                            }
-                        }
-
-                        // 2. BLOC EN SÉRIE (Étapes 7 à 10)
-                        // Le verrou : l'étape 7 ne s'ouvre que si le bloc 1-6 est TOTALEMENT fini
-                        if (bloc2to6Complet) {
-                            int nextStep = (lastStep < 7) ? 7 : lastStep + 1;
-                            
-                            if (nextStep <= 10 && rDao.canAccessEtape(user.getRole(), nextStep)) {
-                                if (!pendingList.contains(wf)) pendingList.add(wf);
-                            }
-                        }
-                    }
-                }
-
-                // --- LOGIQUE B : FILTRAGE TABLEAU PRINCIPAL ---
                 if ("tous".equals(status) || ("en_cours".equals(status) && !isClosed)) {
                     workflowsFiltered.add(wf);
                 } 
                 else if (isClosed) {
+                    int lastStep = vDao.getDerniereEtapeValidee(wf.getId());
                     int etapeDecision = (lastStep >= 10) ? 10 : 7;
                     String avis = dDao.getValeurAttribut(wf.getId(), etapeDecision, "Avis D.O.P.");
                     if (avis == null || avis.trim().isEmpty()) {
@@ -113,6 +78,10 @@ public class accueilController extends HttpServlet {
                 }
             }
 
+            // On appelle ta méthode statique en lui passant l'ID du rôle de l'utilisateur connecté
+            List<Workflow> pendingList = WorkflowDAO.getWorkflowsEnAttenteParRole(user.getRole());
+           
+            // --- 3. ENVOI DES DONNÉES À LA JSP ---
             request.setAttribute("workflows", workflowsFiltered); 
             request.setAttribute("pendingList", pendingList);    
             request.setAttribute("currentStatus", status);       
