@@ -1,29 +1,61 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ page import="model.Utilisateur, model.Workflow, java.util.List" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <style>
-/* On transforme le conteneur en grille à 4 colonnes pour plus de flexibilité */
+/* 🛠️ Conteneur en grille à 4 colonnes robuste pour l'alignement responsive */
 .grid-form-dispositif {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: 16px 24px;
     width: 100%;
 }
 
-/* Les différentes tailles dynamiques */
-.champs-court {
-    grid-column: span 1;
-}
-.champs-moyen {
-    grid-column: span 2;
-}
-.champs-long {
-    grid-column: span 4;
+/* Alignements et styles des blocs de champs */
+.visu-row-grid {
+    display: contents; /* Transmet les enfants directement au conteneur Grid principal */
 }
 
-/* Ajustement pour que la ligne s'aligne bien */
-.visu-row-grid {
-    display: contents; /* Permet aux enfants d'obéir directement à la grille parente */
+.champ-element {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    /* 🛠️ Gestion dynamique du texte long pour éviter les débordements */
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Les différentes portées de colonnes dynamiques selon le contenu */
+.champs-court { grid-column: span 1; }
+.champs-moyen { grid-column: span 2; }
+.champs-long  { grid-column: span 4; }
+
+.label-titre {
+    font-weight: 600; 
+    color: #4a5568;
+    font-size: 0.95em;
+}
+
+/* Zone de texte adaptative fluide */
+.textarea-dynamique {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical; /* Permet à l'utilisateur d'agrandir verticalement si nécessaire */
+    min-height: 40px;
+}
+
+.input-dynamique {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-size: 14px;
 }
 </style>
 <%
@@ -66,72 +98,92 @@
             <input type="hidden" name="id_workflow" value="${id_workflow}">
             <input type="hidden" name="current_n" value="<%= nEtape %>">
 
-            <div class="step-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;">
-                <h3 style="margin: 0;">Étape <%= nEtape %> : <%= model.Utilisateur.getRole(nEtape) %></h3>
+            <div class="step-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;">
+                <h3 style="margin: 0; color: #2d3748;">Étape <%= nEtape %> : <%= model.Utilisateur.getRole(nEtape) %></h3>
                 <div>
                     <% if (canEdit) { %>
-                        <button type="button" id="btn-modifier" onclick="activerEdition()" class="btn" style="background: #3182ce; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer;">Modifier</button>
-                        <button type="submit" id="btn-enregistrer" style="display: none; background: #38a169; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer;">Enregistrer</button>
+                        <button type="button" id="btn-modifier" onclick="activerEdition()" class="btn" style="background: #3182ce; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Modifier</button>
+                        <button type="submit" id="btn-enregistrer" style="display: none; background: #38a169; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Enregistrer</button>
                     <% } %>
                 </div>
             </div>
 
             <fieldset id="fs-edition" <%= canEdit ? "" : "disabled" %> style="border:none; padding:0; margin:0;">
-                <c:forEach var="d" items="${donneesEtape}" varStatus="status">
-                    <div class="visu-row" style="display: flex; align-items: flex-start; padding: 12px; border-bottom: 1px solid #f7fafc;">
-                        
-                        <%-- Champs techniques --%>
-                        <input type="hidden" name="idDonne_${status.index}" value="${d.idDonne}">
-                        <input type="hidden" name="ref_${status.index}" value="${d.refTypeContraint}">
-                        <input type="hidden" name="type_${status.index}" value="${d.type}">
+                <div class="grid-form-dispositif">
+                    
+                    <c:forEach var="d" items="${donneesEtape}" varStatus="status">
+                        <div class="visu-row-grid">
+                            
+                            <%-- ID techniques masqués --%>
+                            <input type="hidden" name="idDonne_${status.index}" value="${d.idDonne}">
+                            <input type="hidden" name="ref_${status.index}" value="${d.refTypeContraint}">
+                            <input type="hidden" name="type_${status.index}" value="${d.type}">
 
-                        <%-- Libellé --%>
-                        <div style="flex: 1; font-weight: 600; color: #4a5568;">${d.type}</div>
-                        <%-- Attribut --%>
-                        <div style="flex: 1;">
-                            <span class="view-mode">${not empty d.attribut ? d.attribut : '(Vide)'}</span>
-                            <div class="edit-mode" style="display: none;">
-                                <c:choose>
-                                    <c:when test="${d.refTypeContraint == 'avis'}">
-                                        <select name="attr_${status.index}" style="width: 100%; padding: 5px;">
-                                            <c:forEach var="opt" items="${optionsAvis}">
-                                                <option value="${opt}" ${d.attribut == opt ? 'selected' : ''}>${opt}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </c:when>
-                                    <c:when test="${d.refTypeContraint == 'Bool'}">
-                                        <select name="attr_${status.index}" style="width: 100%; padding: 5px;">
-                                            <option value="OUI" ${d.attribut == 'OUI' ? 'selected' : ''}>OUI</option>
-                                            <option value="NON" ${d.attribut == 'NON' ? 'selected' : ''}>NON</option>
-                                        </select>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <input type="text" name="attr_${status.index}" value="${d.attribut}" style="width: 100%; padding: 5px;">
-                                    </c:otherwise>
-                                </c:choose>
+                            <%-- Détermination de la taille du conteneur selon la nature de la donnée --%>
+                            <c:set var="layoutClass" value="${d.refTypeContraint == 'Commentaire' || d.refTypeContraint == 'TexteLong' ? 'champs-long' : 'champs-moyen'}" />
+
+                            <%-- 🛠️ BLOC SAISIE / AFFICHAGE PRINCIPAL --%>
+                            <div class="champ-element ${layoutClass}" style="border-bottom: 1px solid #edf2f7; padding-bottom: 14px;">
+                                <div class="label-titre">${d.type}</div>
+                                
+                                <div class="view-mode" style="color: #2d3748; line-height: 1.5;">
+                                    ${not empty d.attribut ? d.attribut : '<span style="color: #a0aec0; font-style: italic;">(Vide)</span>'}
+                                </div>
+                                
+                                <div class="edit-mode" style="display: none; width: 100%;">
+                                    <c:choose>
+                                        <c:when test="${d.refTypeContraint == 'avis'}">
+                                            <select name="attr_${status.index}" class="input-dynamique">
+                                                <c:forEach var="opt" items="${optionsAvis}">
+                                                    <option value="${opt}" ${d.attribut == opt ? 'selected' : ''}>${opt}</option>
+                                                </c:forEach>
+                                            </select>
+                                        </c:when>
+                                        <c:when test="${d.refTypeContraint == 'Bool'}">
+                                            <select name="attr_${status.index}" class="input-dynamique">
+                                                <option value="OUI" ${d.attribut == 'OUI' ? 'selected' : ''}>OUI</option>
+                                                <option value="NON" ${d.attribut == 'NON' ? 'selected' : ''}>NON</option>
+                                            </select>
+                                        </c:when>
+										<%-- Si c'est un long texte, on bascule sur un textarea adaptatif --%>
+										<c:when test="${d.refTypeContraint == 'Commentaire' || d.refTypeContraint == 'TexteLong' || (not empty d.attribut && fn:length(d.attribut) > 60)}">
+										    <textarea name="attr_${status.index}" class="textarea-dynamique" rows="3">${d.attribut}</textarea>
+										</c:when>
+                                        <c:otherwise>
+                                            <input type="text" name="attr_${status.index}" value="${d.attribut}" class="input-dynamique">
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                             </div>
-                        </div>
+                            <div class="champ-element ${layoutClass == 'champs-long' ? 'champs-long' : 'champs-moyen'}" style="border-bottom: 1px solid #edf2f7; padding-bottom: 14px; justify-content: flex-end;">
+                                <%-- Gestion Commentaire Additionnel --%>
+                                <c:if test="${not empty d.commentaire || canEdit}">
+                                    <div class="view-mode" style="color: #718096; font-size: 0.9em; font-style: italic; line-height: 1.4;">
+                                        ${not empty d.commentaire ? d.commentaire : ''}
+                                    </div>
+                                    <div class="edit-mode" style="display: none; width: 100%;">
+                                        <label style="font-size: 0.8em; color: #718096; display:block; margin-bottom: 2px;">Observations / Précisions :</label>
+                                        <textarea name="comm_${status.index}" class="textarea-dynamique" rows="2" placeholder="Ajouter une observation...">${d.commentaire}</textarea>
+                                    </div>
+                                </c:if>
 
-                        <%-- Meta (Commentaire + Date) conditionnels --%>
-                        <div style="flex: 1; margin-left: 20px;">
-                            <%-- Gestion Commentaire --%>
-                            <c:if test="${not empty d.commentaire}">
-                                <div class="view-mode" style="color: #a0aec0; font-size: 0.85em;">${d.commentaire}</div>
-                                <div class="edit-mode" style="display: none;">
-                                    <input type="text" name="comm_${status.index}" value="${d.commentaire}" style="width: 100%; padding: 5px;">
-                                </div>
-                            </c:if>
+                                <%-- Gestion Date associée --%>
+                                <c:if test="${not empty d.date || canEdit}">
+                                    <div style="margin-top: 5px;">
+                                        <div class="view-mode" style="font-size: 0.8em; color: #a0aec0;">
+                                            <c:if test="${not empty d.date}">📅 Renseigné le : ${d.date}</c:if>
+                                        </div>
+                                        <div class="edit-mode" style="display: none; width: 100%;">
+                                            <input type="date" name="date_${status.index}" value="${d.date}" class="input-dynamique" style="padding: 4px 8px; font-size: 13px;">
+                                        </div>
+                                    </div>
+                                </c:if>
+                            </div>
 
-                            <%-- Gestion Date --%>
-                            <c:if test="${not empty d.date}">
-                                <div class="view-mode" style="font-size: 0.8em; color: #718096;">Date: ${d.date}</div>
-                                <div class="edit-mode" style="display: none;">
-                                    <input type="date" name="date_${status.index}" value="${d.date}" style="width: 100%; padding: 5px; margin-top: 5px;">
-                                </div>
-                            </c:if>
                         </div>
-                    </div>
-                </c:forEach>
+                    </c:forEach>
+                    
+                </div>
             </fieldset>
         </form>
     <% } %>

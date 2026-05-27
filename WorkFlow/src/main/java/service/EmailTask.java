@@ -68,12 +68,10 @@ public class EmailTask implements Runnable {
                         String msgPerso = corps.toString().replace("Bonjour,", "Bonjour " + u.getPrenom() + " " + u.getNom() + ",");
                         MailSender.send(u.getMail(), sujet, msgPerso);
                     }
-                    
-                    // Optionnel : Marquer ces workflows comme "annoncés" en BDD pour ne pas renvoyer l'email au prochain tour
-                    for (Workflow w : termines) {
-                        WorkflowDAO.marquerEtapeAnnoncee(w.getId(), etapeConcernee);
+                                        for (Workflow w : termines) {
+                        WorkflowDAO.marquerAnnonceTerminee(w.getId()); // Appel de la méthode corrigée
                     }
-                    System.out.println("[Rôle " + roleId + "] " + termines.size() + " annonces de finalisation envoyées.");
+                    System.out.println("[Rôle " + roleId + "] " + termines.size() + " annonces de finalisation envoyées et verrouillées en BDD.");
                 }
             }
 

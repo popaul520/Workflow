@@ -14,7 +14,6 @@ public class EmailService {
         for (Demande d : demandes) {
             contenu += "- " + d.getDescription() + "\n";
         }
-
         if (role == 1) {
             contenu += "\nMerci de valider ces demandes.";
         } else if (role == 2) {

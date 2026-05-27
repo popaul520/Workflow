@@ -1,5 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ page import="java.util.List" %>
+<%@ page import="dao.DonneeDAO" %>
+<%
+    // Initialisation du DAO pour charger le référentiel de saisonnalité nécessaire à l'étape 1
+    DonneeDAO donneeDao = new DonneeDAO();
+    List<String> optionsSaisonalite = donneeDao.getValeursContraintes("saisonalite");
+    request.setAttribute("optionsSaisonalite", optionsSaisonalite);
+%>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -35,7 +43,8 @@
         .export-conditional { display: none; grid-column: span 2; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         
         label { font-weight: 600; margin-bottom: 5px; color: #555; font-size: 0.9em; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; transition: border-color 0.2s; }
+        input, select, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; transition: border-color 0.2s; font-family: inherit; }
+        textarea { height: 60px; resize: vertical; }
 
         /* Feedback visuel d'erreur */
         .input-error { border-color: var(--danger) !important; background-color: #fff6f6; }
@@ -56,7 +65,6 @@
         <h3>Actions</h3>
         <ul>
             <li><a href="home">🏠 Retour Accueil</a></li>
-            <li><a href="#">📋 Mes Workflows</a></li>
         </ul>
     </div>
 
@@ -105,6 +113,29 @@
                                 <c:forEach var="opt" items="${optionsReponse}"><option value="${opt}">${opt}</option></c:forEach>
                             </select>
                         </div>
+
+                        <div class="form-group">
+                            <input type="hidden" name="type_prev_lancement" value="Prévision lancement">
+                            <label>Volume de lancement prévu *</label>
+                            <input type="number" name="attr_prev_lancement" min="0" required placeholder="Ex: 50000">
+                        </div>
+
+                        <div class="form-group">
+                            <input type="hidden" name="type_saisonalite" value="Saisonalité"> 
+                            <input type="hidden" name="ref_saisonalite" value="saisonalite"> 
+                            <label>Saisonnalité forte attendue *</label>
+                            <select name="attr_saisonalite" required>
+                                <option value="" disabled selected>-- Choisir une saison --</option>
+                                <c:forEach var="opt" items="${optionsSaisonalite}">
+                                    <option value="${opt}">${opt}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <div class="form-group full">
+                            <label>Commentaire lié à la saisonnalité</label>
+                            <textarea name="comm_saisonalite" placeholder="Précisez les contraintes de calendrier ou détails ici..."></textarea>
+                        </div>
                     </div>
                     <div class="button-group">
                         <span></span>
@@ -139,8 +170,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Code référence *</label>
-                            <input type="text" name="attr_code_ref" placeholder="Code interne" required>
+                            <label>Code référence équivalente</label>
+                            <input type="text" name="attr_code_ref" placeholder="Code interne">
                         </div>
                     </div>
                     <div class="button-group">
@@ -158,6 +189,8 @@
                             <select name="attr_uo" required>
                                 <option value="" disabled selected>-- Choisissez l'UO --</option>
                                 <c:forEach var="opt" items="${optionsUO}"><option value="${opt}">${opt}</option></c:forEach>
+                                <option value="Prêt à vendre">Prêt à vendre</option>
+                                <option value="Autre">Autre</option>
                             </select>
                         </div>
 
@@ -171,7 +204,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Pièces par colis *</label>
+                            <label>Piece par unité de Mise en œuvre *</label>
                             <input type="number" name="attr_pcs_colis" min="1" required placeholder="Nombre de pièces">
                         </div>
 
@@ -198,7 +231,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Format D.D.M attendu *</label>
+                                <label>D.D.M attendu *</label>
                                 <input type="hidden" name="ref_ddm_export" value="ddm">
                                 <input type="text" name="attr_ddm_export" id="ddmInput" placeholder="Ex: MM/AAAA ou JJ/MM/AAAA">
                             </div>
@@ -215,7 +248,6 @@
     </div>
 
     <script>
-        // Changement structurel d'étape sans vérification (pour les retours en arrière)
         function goToStep(step) {
             document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.step-head').forEach(el => el.classList.remove('active'));
@@ -227,12 +259,9 @@
             }
         }
 
-        // Bloque le bouton tant que les éléments requis de l'étape active ne sont pas valides
         function validateAndNext(currentStep, targetStep) {
             const currentStepEl = document.getElementById('step-' + currentStep);
-            
-            // On sélectionne uniquement les éléments visibles et requis de l'étape courante
-            const requiredFields = currentStepEl.querySelectorAll('input[required], select[required]');
+            const requiredFields = currentStepEl.querySelectorAll('input[required], select[required], textarea[required]');
             let isStepValid = true;
 
             requiredFields.forEach(field => {
@@ -251,7 +280,6 @@
             }
         }
 
-        // Affichage ou masquage dynamique des options d'exportations
         function toggleExportFields() {
             const exportSelect = document.getElementById('exportSelect');
             const exportFields = document.getElementById('exportFields');
@@ -273,7 +301,6 @@
             }
         }
 
-        // Sécurité ultime : Empêche la soumission globale du formulaire au clavier (Enter) si l'étape finale est incomplète
         document.getElementById('multiStepForm').addEventListener('submit', function(e) {
             const currentStepEl = document.getElementById('step-3');
             const requiredFields = currentStepEl.querySelectorAll('input[required], select[required]');

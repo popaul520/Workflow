@@ -1,3 +1,4 @@
+
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
@@ -6,68 +7,64 @@
 <%@ page import="java.util.List"%>
 <%@ page import="java.util.ArrayList" %>
 
-
 <%
-    // Récupération du Workflow depuis la requête (envoyé par ton WorkflowController/DetailsController)
+    // Récupération du Workflow depuis la requête
     model.Workflow wf = (model.Workflow) request.getAttribute("wf");
-	Utilisateur user = (Utilisateur) session.getAttribute("user");
+    Utilisateur user = (Utilisateur) session.getAttribute("user");
 
-    // Récupération de l'étape max validée (envoyée par le contrôleur ou calculée ici)
-    // Si ton contrôleur ne l'envoie pas, on peut appeler le DAO directement
     dao.ValidationDAO valDao = new dao.ValidationDAO();
     int etapeMax = 0;
-    
+    boolean bloc1a6Complet = false;
+    List<Integer> etapesValidees = new ArrayList<>();
+    int etapeMaxPost6 = 0;
+
     if (wf != null) {
         try {
             etapeMax = valDao.getDerniereEtapeValidee(wf.getId());
+            bloc1a6Complet = valDao.sontEtapes1a6Validees(wf.getId());
+            etapesValidees = valDao.getListeEtapesValidees(wf.getId());
+            for(int e : etapesValidees) {
+                if(e > etapeMaxPost6) etapeMaxPost6 = e;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }  
     }
     
-    boolean bloc1a6Complet = false;
+    boolean isFinalise = (wf != null && wf.getDateFinalisation() != null);
     
-    if (wf != null) {
-        etapeMax = valDao.getDerniereEtapeValidee(wf.getId());
-        bloc1a6Complet = valDao.sontEtapes1a6Validees(wf.getId());
-    }
-    
-    List<Integer> etapesValidees = new ArrayList<>();
-    int etapeMaxPost6 = 0; // Pour gérer la suite (7, 8, 9, 10)
-
-    if (wf != null) {
-        etapesValidees = valDao.getListeEtapesValidees(wf.getId());
-        // On cherche l'étape max uniquement pour la phase séquentielle (>=7)
-        for(int e : etapesValidees) {
-            if(e > etapeMaxPost6) etapeMaxPost6 = e;
-        }
-    }
-    
-	boolean isFinalise = (wf != null && wf.getDateFinalisation() != null);
-    
-    // On récupère les données clés pour l'affichage en haut
+    // Récupération des données pour l'affichage statique
     dao.DonneeDAO dDao = new dao.DonneeDAO();
-    // Étape 1 : Libellé/Début
     List<model.Donnee> dataE1 = dDao.getDonneesByEtape(wf.getId(), 1);
-    // Étape 7 ou 10 : Verdict
     List<model.Donnee> dataE7 = dDao.getDonneesByEtape(wf.getId(), 7);
     List<model.Donnee> dataE10 = dDao.getDonneesByEtape(wf.getId(), 10);
+
+    // RÉCUPÉRATION ET EXTRACTION DES AVIS DES ÉTAPES PRÉCÉDENTES (2 à 6 et 7)
+    List<model.Donnee> tousLesAvisPrecedents = new ArrayList<>();
+    if (wf != null) {
+        for (int i = 2; i <= 7; i++) {
+            List<model.Donnee> dataEtape = dDao.getDonneesByEtape(wf.getId(), i);
+            for (model.Donnee d : dataEtape) {
+                if (d.getType() != null && d.getType().toLowerCase().contains("avis")) {
+                    tousLesAvisPrecedents.add(d);
+                }
+            }
+        }
+    }
+    request.setAttribute("avisPrecedents", tousLesAvisPrecedents);
 %>
 <style>
-    /* Structure de la grille */
     .grid-boutons {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 12px;
         margin: 20px 0;
     }
-
-    /* Style de base des boutons (on enlève les styles par défaut) */
     .btn-etape {
         border: none;
         border-radius: 6px;
         padding: 12px;
-        color: white !important; /* Texte toujours blanc */
+        color: white !important;
         text-align: center;
         cursor: pointer;
         min-height: 70px;
@@ -76,30 +73,62 @@
         justify-content: center;
         transition: all 0.2s;
     }
+    .state-locked { background-color: #bdc3c7 !important; cursor: not-allowed; opacity: 0.8; box-shadow: none !important; }
+    .state-validated { background-color: #2ecc71 !important; }
+    .state-modifiable { background-color: #3498db !important; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3); }
+    .btn-etape strong { display: block; font-size: 0.9em; margin-top: 5px; }
 
-    /* ÉTAT : GRIS (Bloqué) */
-    .state-locked {
-        background-color: #bdc3c7 !important; 
-        cursor: not-allowed;
-        opacity: 0.8;
+    .panneau-avis-consultation {
+        display: none; 
+        background: #f8f9fa;
+        border-left: 5px solid #6f42c1;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
     }
+    
+    /* 🛠️ AFFICHAGE DYNAMIQUE SELON LA TAILLE DU TEXTE */
+    .table-avis-mini, .table-recap {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 14px;
+        table-layout: fixed; /* Force le respect des dimensions des colonnes */
+    }
+    .table-avis-mini th, .table-recap th {
+        text-align: left;
+        color: #718093;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #dcdde1;
+    }
+    .table-avis-mini td, .table-recap td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #f1f2f6;
+        vertical-align: top;
+        /* Gestion dynamique du retour à la ligne automatique */
+        white-space: normal;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word; 
+    }
+    /* Définition des largeurs de colonnes adaptatives */
+    .col-xs { width: 10%; }
+    .col-sm { width: 20%; }
+    .col-md { width: 30%; }
+    .col-lg { width: 40%; }
 
-    /* ÉTAT : VERT (Déjà validé) */
-    .state-validated {
-        background-color: #2ecc71 !important;
+    .badge-avis {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 11px;
+        color: white;
+        display: inline-block;
     }
-
-    /* ÉTAT : BLEU (Modifiable / Prochaine étape) */
-    .state-modifiable {
-        background-color: #3498db !important;
-        box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3);
-    }
-
-    .btn-etape strong {
-        display: block;
-        font-size: 0.9em;
-        margin-top: 5px;
-    }
+    .badge-faisable { background-color: #2ecc71; }
+    .badge-nonfaisable { background-color: #e74c3c; }
+    .badge-reserve { background-color: #f39c12; }
 </style>
 <!DOCTYPE html>
 <html lang="fr">
@@ -107,8 +136,6 @@
     <meta charset="UTF-8">
     <title>Détails Workflow #${wf.id}</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-    
-
 </head>
 <body>
 
@@ -116,12 +143,11 @@
         <h3>Actions</h3>
         <ul>
             <li><a href="home">🏠 Retour Accueil</a></li>
-            
-             <%-- a faire comme page modif / .... pour rendu propre  --%>
-            
-            <li><a href="workflow?action=edit&id=${wf.id}">📝 Modifier le titre</a></li>
-            <li><a href="workflow?action=delete&id=${wf.id}" style="color: var(--danger);">🗑️ Supprimer</a></li>
-            
+            <%-- 🛠️ BLOCAGE DU MENU DE MODIFICATION SI LE WORKFLOW EST TERMINÉ --%>
+            <c:if test="<%= !isFinalise %>">
+                <li><a href="workflow?action=edit&id=${wf.id}">📝 Modifier le titre</a></li>
+                <li><a href="workflow?action=delete&id=${wf.id}" style="color: var(--danger);">🗑️ Supprimer</a></li>
+            </c:if>
         </ul>
     </div>
 
@@ -145,7 +171,7 @@
                 </div>
                 <div class="info-group">
                     <div class="label">Commentaire</div>
-                    <div class="value">${empty wf.commentaire ? 'Aucun' : wf.commentaire}</div>
+                    <div class="value" style="word-break: break-word;">${empty wf.commentaire ? 'Aucun' : wf.commentaire}</div>
                 </div>
             </div>
         </div>
@@ -160,8 +186,6 @@
 		    <c:if test="<%= isFinalise %>">
 		        <div class="status-banner <%= etapeMax < 10 ? "status-rejete" : "status-valide" %>">
 		            <h3>⚠️ DOSSIER CLÔTURÉ LE <fmt:formatDate value="${wf.dateFinalisation}" pattern="dd/MM/yyyy"/></h3>
-		            
-		            <%-- On affiche l'avis de l'étape 7 ou 10 --%>
 		            <c:set var="finalData" value="<%= !dataE10.isEmpty() ? dataE10 : dataE7 %>" />
 		            <c:forEach var="d" items="${finalData}">
 		                <c:if test="${d.refTypeContraint == 'avis'}">
@@ -175,51 +199,96 @@
 
         <div class="navigation-etapes">
             <h3 style="border-left: 5px solid var(--success); padding-left: 15px;">Suivi des services</h3>
-            
 
-
-<div class="grid-boutons">
-    <c:forEach var="i" begin="2" end="10">
-        <%
-            int iValue = (Integer) pageContext.getAttribute("i");
-            
-            boolean isValidated = etapesValidees.contains(iValue);
-            boolean isLocked = false;
-            
-            if (iValue >= 1 && iValue <= 6) {
-                isLocked = false; 
-            } else if (iValue == 7) {
-                int count1to6 = 0;
-                for(int e : etapesValidees) if(e >= 1 && e <= 6) count1to6++;
-                isLocked = (count1to6 < 6);
-            } else {
-            	System.out.println(wf.getId());
-            	isLocked = ((iValue > etapeMaxPost6 + 1) || ("Non faisable".equalsIgnoreCase( dDao.getValeurAttribut(wf.getId(), 7, "Avis D.O.P."))));
-            }
-            
-            // Détermination de la classe CSS
-            String cssClass = "btn-etape";
-            if (isLocked) {
-                cssClass += " state-locked";      // Gris
-            } else if (isValidated) {
-                cssClass += " state-validated";   // Vert
-            } else {
-                cssClass += " state-modifiable";  // Bleu
-            }
-        %>
-        	<button type="button" 
-        	    onclick="<%= isLocked ? "" : "chargerEtape(" + iValue + "," + wf.getId() + ")" %>"
-                class="<%= cssClass %>">
-        	<div class="step-number">ÉTAPE <%= iValue %></div>
-            <div class="step-role"><%= model.Utilisateur.getRole(iValue) %></div>
-        </button>
-    </c:forEach>
-</div>
+            <div class="grid-boutons">
+                <c:forEach var="i" begin="2" end="10">
+                    <%
+                        int iValue = (Integer) pageContext.getAttribute("i");
+                        boolean isValidated = etapesValidees.contains(iValue);
+                        boolean isLocked = false;
+                        
+                        // 🛠️ CONDITION AJOUTÉE : Si le dossier est finalisé, on verrouille absolument TOUT
+                        if (isFinalise) {
+                            isLocked = true;
+                        } else {
+                            // Logique de verrouillage classique en cours de traitement
+                            if (iValue >= 2 && iValue <= 6) {
+                                isLocked = false; 
+                            } else if (iValue == 7) {
+                                int count1to6 = 0;
+                                for(int e : etapesValidees) if(e >= 1 && e <= 6) count1to6++;
+                                isLocked = (count1to6 < 6);
+                            } else {
+                                isLocked = ((iValue > etapeMaxPost6 + 1) || ("Non faisable".equalsIgnoreCase(dDao.getValeurAttribut(wf.getId(), 7, "Avis D.O.P."))));
+                            }
+                        }
+                        
+                        String cssClass = "btn-etape";
+                        if (isLocked) {
+                            cssClass += " state-locked";
+                        } else if (isValidated) {
+                            cssClass += " state-validated";
+                        } else {
+                            cssClass += " state-modifiable";
+                        }
+                    %>
+                    <button type="button" 
+                            <%= isLocked ? "disabled='disabled'" : "" %>
+                            onclick="<%= isLocked ? "" : "chargerEtape(" + iValue + "," + wf.getId() + ")" %>"
+                            class="<%= cssClass %>">
+                        <div class="step-number">ÉTAPE <%= iValue %></div>
+                        <div class="step-role"><%= model.Utilisateur.getRole(iValue) %></div>
+                    </button>
+                </c:forEach>
+            </div>
         </div>
+
         <div id="affichage-dynamique-etape">
-            <h3 id="titre-etape" style="color: var(--primary); margin-top: 0;">Détails de l'étape</h3>
-            <div id="contenu-etape">
-                </div>
+            
+            <div id="panneau-avis-recaps" class="panneau-avis-consultation">
+                <h4 style="margin: 0 0 10px 0; color: #6f42c1; font-size: 15px;">Synthèse des Avis Recueillis (Avis Commerciaux & Techniques)</h4>
+                <table class="table-avis-mini">
+                    <thead>
+                        <tr>
+                            <th class="col-md">Entité / Étape</th>
+                            <th class="col-sm">Avis émis</th>
+                            <th class="col-lg">Note / Commentaire</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="avis" items="${avisPrecedents}">
+                            <tr>
+                                <td><strong>${avis.type}</strong> <span style="font-size:11px; color:#95a5a6;">(Étape ${avis.etape.nbEtape})</span></td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${avis.attribut == 'Faisable' || avis.attribut == 'Favorable' || avis.attribut == 'Oui'}">
+                                            <span class="badge-avis badge-faisable">${avis.attribut}</span>
+                                        </c:when>
+                                        <c:when test="${avis.attribut == 'Non faisable' || avis.attribut == 'Défavorable' || avis.attribut == 'Non'}">
+                                            <span class="badge-avis badge-nonfaisable">${avis.attribut}</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge-avis badge-reserve">${avis.attribut}</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td><span style="color:#555; font-style:italic;">${empty avis.commentaire ? 'Aucune observation' : avis.commentaire}</span></td>
+                            </tr>
+                        </c:forEach>
+                        <c:if test="${empty avisPrecedents}">
+                            <tr>
+                                <td colspan="3" style="color:#7f8c8d; font-style:italic;">Aucun avis n'a encore été formalisé en base.</td>
+                            </tr>
+                        </c:if>
+                    </tbody>
+                </table>
+            </div>
+
+            <%-- On n'affiche la zone dynamique que si le workflow est encore actif --%>
+            <c:if test="<%= !isFinalise %>">
+                <h3 id="titre-etape" style="color: var(--primary); margin-top: 0;">Détails de l'étape</h3>
+                <div id="contenu-etape"></div>
+            </c:if>
         </div>
 
         <div class="visualisation-donnees" style="margin-top: 50px;">
@@ -229,10 +298,10 @@
                     <table class="table-recap">
                         <thead>
                             <tr>
-                                <th>Étape</th>
-                                <th>Type / Libellé</th>
-                                <th>Valeur saisie</th>
-                                <th>Date de saisie</th>
+                                <th class="col-xs">Étape</th>
+                                <th class="col-md">Type / Libellé</th>
+                                <th class="col-lg">Valeur saisie</th>
+                                <th class="col-sm">Date de saisie</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -262,34 +331,48 @@
         let etapeOuverte = null;
 
         function chargerEtape(n, idWf, forceSaisie = false) {
+            // Sécurité additionnelle côté client si le dossier est clos
+            if (<%= isFinalise %>) return;
+
             const zone = document.getElementById('affichage-dynamique-etape');
             const contenu = document.getElementById('contenu-etape');
+            const panneauAvis = document.getElementById('panneau-avis-recaps');
 
             if (etapeOuverte === n && zone.style.display === 'block' && !forceSaisie) {
                 zone.style.display = 'none';
+                panneauAvis.style.display = 'none';
                 etapeOuverte = null;
                 return;
             }
 
             zone.style.display = 'block';
-            contenu.innerHTML = "<p>Chargement des données en cours...</p>";
-            etapeOuverte = n;
+            
+            if (n === 7 || n === 10) {
+                panneauAvis.style.display = 'block';
+            } else {
+                panneauAvis.style.display = 'none';
+            }
 
-            let url = '${pageContext.request.contextPath}/etapeController?n=' + n + '&id_workflow=' + idWf;
-            if(forceSaisie) url += '&mode=edit';
+            if(contenu) {
+                contenu.innerHTML = "<p>Chargement des données en cours...</p>";
+                etapeOuverte = n;
 
-            fetch(url)
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const formRecu = doc.querySelector('form');
-                contenu.innerHTML = formRecu ? formRecu.outerHTML : doc.body.innerHTML;
-               
-            });
+                let url = '${pageContext.request.contextPath}/etapeController?n=' + n + '&id_workflow=' + idWf;
+                if(forceSaisie) url += '&mode=edit';
+
+                fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const formRecu = doc.querySelector('form');
+                    contenu.innerHTML = formRecu ? formRecu.outerHTML : doc.body.innerHTML;
+                });
+            }
         }
 
         function activerEdition() {
+            if (<%= isFinalise %>) return;
             const container = document.getElementById('affichage-dynamique-etape');
             if (container) {
                 container.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');

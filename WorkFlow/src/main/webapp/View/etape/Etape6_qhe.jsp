@@ -43,21 +43,14 @@
         <%-- --- BLOC 2 : D.D.M. AU CONDI. --- --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
             <input type="hidden" name="type_ddm" value="D.D.M. au condi."> 
-            <input type="hidden" name="ref_ddm" value="Bool"> 
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">D.D.M. au conditionnement :</label>
-            <select name="attr_ddm" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                <option value="">-- Sélectionner --</option>
-                <c:forEach var="opt" items="${optionsBool}">
-                    <option value="${opt}">${opt}</option>
-                </c:forEach>
-            </select>
-            
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">D.D.M. au conditionnement * :</label>
+            <input type="text" name="attr_ddm" required placeholder="Ex: 45 jours, JJ/MM/AAAA, Fin de mois..." 
+                   style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"> 
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) DDM :</label>
             <textarea name="comm_ddm" placeholder="Règle de calcul de la DDM, gestion du report..." 
                       style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
         </div>
-
         <%-- --- BLOC 3 : MÉTROLOGIE --- --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f8f9fa;">
             <input type="hidden" name="type_metro" value="Métrologie"> 

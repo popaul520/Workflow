@@ -10,12 +10,10 @@
     // 2. Récupération des options basées sur la colonne 'type'
     List<String> optionsBool = donneeDao.getValeursContraintes("Bool"); 
     List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
-    List<String> optionsSaisonalite = donneeDao.getValeursContraintes("saisonalite"); // 🆕 Récupération de la saisonnalité
     
     // 3. Mise à disposition pour JSTL
     request.setAttribute("optionsBool", optionsBool);
     request.setAttribute("optionsAvis", optionsAvis);
-    request.setAttribute("optionsSaisonalite", optionsSaisonalite);
 %>
 
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
@@ -35,33 +33,6 @@
             <input type="text" name="attr_machine" placeholder="Ex: Ligne 4, Cellule B..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">	
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire technique :</label>
             <textarea name="comm_machine" style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
-        </div>
-
-        <%-- PRÉVISION LANCEMENT (Quantité Saisie Libre) --- --%>
-        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
-            <input type="hidden" name="type_prev_lancement" value="Prévision lancement">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Volume de lancement prévu (Attribut) :</label>
-            <input type="number" name="attr_prev_lancement" min="0" placeholder="Ex: 50000" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-        </div>
-
-        <%--  SAISONNALITÉ (Depuis type_contraint) --- --%>
-        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
-            <input type="hidden" name="type_saisonalite" value="Saisonalité"> 
-            <input type="hidden" name="ref_saisonalite" value="saisonalite"> 
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Saisonnalité forte attendue :</label>
-            <select name="attr_saisonalite" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-                <option value="">-- Choisir une saison --</option>
-                <c:forEach var="opt" items="${optionsSaisonalite}">
-                    <option value="${opt}">${opt}</option>
-                </c:forEach>
-            </select>
-        </div>
-
-        <%--  PRÉVISION ANNUELLE (Saisie Libre) --- --%>
-        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
-            <input type="hidden" name="type_prev_annuelle" value="Prévision annuelle">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Estimation volume annuel (Attribut) :</label>
-            <input type="number" name="attr_prev_annuelle" min="0" placeholder="Ex: 250000" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
 
         <%-- --- BLOC 2 : BESOIN D'ESSAIS --- --%>

@@ -14,7 +14,6 @@ public class AppContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         scheduler = Executors.newSingleThreadScheduledExecutor();
-
         Runnable task = new EmailTask();
         long initialDelay = 5;
        // long period = 24 * 60 * 60; // 24h

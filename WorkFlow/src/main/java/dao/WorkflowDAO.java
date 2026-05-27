@@ -134,7 +134,7 @@ public class WorkflowDAO {
 	 * @param idWf L'identifiant du workflow à clôturer
 	 */
 	public void finaliserWorkflow(int idWf) {
-		String sql = "UPDATE workflow SET date_finalisation = CURRENT_DATE WHERE id = ?";
+		String sql = "UPDATE workflow SET date_finalisation = CURRENT_DATE , statut = 'TERMINER' WHERE id = ?";
 
 		// Utilisation du try-with-resources pour fermer automatiquement la connexion
 		try (java.sql.Connection conn = dao.DBConnection.getConnection();
@@ -381,30 +381,21 @@ public class WorkflowDAO {
 	public static List<Workflow> getWorkflowsTerminesPourEtape(int etape) {
 	    List<Workflow> list = new ArrayList<>();
 	    
-	    // On sélectionne les workflows validés pour cette étape, 
-	    // à condition qu'ils ne soient pas déjà présents dans la table etape_annoncee
-	    String sql = "SELECT w.id, w.titre FROM workflow w " +
-	                 "INNER JOIN validation v ON v.id_workflow = w.id " +
-	                 "WHERE TRIM(v.etape) = ? " + 
-	                 "  AND (w.statut IS NULL OR w.statut != 'Terminé') " +
-	                 "  AND NOT EXISTS ( " +
-	                 "      SELECT 1 FROM etape_annoncee ea " +
-	                 "      WHERE ea.id_workflow = w.id AND ea.etape = ? " +
-	                 "  )";
+	    // On cible directement le statut du workflow et son flag d'annonce.
+	    // Plus besoin de dépendre d'une ligne spécifique parfois manquante dans la table validation.
+	    String sql = "SELECT id, titre, statut, annonce_termine FROM workflow " +
+	                 "WHERE statut = 'TERMINER' " +  
+	                 "  AND annonce_termine = false";
 
 	    try (Connection conn = DBConnection.getConnection();
-	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	         PreparedStatement ps = conn.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
 	        
-	        ps.setString(1, String.valueOf(etape));
-	        ps.setInt(2, etape);
-	        
-	        try (ResultSet rs = ps.executeQuery()) {
-	            while (rs.next()) {
-	                Workflow w = new Workflow();
-	                w.setId(rs.getInt("id"));
-	                w.setTitre(rs.getString("titre"));
-	                list.add(w);
-	            }
+	        while (rs.next()) {
+	            Workflow w = new Workflow();
+	            w.setId(rs.getInt("id"));
+	            w.setTitre(rs.getString("titre"));
+	            list.add(w);
 	        }
 	    } catch (Exception e) { 
 	        e.printStackTrace(); 
@@ -413,20 +404,17 @@ public class WorkflowDAO {
 	}
 
 	// 2. ACTION : Enregistrer en BDD que l'étape de ce workflow a été annoncée
-	public static void marquerEtapeAnnoncee(int idWorkflow, int etape) {
-	    // ON CONFLICT DO NOTHING évite de planter si la tâche s'exécute deux fois en même temps
-	    String sql = "INSERT INTO etape_annoncee (id_workflow, etape) VALUES (?, ?) " +
-	                 "ON CONFLICT (id_workflow, etape) DO NOTHING";
-	                 
+	public static void marquerAnnonceTerminee(int idWf) {
+	    String sql = "UPDATE workflow SET annonce_termine = 't' WHERE id = ?";
+	    
 	    try (Connection conn = DBConnection.getConnection();
 	         PreparedStatement ps = conn.prepareStatement(sql)) {
 	        
-	        ps.setInt(1, idWorkflow);
-	        ps.setInt(2, etape);
+	        ps.setInt(1, idWf);
 	        ps.executeUpdate();
+	        System.out.println("Workflow #" + idWf + " marqué comme annoncé (plus de futurs envois).");
 	        
 	    } catch (Exception e) {
-	        System.err.println("Erreur lors du marquage de l'annonce pour le Workflow N°" + idWorkflow + " (Étape " + etape + ")");
 	        e.printStackTrace();
 	    }
 	}
