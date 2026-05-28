@@ -35,6 +35,24 @@ public class DonneeDAO {
 		}
 	}
 
+	public void insertDonnee(Connection conn, String type, String attribut, String commentaire, java.sql.Date sqlDate,
+			int idWorkflow, int nbEtape, String refContrainte, int idTemplateDonnee) throws SQLException {
+		String query = "INSERT INTO donnee (type, attribut, commentaire, date, id_workflow, "
+				+ "nb_etape, type_contraint_ref, id_template_donnee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+		try (PreparedStatement ps = conn.prepareStatement(query)) {
+			ps.setString(1, type);
+			ps.setString(2, attribut);
+			ps.setString(3, commentaire);
+			ps.setDate(4, sqlDate);
+			ps.setInt(5, idWorkflow);
+			ps.setInt(6, nbEtape);
+			ps.setString(7, refContrainte);
+			ps.setInt(8, idTemplateDonnee);
+			ps.executeUpdate();
+		}
+	}
+
 	public void deleteDonneesByEtape(int idWorkflow, int nbEtape) {
 		String sql = "DELETE FROM donnee WHERE id_workflow = ? AND nb_etape = ?";
 
@@ -48,6 +66,19 @@ public class DonneeDAO {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void updateDonnee(Connection conn, String attribut, String commentaire, java.sql.Date sqlDate, int idDonne)
+			throws SQLException {
+		String query = "UPDATE donnee SET attribut = ?, commentaire = ?, date = ? WHERE id_donne = ?";
+
+		try (PreparedStatement ps = conn.prepareStatement(query)) {
+			ps.setString(1, attribut);
+			ps.setString(2, commentaire);
+			ps.setDate(3, sqlDate);
+			ps.setInt(4, idDonne);
+			ps.executeUpdate();
 		}
 	}
 

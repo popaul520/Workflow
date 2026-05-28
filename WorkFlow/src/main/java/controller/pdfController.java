@@ -39,7 +39,7 @@ public class pdfController extends HttpServlet {
             PdfDocument pdfGenerator = new PdfDocument();
             byte[] pdfContent = pdfGenerator.creationPdf(idWf, listeComplete);
 
-            // ✅ Vérification utile
+            // Vérification utile
             System.out.println("PDF taille = " + pdfContent.length);
 
             if (pdfContent == null || pdfContent.length == 0) {
@@ -53,7 +53,6 @@ public class pdfController extends HttpServlet {
                 "attachment; filename=\"Recap_Workflow_" + idWf + ".pdf\"");
             response.setContentLength(pdfContent.length);
 
-            // ✅ Écriture correcte
             ServletOutputStream out = response.getOutputStream();
             out.write(pdfContent);
             out.flush();

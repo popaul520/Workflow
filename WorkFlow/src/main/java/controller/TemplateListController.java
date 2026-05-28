@@ -9,10 +9,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-
-
-
-
 @WebServlet("/template-list")
 public class TemplateListController extends HttpServlet {
     private TemplateDAO dao = new TemplateDAO();
