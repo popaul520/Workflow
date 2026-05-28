@@ -136,10 +136,6 @@
         <h3>Actions</h3>
         <ul>
             <li><a href="home">🏠 Retour Accueil</a></li>
-            <c:if test="<%= !isFinalise %>">
-                <li><a href="workflow?action=edit&id=${wf.id}">📝 Modifier le titre</a></li>
-                <li><a href="workflow?action=delete&id=${wf.id}" style="color: var(--danger);">🗑️ Supprimer</a></li>
-            </c:if>
         </ul>
     </div>
 

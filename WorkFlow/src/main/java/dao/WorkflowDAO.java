@@ -401,24 +401,29 @@ public class WorkflowDAO {
 	}
 
 	// 1. REQUÊTE : Trouver les dossiers dont l'étape vient de se TERMINER et qui n'ont PAS ENCORE été annoncés
-	public static List<Workflow> getWorkflowsTerminesPourEtape(int etape) {
+	public static List<Workflow> getWorkflowsTerminesPourRole(int roleId) {
 	    List<Workflow> list = new ArrayList<>();
 	    
-	    // On cible directement le statut du workflow et son flag d'annonce.
-	    // Plus besoin de dépendre d'une ligne spécifique parfois manquante dans la table validation.
-	    String sql = "SELECT id, titre, statut, annonce_termine FROM workflow " +
-	                 "WHERE statut = 'TERMINER' " +  
-	                 "  AND annonce_termine = false";
+	    // On joint la table droit pour s'assurer que ce rôle possède l'étape liée au workflow finalisé
+	    // ET on vérifie dans une table d'historique (ou via une logique de droits) que ce rôle précis n'a pas encore reçu l'alerte.
+	    
+	    String sql = "SELECT DISTINCT w.id, w.titre FROM workflow w " +
+	                 "JOIN droit d ON d.etape = 10 " + 
+	                 "WHERE w.statut = 'TERMINER' " +
+	                 "  AND w.annonce_termine = false " + 
+	                 "  AND d.role = ?"; // On s'assure que le rôle a le droit sur cette fin de processus
 
 	    try (Connection conn = DBConnection.getConnection();
-	         PreparedStatement ps = conn.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
 	        
-	        while (rs.next()) {
-	            Workflow w = new Workflow();
-	            w.setId(rs.getInt("id"));
-	            w.setTitre(rs.getString("titre"));
-	            list.add(w);
+	        ps.setInt(1, roleId);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                Workflow w = new Workflow();
+	                w.setId(rs.getInt("id"));
+	                w.setTitre(rs.getString("titre"));
+	                list.add(w);
+	            }
 	        }
 	    } catch (Exception e) { 
 	        e.printStackTrace(); 

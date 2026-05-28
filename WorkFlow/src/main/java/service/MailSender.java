@@ -16,17 +16,14 @@ public class MailSender {
             Properties props = new Properties();
 
             // ON UTILISE LE SERVEUR GMAIL (Expéditeur)
-            props.put("mail.smtp.host", "smtp.gmail.com");
-            props.put("mail.smtp.port", "465");
+            props.put("mail.smtp.host", "in-v3.mailjet.com");
+            props.put("mail.smtp.port", "587");
             props.put("mail.smtp.auth", "true");
             
-            // Configuration SSL Direct (Port 465)
-            props.put("mail.smtp.socketFactory.port", "465");
-            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-            props.put("mail.smtp.socketFactory.fallback", "false");
-
+            // Configuration SSL Direct (Port 587)
+            props.put("mail.smtp.starttls.enable", "true");
             props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-            props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+            props.put("mail.smtp.ssl.trust", "in-v3.mailjet.com");
            
             // Timeouts de sécurité
             props.put("mail.smtp.connectiontimeout", "3000");
@@ -37,8 +34,7 @@ public class MailSender {
            
             Message message = new MimeMessage(session);
             //  L'expéditeur réel de l'email
-            message.setFrom(new InternetAddress("robin.colle38@gmail.com"));
-
+            message.setFrom(new InternetAddress("workflow@raffin.com"));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
             message.setSubject(subject);
             message.setText(text);
@@ -47,7 +43,7 @@ public class MailSender {
             transport = session.getTransport("smtp");
 
             // Authentification sur les serveurs de Google avec ton token d'application
-            transport.connect("smtp.gmail.com", "robin.colle38@gmail.com", "vggdnrsugcfzntvk");
+            transport.connect("in-v3.mailjet.com",  "78bc9e10a55c3fee55a6e602f116f7e2",  "1b6daf79d468a3700593e7a2a612bc92");
             System.out.println(" CONNECTÉ AU SMTP DE GMAIL !");
 
             System.out.println(" ENVOI DU MAIL EN COURS...");
