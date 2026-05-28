@@ -238,6 +238,148 @@ public int create(model.Workflow wf) {
 	    return list;
 	}
 	
+	// 1. REQUÊTE : Trouver les dossiers qui ATTENDENT une étape précise (et qui n'ont pas encore été signés)
+	public static List<Workflow> getWorkflowsEnAttentePourEtape(int etape) {
+	    List<Workflow> list = new ArrayList<>();
+	    
+	    // Règle SQL de base pour filtrer l'étape en cours
+	    String conditionEtape = "";
+	    if (etape == 1) {
+	        conditionEtape = "NOT EXISTS (SELECT 1 FROM validation WHERE id_workflow = w.id AND TRIM(etape) = '1')";
+	    } else if (etape >= 2 && etape <= 6) {
+	        conditionEtape = "EXISTS (SELECT 1 FROM validation WHERE id_workflow = w.id AND TRIM(etape) = '1') " +
+	                         "AND NOT EXISTS (SELECT 1 FROM validation WHERE id_workflow = w.id AND TRIM(etape) = '" + etape + "')";
+	    } else if (etape == 7) {
+	        conditionEtape = "(SELECT COUNT(DISTINCT TRIM(v.etape)) FROM validation v WHERE v.id_workflow = w.id AND TRIM(v.etape) IN ('1','2','3','4','5','6')) = 6 " +
+	                         "AND NOT EXISTS (SELECT 1 FROM validation WHERE id_workflow = w.id AND TRIM(etape) = '7')";
+	    } else if (etape >= 8 && etape <= 11) {
+	        int etapePrecedente = etape - 1;
+	        conditionEtape = "EXISTS (SELECT 1 FROM validation WHERE id_workflow = w.id AND TRIM(etape) = '" + etapePrecedente + "') " +
+	                         "AND NOT EXISTS (SELECT 1 FROM validation WHERE id_workflow = w.id AND TRIM(etape) = '" + etape + "')";
+	    }
+
+	    String sql = "SELECT id, titre FROM workflow w " +
+	                 "WHERE (statut IS NULL OR statut != 'Terminé') AND date_finalisation IS NULL AND (" + conditionEtape + ")";
+
+	    try (Connection conn = DBConnection.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+	        while (rs.next()) {
+	            Workflow w = new Workflow();
+	            w.setId(rs.getInt("id"));
+	            w.setTitre(rs.getString("titre"));
+	            list.add(w);
+	        }
+	    } catch (Exception e) { e.printStackTrace(); }
+	    return list;
+	}
+
+	// 1. REQUÊTE : Trouver les dossiers dont l'étape vient de se TERMINER et qui n'ont PAS ENCORE été annoncés
+	public static List<Workflow> getWorkflowsTerminesPourRole(int roleId) {
+	    List<Workflow> list = new ArrayList<>();
+	    
+	    // On joint la table droit pour s'assurer que ce rôle possède l'étape liée au workflow finalisé
+	    // ET on vérifie dans une table d'historique (ou via une logique de droits) que ce rôle précis n'a pas encore reçu l'alerte.
+	    
+	    String sql = "SELECT DISTINCT w.id, w.titre FROM workflow w " +
+	                 "JOIN droit d ON d.etape = 10 " + 
+	                 "WHERE w.statut = 'TERMINER' " +
+	                 "  AND w.annonce_termine = false " + 
+	                 "  AND d.role = ?"; // On s'assure que le rôle a le droit sur cette fin de processus
+
+	    try (Connection conn = DBConnection.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        
+	        ps.setInt(1, roleId);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                Workflow w = new Workflow();
+	                w.setId(rs.getInt("id"));
+	                w.setTitre(rs.getString("titre"));
+	                list.add(w);
+	            }
+	        }
+	    } catch (Exception e) { 
+	        e.printStackTrace(); 
+	    }
+	    return list;
+	}
+
+	// 2. ACTION : Enregistrer en BDD que l'étape de ce workflow
+	public static void marquerAnnonceTerminee(int idWf) {
+	    String sql = "UPDATE workflow SET annonce_termine = 't' WHERE id = ?";
+	    
+	    try (Connection conn = DBConnection.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        
+	        ps.setInt(1, idWf);
+	        ps.executeUpdate();
+	        System.out.println("Workflow #" + idWf + " marqué comme annoncé (plus de futurs envois).");
+	        
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	// PREMIÈRE FONCTION : Récupère les workflows en attente du rôle spécifié dynamiquement :)
+	public static List<Workflow> getWorkflowsEnAttenteParRole(int roleId) {
+	    List<Workflow> liste = new ArrayList<>();
+	    
+	    String sql = 
+	        "SELECT DISTINCT w.id, w.titre, w.commentaire "
+	      + "FROM workflow w "
+	      + "JOIN template_etape te ON te.id_template_workflow = w.id_template_workflow "
+	      + "WHERE te.role_associe = ? "
+	      + "  AND w.date_finalisation IS NULL "
+	      + "  AND (w.statut IS NULL OR UPPER(w.statut) != 'TERMINER') "
+	      + "  "
+	      + "  -- 1. L'étape courante n'a pas encore été validée pour ce workflow -- "
+	      + "  AND NOT EXISTS ( "
+	      + "      SELECT 1 FROM validation v "
+	      + "      WHERE v.id_workflow = w.id "
+	      + "        AND CAST(v.etape AS INT) = te.place "
+	      + "  ) "
+	      + "  "
+	      + "  -- 2. Règles dynamiques de franchissement des étapes -- "
+	      + "  AND ( "
+	      + "      -- Cas A : L'étape a une contrainte spécifique (attente_place renseignée et > 0) -- "
+	      + "      (te.attente_place IS NOT NULL AND te.attente_place > 0 AND EXISTS ( "
+	      + "          SELECT 1 FROM validation v_spec "
+	      + "          WHERE v_spec.id_workflow = w.id "
+	      + "            AND CAST(v_spec.etape AS INT) = te.attente_place "
+	      + "      )) "
+	      + "      OR "
+	      + "      -- Cas B : C'est la toute première étape du workflow (place = 1 ou position de départ) -- "
+	      + "      ((te.attente_place IS NULL OR te.attente_place = 0) AND te.place = 1) "
+	      + "      OR "
+	      + "      -- Cas C : Séquence standard (attente_place vide/0, s'active si l'étape précédente (place - 1) est validée) -- "
+	      + "      ((te.attente_place IS NULL OR te.attente_place = 0) AND te.place > 1 AND EXISTS ( "
+	      + "          SELECT 1 FROM validation v_seq "
+	      + "          WHERE v_seq.id_workflow = w.id "
+	      + "            AND CAST(v_seq.etape AS INT) = te.place - 1 "
+	      + "      )) "
+	      + "  );";
+
+	    try (Connection conn = DBConnection.getConnection(); 
+	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	        
+	        ps.setInt(1, roleId);
+	        
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                Workflow w = new Workflow();
+	                w.setId(rs.getInt("id"));
+	                w.setTitre(rs.getString("titre")); 
+	                w.setCommentaire(rs.getString("commentaire"));
+	                liste.add(w);
+	            }
+	        }
+	    } catch (Exception e) {
+	        System.err.println(" Erreur SQL dynamique V2 pour le rôle : " + roleId);
+	        e.printStackTrace();
+	    }
+	    return liste;
+	}
 	
 
 }

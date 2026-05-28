@@ -2,7 +2,9 @@ package dao;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import model.Utilisateur;
 
@@ -206,4 +208,60 @@ public class UtilisateurDAO {
             ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
+    public static List<Utilisateur> getUsersByRole(int role) throws Exception {
+
+        List<Utilisateur> list = new ArrayList<>();
+
+        String sql = "SELECT * FROM utilisateur WHERE role = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, role);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Utilisateur u = new Utilisateur();
+
+                u.setId(rs.getInt("id"));
+                u.setNom(rs.getString("nom"));
+                u.setPrenom(rs.getString("prenom"));
+                u.setMail(rs.getString("mail"));
+
+                list.add(u);
+            }
+        }
+
+        return list;
+    }
+    
+    public static Map<Integer, List<Utilisateur>> getAllUsersGroupedByRole() {
+        Map<Integer, List<Utilisateur>> map = new HashMap<>();
+        String sql = "SELECT id, login, nom, prenom, mail, role FROM utilisateur WHERE role IS NOT NULL";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Utilisateur u = new Utilisateur();
+                u.setId(rs.getInt("id"));
+                u.setLogin(rs.getString("login"));
+                u.setNom(rs.getString("nom"));
+                u.setPrenom(rs.getString("prenom"));
+                u.setMail(rs.getString("mail"));
+                int roleId = rs.getInt("role");
+                u.setRole(roleId);
+
+                // Si le rôle n'existe pas encore dans la Map, on crée la liste
+                map.computeIfAbsent(roleId, k -> new ArrayList<>()).add(u);
+            }
+        } catch (Exception e) {
+            System.out.println("Erreur lors de la récupération des utilisateurs par rôles");
+            e.printStackTrace();
+        }
+        return map;
+    }
+
 }
