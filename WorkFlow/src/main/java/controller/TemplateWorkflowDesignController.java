@@ -67,22 +67,31 @@ public class TemplateWorkflowDesignController extends HttpServlet {
         
         try {
             // CAS 1 : GESTION DES DONNÉES
-            if ("donnee".equals(type)) {
-                String idDonneeStr = request.getParameter("id_donnee");
-                int idDonnee = (idDonneeStr == null || idDonneeStr.isEmpty()) ? 0 : Integer.parseInt(idDonneeStr);
-                
-                template_donnee d = new template_donnee();
-                d.setId(idDonnee);
-                d.setIdTemplateEtape(Integer.parseInt(request.getParameter("id_etape")));
-                d.setNomChamp(request.getParameter("nom_champ"));
-                d.setTypeComposant(request.getParameter("type_composant"));
-                d.setOrdreAffichage(Integer.parseInt(request.getParameter("ordre_affichage")));
-                d.setACommentaire(request.getParameter("a_commentaire") != null);
-                d.setADate(request.getParameter("a_date") != null);
-                d.setEstObligatoire(request.getParameter("est_obligatoire") != null);
-                
-                designService.saveOrUpdateDonnee(d);
-            } 
+        	// Dans ton TemplateWorkflowDesignController.java, remplace le bloc CAS 1 par celui-ci :
+        	if ("donnee".equals(type)) {
+        	    String idDonneeStr = request.getParameter("id_donnee");
+        	    int idDonnee = (idDonneeStr == null || idDonneeStr.isEmpty()) ? 0 : Integer.parseInt(idDonneeStr);
+        	    
+        	    template_donnee d = new template_donnee();
+        	    d.setId(idDonnee);
+        	    d.setIdTemplateEtape(Integer.parseInt(request.getParameter("id_etape")));
+        	    d.setNomChamp(request.getParameter("nom_champ"));
+        	    d.setTypeComposant(request.getParameter("type_composant"));
+        	    d.setOrdreAffichage(Integer.parseInt(request.getParameter("ordre_affichage")));
+        	    d.setACommentaire(request.getParameter("a_commentaire") != null);
+        	    d.setADate(request.getParameter("a_date") != null);
+        	    d.setEstObligatoire(request.getParameter("est_obligatoire") != null);
+        	    
+        	    // RECUPÉRATION ET SAUVEGARDE DE LA CONTRAINTE EN BASE
+        	    String refContraint = request.getParameter("ref_type_contraint");
+        	    if (refContraint != null && !refContraint.trim().isEmpty()) {
+        	        d.setRefContrainte(refContraint);
+        	    } else {
+        	        d.setRefContrainte(null);
+        	    }
+        	    
+        	    designService.saveOrUpdateDonnee(d);
+        	}
             // CAS 2 : GESTION DES ÉTAPES 
             else if ("etape".equals(type)) {
                 String idEtapeStr = request.getParameter("id_etape");
@@ -102,6 +111,7 @@ public class TemplateWorkflowDesignController extends HttpServlet {
                 
                 designService.saveOrUpdateEtape(e);
             }
+            
         } catch (Exception e) {
             e.printStackTrace();
         }

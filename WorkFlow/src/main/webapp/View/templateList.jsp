@@ -13,7 +13,14 @@
     </style>
 </head>
 <body class="bg-light">
-
+    <div class="sidebar">
+        <h3>Workflow</h3>
+        <ul>
+            <li class="${currentStatus == 'tous' ? 'active' : ''}">
+                <a href="home">🏠 Retour accueil</a>
+            </li>
+        </ul>
+    </div>
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fa-solid fa-list-check me-2 text-primary"></i>Templates de Workflow</h2>

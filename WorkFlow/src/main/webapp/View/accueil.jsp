@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.*, controller.accueilController.WorkflowDisplay, model.Workflow" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -27,7 +27,6 @@
     </style>
 </head>
 <body>
-
     <div class="sidebar">
         <h3>Workflow</h3>
         <ul>
@@ -44,36 +43,31 @@
                 <a href="home?status=annule">❌ Annulé </a>
             </li>
 
-				<%-- 1. SEUL L'ADMIN (ID 11) VOIT LA GESTION DES RÔLES --%>
-				<c:if test="${roleDAO.canAccessEtape(user.role, 11)}">
-					<li
-						style="background: #2d3748; margin-top: 10px; border-radius: 4px;">
-						<a href="admin-roles" style="color: #63b3ed; font-weight: bold;">⚙️
-							Gestion rôle</a>
-					</li>
-				</c:if>
+            <%-- 1. SEUL L'ADMIN (ID 11) VOIT LA GESTION DES RÔLES --%>
+            <c:if test="${roleDAO.canAccessEtape(user.role, 11)}">
+                <li style="background: #2d3748; margin-top: 10px; border-radius: 4px;">
+                    <a href="admin-roles" style="color: #63b3ed; font-weight: bold;">⚙️ Gestion rôle</a>
+                </li>
+            </c:if>
 
-				<%-- 2. SEUL LE RÔLE 1 ET LE PATRON PEUVENT CRÉER --%>
-				<c:if
-					test="${roleDAO.canAccessEtape(user.role, 1) || roleDAO.canAccessEtape(user.role, 11)}">
-					<li style="margin-top: 30px;"><a href="creer-workflowV1"
-						style="color: var(--success); font-weight: bold;">➕ Créer
-							Workflow</a></li>
-					<li style="margin-top: 30px;">
-					<li style="margin-top: 30px;"><a href="admin-roles"
-						style="color: var(--success); font-weight: bold;"> gestion des
-							rôles </a></li>
-					<p>V2 en production testable sous réserve de bugs et problème
-						(pas beaucoup mais un peu)</p>
-					<a href="template-list"
-						style="color: var(--success); font-weight: bold;"> Liste de
-						template </a>
-					</li>
-					<li style="margin-top: 30px;"><a href="creer-workflow"
-						style="color: var(--success); font-weight: bold;"> Creation
-							workflow-template </a></li>
-
-				</c:if>
+            <%-- 2. SEUL LE RÔLE 1 ET LE PATRON PEUVENT CRÉER --%>
+            <c:if test="${roleDAO.canAccessEtape(user.role, 1) || roleDAO.canAccessEtape(user.role, 11)}">
+                <li style="margin-top: 30px;">
+                    <a href="creer-workflowV1" style="color: var(--success); font-weight: bold;">➕ Créer Workflow</a>
+                </li>
+                <li style="margin-top: 10px;">
+                    <a href="admin-roles" style="color: var(--success); font-weight: bold;">⚙️ Gestion des rôles</a>
+                </li>
+                <li style="margin-top: 15px; padding: 0 15px; color: #a0aec0; font-size: 0.85em;">
+                    <p>V2 en production testable sous réserve de bugs (pas beaucoup mais un peu)</p>
+                </li>
+                <li>
+                    <a href="template-list" style="color: var(--success); font-weight: bold;">Liste de template</a>
+                </li>
+                <li style="margin-top: 10px;">
+                    <a href="creer-workflow" style="color: var(--success); font-weight: bold;">Creation workflow-template</a>
+                </li>
+            </c:if>
         </ul>
     </div>
 
@@ -81,27 +75,32 @@
         <div class="header-flex">
             <h1>Accueil WorkFlow</h1>
             <div class="user-controls">
-				<form action="home" method="get">
-				    <input type="text" name="q" class="search-bar" placeholder="ID ou Nom du dossier..." value="<%= request.getParameter("q") != null ? request.getParameter("q") : "" %>">
-				</form>
-                <% if (session.getAttribute("user") != null) { %>
-                    <a href="profil" class="profile-btn">Mon Profil</a>
-                    <a href="logout" class="logout-link">Déconnexion</a>
-                <% } else { %>
-                    <a href="login" class="profile-btn login-btn">Connexion</a>
-                <% } %>
+                <form action="home" method="get">
+                    <input type="text" name="q" class="search-bar" placeholder="ID ou Nom du dossier..." value="<c:out value='${param.q}'/>">
+                </form>
+                <c:choose>
+                    <c:when test="${not empty sessionScope.user}">
+                        <a href="profil" class="profile-btn">Mon Profil</a>
+                        <a href="logout" class="logout-link">Déconnexion</a>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="login" class="profile-btn login-btn">Connexion</a>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
 
-        <%
-            String currentStatus = (String) request.getAttribute("currentStatus");
-            String titreAffiche = "Tous les dossiers";
-            if ("en_cours".equals(currentStatus)) titreAffiche = "Dossiers en cours";
-            else if ("termine".equals(currentStatus)) titreAffiche = "Dossiers terminés";
-            else if ("annule".equals(currentStatus)) titreAffiche = "Dossiers annulés";
-        %>
-        <h2><%= titreAffiche %></h2>
+        <%-- Détermination dynamique du titre de la section --%>
+        <h2>
+            <c:choose>
+                <c:when test="${currentStatus == 'en_cours'}">Dossiers en cours</c:when>
+                <c:when test="${currentStatus == 'termine'}">Dossiers terminés</c:when>
+                <c:when test="${currentStatus == 'annule'}">Dossiers annulés</c:when>
+                <c:otherwise>Tous les dossiers</c:otherwise>
+            </c:choose>
+        </h2>
 
+        <%-- Tableau principal des dossiers --%>
         <div class="box">
             <table>
                 <thead>
@@ -115,39 +114,41 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% 
-                        List<WorkflowDisplay> list = (List<WorkflowDisplay>) request.getAttribute("workflows");
-                        if(list != null && !list.isEmpty()) {
-                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                            for(WorkflowDisplay wd : list) {
-                                Workflow wf = wd.getWorkflow();
-                    %>
-                        <tr>
-                            <td><strong>#<%= wf.getId() %></strong></td>
-                            <td><%= wf.getTitre() %></td>
-                            <td>
-                                <span style="color: #666; font-size: 0.9em;">
-                                    <%= (wf.getDateCreation() != null) ? sdf.format(wf.getDateCreation()) : "N/C" %>
-                                </span>
-                            </td>
-                            <td><span style="color: #888; font-size: 0.9em;">Admin</span></td>
-                            <td>
-                                <span style="font-size: 0.85em; background: <%= wd.getBadgeBg() %>; color: <%= wd.getBadgeText() %>; padding: 4px 12px; border-radius: 12px; font-weight: bold; display: inline-block; min-width: 100px; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
-                                    <%= wd.getLibelleEtape() %>
-                                </span>
-                            </td>
-                            <td><a href="saisie-etape?id_workflow=<%= wf.getId() %>" class="btn-view">Voir</a></td>
-                        </tr>
-                    <%
-                            }
-                        } else { 
-                    %>
-                        <tr><td colspan="6" style="text-align: center; padding: 30px; color: #999;">Aucun workflow trouvé.</td></tr>
-                    <% } %>
+                    <c:choose>
+                        <c:when test="${not empty workflows}">
+                            <c:forEach var="wd" items="${workflows}">
+                                <tr>
+                                    <td><strong>#<c:out value="${wd.workflow.id}"/></strong></td>
+                                    <td><c:out value="${wd.workflow.titre}"/></td>
+                                    <td>
+                                        <span style="color: #666; font-size: 0.9em;">
+                                            <c:choose>
+                                                <c:when test="${not empty wd.workflow.dateCreation}">
+                                                    <fmt:formatDate value="${wd.workflow.dateCreation}" pattern="dd/MM/yyyy"/>
+                                                </c:when>
+                                                <c:otherwise>N/C</c:otherwise>
+                                            </c:choose>
+                                        </span>
+                                    </td>
+                                    <td><span style="color: #888; font-size: 0.9em;">Admin</span></td>
+                                    <td>
+                                        <span style="font-size: 0.85em; background: ${wd.badgeBg}; color: ${wd.badgeText}; padding: 4px 12px; border-radius: 12px; font-weight: bold; display: inline-block; min-width: 100px; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
+                                            <c:out value="${wd.libelleEtape}"/>
+                                        </span>
+                                    </td>
+                                    <td><a href="saisie-etape?id_workflow=${wd.workflow.id}" class="btn-view">Voir</a></td>
+                                </tr>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <tr><td colspan="6" style="text-align: center; padding: 30px; color: #999;">Aucun workflow trouvé.</td></tr>
+                        </c:otherwise>
+                    </c:choose>
                 </tbody>
             </table>
         </div>
 
+        <%-- Tableau des actions en attente --%>
         <h2>⚠️ En attente de votre action</h2>
         <div class="box">
             <table style="border-left: 5px solid #e74c3c;">
@@ -164,8 +165,8 @@
                         <c:when test="${not empty pendingList}">
                             <c:forEach var="wfAction" items="${pendingList}">
                                 <tr>
-                                    <td><strong>#${wfAction.id}</strong></td>
-                                    <td>${wfAction.titre}</td>
+                                    <td><strong>#<c:out value="${wfAction.id}"/></strong></td>
+                                    <td><c:out value="${wfAction.titre}"/></td>
                                     <td>
                                         <span class="badge-urgent" style="background: #fed7d7; color: #822727; padding: 5px 10px; border-radius: 15px; font-weight: bold; font-size: 0.8em;">
                                             ÉTAPE SUIVANTE

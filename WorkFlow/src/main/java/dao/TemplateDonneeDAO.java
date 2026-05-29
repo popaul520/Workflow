@@ -124,8 +124,8 @@ public class TemplateDonneeDAO {
 
             // 3. SAUVEGARDE FINALE DE LA DONNÉE 
             String sqlSave = (id == 0)
-                ? "INSERT INTO template_donnee (id_template_etape, nom_champ, type_composant, ordre_affichage, a_commentaire, a_date, est_obligatoire) VALUES (?, ?, ?, ?, ?, ?, ?)"
-                : "UPDATE template_donnee SET id_template_etape = ?, nom_champ = ?, type_composant = ?, ordre_affichage = ?, a_commentaire = ?, a_date = ?, est_obligatoire = ? WHERE id = ?";
+                ? "INSERT INTO template_donnee (id_template_etape, nom_champ, type_composant, ordre_affichage, a_commentaire, a_date, est_obligatoire, ref_contrainte) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                : "UPDATE template_donnee SET id_template_etape = ?, nom_champ = ?, type_composant = ?, ordre_affichage = ?, a_commentaire = ?, a_date = ?, est_obligatoire = ? , ref_contrainte = ? WHERE id = ?";
 
             try (PreparedStatement ps = conn.prepareStatement(sqlSave)) {
                 ps.setInt(1, idEtape);
@@ -135,9 +135,10 @@ public class TemplateDonneeDAO {
                 ps.setBoolean(5, donnee.isACommentaire());
                 ps.setBoolean(6, donnee.isADate());
                 ps.setBoolean(7, donnee.isEstObligatoire());
+                ps.setString(8, donnee.getRefContrainte());
                 
                 if (id != 0) {
-                    ps.setInt(8, id);
+                    ps.setInt(9, id);
                 }
                 ps.executeUpdate();
             }

@@ -20,10 +20,7 @@ public class WorkflowController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        
         String path = request.getServletPath();
-
-
         if ("/details".equals(path)) {
             try {
                 int id = Integer.parseInt(request.getParameter("id"));

@@ -218,17 +218,16 @@
 											</select>
 										</div>
 
+										<%-- Remplace le bloc de sélection du type associé par celui-ci --%>
 										<div class="col-md-2">
-											<label class="small fw-bold text-primary">Associer
-												type</label> <select name="ref_type_contraint" id="${e.id}"
-												class="form-select form-select-sm">
-												<option value="">-- Aucun --</option>
-												<c:forEach var="tc" items="${listeUniqueTypesContraints}">
-													<option value="${tc}">${tc}</option>
-												</c:forEach>
-											</select>
+										    <label class="small fw-bold text-primary">Associer type</label> 
+										    <select name="ref_type_contraint" id="ref_type_${e.id}" class="form-select form-select-sm">
+										        <option value="">-- Aucun --</option>
+										        <c:forEach var="tc" items="${listeUniqueTypesContraints}">
+										            <option value="${tc}">${tc}</option>
+										        </c:forEach>
+										    </select>
 										</div>
-
 										<div class="col-md-1">
 											<label class="small fw-bold">Ordre</label> <input
 												type="number" name="ordre_affichage" id="ordre_${e.id}"

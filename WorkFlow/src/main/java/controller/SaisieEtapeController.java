@@ -37,7 +37,7 @@ public class SaisieEtapeController extends HttpServlet {
             HttpSession session = request.getSession();
             Utilisateur user = (Utilisateur) session.getAttribute("user");
 
-            // Récupération du contexte complet via le Service
+            // Récupération du contexte complet via le Service (incluant mapCatalogues)
             Map<String, Object> context = etapeService.getEtapeSaisieContext(idWf, numEtape, user);
 
             if (context == null) {
@@ -45,7 +45,7 @@ public class SaisieEtapeController extends HttpServlet {
                 return;
             }
 
-            // Injection en masse des attributs pour la JSP
+            // Injection en masse de toutes les structures (donneesEtape, mapCatalogues, etc.)
             context.forEach(request::setAttribute);
 
             request.getRequestDispatcher("/View/saisieEtapeDynamique.jsp").forward(request, response);
