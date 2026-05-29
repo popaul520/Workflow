@@ -3,16 +3,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 
-<%
-    // 1. Initialisation du DAO pour charger les référentiels
-    DonneeDAO donneeDao = new DonneeDAO();
-    
-    // 2. Récupération des options Booléennes
-    List<String> optionsBool = donneeDao.getValeursContraintes("Bool");
-    
-    // 3. Mise à disposition pour JSTL
-    request.setAttribute("optionsBool", optionsBool);
-%>
+
 
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #34495e; border-bottom: 2px solid #34495e; padding-bottom: 10px;">
@@ -84,7 +75,7 @@
             
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                 <div>
-                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Quantité de réf. :</label>
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Quantité de réf UEA :</label>
                     <input type="number" name="attr_qte_ref" placeholder="Quantité" 
                            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
                 </div>
@@ -103,6 +94,7 @@
                 <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) production :</label>
                 <textarea name="comm_prod" placeholder="Précisions sur les cadences ou besoins MOD spécifiques..." 
                           style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+            	
             </div>
         </div>
 

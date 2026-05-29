@@ -120,6 +120,8 @@
             
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire final Qualité :</label>
             <textarea name="comm_avis" style="width: 100%; padding: 10px; height: 80px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+        	<input type="hidden" name="date_avis" value="CURRENT_DATE">
+        	
         </div>
 
         <%-- BOUTON DE VALIDATION --%>
@@ -128,6 +130,7 @@
                     style="background-color: #6f42c1; color: white; padding: 15px 40px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background 0.3s;">
                  Valider la faisabilité Qualité
             </button>
+            
         </div>
     </form>
 </div>

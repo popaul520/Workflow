@@ -10,7 +10,6 @@ import model.Utilisateur;
 
 @WebServlet("/register")
 public class registerController extends HttpServlet {
-
     private UtilisateurDAO dao = new UtilisateurDAO();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

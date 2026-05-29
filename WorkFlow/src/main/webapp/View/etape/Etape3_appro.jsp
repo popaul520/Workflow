@@ -2,20 +2,6 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
-
-<%
-    // 1. Initialisation du DAO pour charger les référentiels
-    DonneeDAO donneeDao = new DonneeDAO();
-    
-    // 2. Récupération des options basées sur la colonne 'type' de ta table type_contraint
-    List<String> optionsBool = donneeDao.getValeursContraintes("Bool"); 
-    List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
-    List<String> optionsReponse = donneeDao.getValeursContraintes("reponse"); // 'reponse' en minuscule
-    // 3. Mise à disposition pour JSTL
-    request.setAttribute("optionsBool", optionsBool);
-    request.setAttribute("optionsAvis", optionsAvis);
-    request.setAttribute("optionsReponse", optionsReponse);
-%>
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
     <h2 style="color: #2c3e50; border-bottom: 2px solid #e67e22; padding-bottom: 10px;">
         Étape 3 : Faisabilité Approvisionnement
@@ -83,7 +69,7 @@
             <textarea name="comm_avis" style="width: 100%; height: 60px;"></textarea>
             
             <label style="display: block; font-weight: bold; margin-top: 10px;">Date de validation :</label>
-            <input type="date" name="date_avis" required style="width: 100%; padding: 10px;">
+            <input type="hidden" name="date_avis" value="CURRENT_DATE">
         </div>
 
         <div style="text-align: right;">

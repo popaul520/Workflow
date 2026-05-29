@@ -140,7 +140,7 @@
     </div>
 
     <div class="main-container">
-        
+
         <div class="header">
             <h1>Dossier Workflow <span class="status-badge">ID #${wf.id}</span></h1>
         </div>
@@ -195,7 +195,7 @@
                         boolean isValidated = etapesValidees.contains(iValue);
                         boolean isLocked = false;
                         
-                        // 🛠️ LOGIQUE CORRIGÉE : Si le dossier est clos, on ne verrouille QUE les étapes qui n'ont PAS été faites.
+                        //  Si le dossier est clos, on ne verrouille que les étapes qui n'ont pas été faites.
                         if (isFinalise) {
                             isLocked = !isValidated; 
                         } else {
@@ -272,7 +272,7 @@
                 </table>
             </div>
 
-            <%-- 🛠️ CORRECTION : On laisse le bloc de détails accessible dans tous les cas pour afficher les étapes validées --%>
+            <%--On laisse le bloc de détails accessible dans tous les cas pour afficher les étapes validées --%>
             <h3 id="titre-etape" style="color: var(--primary); margin-top: 0;">Détails de l'étape</h3>
             <div id="contenu-etape"></div>
         </div>

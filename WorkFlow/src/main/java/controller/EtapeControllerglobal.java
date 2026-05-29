@@ -18,6 +18,7 @@ import model.Utilisateur;
 
 @WebServlet("/etapeController")
 public class EtapeControllerglobal extends HttpServlet {
+    private static final long serialVersionUID = 1L;
 
     private void chargerReferentiels(HttpServletRequest request) {
         dao.DonneeDAO donneeDao = new dao.DonneeDAO();
@@ -146,14 +147,9 @@ public class EtapeControllerglobal extends HttpServlet {
                     d.setAttribut(valAttr.trim());
                     d.setCommentaire(valComm);
                     
-                    // =========================================================================
-                    // 🆕 ATTRIBUTION DE LA DATE ACTUELLE POUR LES ÉTAPES 7 ET 10
-                    // =========================================================================
-                    if ((nbEtape == 7 || nbEtape == 10) && "avis".equals(suffixe)) {
-                        // Injection forcée de la date système actuelle (SQL Date)
+                    if ("CURRENT_DATE".equals(valDate) || (nbEtape == 7 || nbEtape == 10) && "avis".equals(suffixe)) {
                         d.setDate(new java.sql.Date(System.currentTimeMillis()));
                     } else if (valDate != null && !valDate.isEmpty()) {
-                        // Traitement classique si une date provient d'un formulaire
                         try {
                             d.setDate(java.sql.Date.valueOf(valDate));
                         } catch (Exception e) {
@@ -167,7 +163,7 @@ public class EtapeControllerglobal extends HttpServlet {
             }
         }
 
-        // Validation fonctionnelle de l'étape et cloture
+        // Validation fonctionnelle de l'étape et clôture
         try {
             valDao.validerEtape(idWorkflow, user.getId(), nbEtape);
 

@@ -116,8 +116,13 @@
 
                         <div class="form-group">
                             <input type="hidden" name="type_prev_lancement" value="Prévision lancement">
-                            <label>Volume de lancement prévu *</label>
-                            <input type="number" name="attr_prev_lancement" min="0" required placeholder="Ex: 50000">
+                            <label>Volume de lancement prévu (kilo)</label>
+                            <input type="text" name="attr_prev_lancement" min="0" required placeholder="Ex: 50000">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>prévisionnell anuelle (kilo)</label>
+                            <input type="text" name="attr_prev_lancement_annuel" required placeholder="80000 KILO de caviar ">
                         </div>
 
                         <div class="form-group">
@@ -204,7 +209,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Piece par unité de Mise en œuvre *</label>
+                            <label>Piece par unité de Mise en œuvre (Unité PCB))</label>
                             <input type="number" name="attr_pcs_colis" min="1" required placeholder="Nombre de pièces">
                         </div>
 

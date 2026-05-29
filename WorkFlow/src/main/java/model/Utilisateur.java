@@ -57,7 +57,7 @@ public class Utilisateur {
     public static String getRole(int nbrole) {
         switch (nbrole) {
         case 1: return ("COMMERCE");
-        case 2: return ("PRODUCTION");
+        case 2: return ("CONDITIONNEMENT");
         case 3: return ("APPROVISIONNEMENT");
         case 4: return ("SCM");
         case 5: return ("LOGISTIQUE");

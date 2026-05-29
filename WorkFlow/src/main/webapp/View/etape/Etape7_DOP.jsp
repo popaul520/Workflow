@@ -3,16 +3,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 
-<%
-    // 1. Initialisation du DAO pour charger les référentiels
-    DonneeDAO donneeDao = new DonneeDAO();
-    
-    // 2. Récupération des options pour les listes déroulantes (Avis Direction)
-    List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
-    
-    // 3. Mise à disposition pour JSTL
-    request.setAttribute("optionsAvis", optionsAvis);
-%>
+
 
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #c0392b; border-bottom: 2px solid #c0392b; padding-bottom: 10px;">
@@ -28,6 +19,7 @@
         <div class="bloc-donnee" style="margin-bottom: 25px; padding: 20px; border: 2px solid #c0392b; border-radius: 5px; background-color: #fdf2f2;">
             <input type="hidden" name="type_avis" value="Avis D.O.P."> 
             <input type="hidden" name="ref_avis" value="avis"> 
+                        <input type="hidden" name="date_avis" value="CURRENT_DATE">
             
             <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #c0392b; font-size: 1.1em;">Décision Finale D.O.P. :</label>
             <select name="attr_avis" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #c0392b; border-radius: 4px; font-weight: bold;">
@@ -53,6 +45,7 @@
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Détails des actions / Échéancier (Commentaire) :</label>
             <textarea name="comm_actions" placeholder="Détaillez les pré-requis avant lancement ou les points de vigilance..." 
                       style="width: 100%; padding: 10px; height: 80px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+        
         </div>
 
         <%-- BOUTON DE VALIDATION --%>

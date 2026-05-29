@@ -3,17 +3,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 
-<%
-    // 1. Initialisation du DAO pour charger les référentiels
-    DonneeDAO donneeDao = new DonneeDAO();
-    
-    // 2. Récupération des options pour les listes déroulantes (Avis Final)
-    List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
-    
-    // 3. Mise à disposition pour JSTL
-    request.setAttribute("optionsAvis", optionsAvis);
-%>
-
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #2980b9; border-bottom: 2px solid #2980b9; padding-bottom: 10px;">
         Étape 10 : Décision D.C.D.
@@ -40,6 +29,7 @@
             <label style="display: block; font-weight: bold; margin-bottom: 8px;">Commentaire(s) de clôture :</label>
             <textarea name="comm_avis" placeholder="Synthèse finale, conditions de mise en marché, ou raisons du refus..." 
                       style="width: 100%; padding: 12px; height: 150px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></textarea>
+        	 <input type="hidden" name="date_avis" value="CURRENT_DATE">
         </div>
 
         <%-- BOUTON DE VALIDATION FINALE --%>

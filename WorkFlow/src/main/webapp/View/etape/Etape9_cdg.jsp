@@ -3,16 +3,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 
-<%
-    // 1. Initialisation du DAO
-    DonneeDAO donneeDao = new DonneeDAO();
-    
-    // 2. Récupération des options Booléennes (si besoin de valider le calcul)
-    List<String> optionsBool = donneeDao.getValeursContraintes("Bool");
-    
-    // 3. Mise à disposition pour JSTL
-    request.setAttribute("optionsBool", optionsBool);
-%>
 
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">
@@ -44,13 +34,16 @@
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
             <input type="hidden" name="type_valid_cdg" value="Validation calcul C.d.G."> 
             <input type="hidden" name="ref_valid_cdg" value="Bool"> 
+            <input type="hidden" name="date_avis" value="CURRENT_DATE">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Calcul finalisé et validé :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Calcul finalisé et validé du CRI :</label>
             <select name="attr_valid_cdg" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Sélectionner --</option>
                 <c:forEach var="opt" items="${optionsBool}">
                     <option value="${opt}">${opt}</option>
+                    
                 </c:forEach>
+                
             </select>
         </div>
 

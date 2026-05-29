@@ -3,18 +3,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-<%
-    // 1. Initialisation du DAO pour charger les référentiels
-    DonneeDAO donneeDao = new DonneeDAO();
-    
-    // 2. Récupération des options basées sur la colonne 'type'
-    List<String> optionsBool = donneeDao.getValeursContraintes("Bool"); 
-    List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
-    
-    // 3. Mise à disposition pour JSTL
-    request.setAttribute("optionsBool", optionsBool);
-    request.setAttribute("optionsAvis", optionsAvis);
-%>
 
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
@@ -66,7 +54,7 @@
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire de l'avis :</label>
             <textarea name="comm_avis" style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
             <label style="display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px;">Date de validation :</label>
-            <input type="date" name="date_avis" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <input type="hidden" name="date_avis" value="CURRENT_DATE">
         </div>
 
         <%-- BOUTON DE VALIDATION --%>

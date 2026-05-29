@@ -3,18 +3,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 
-<%
-    // 1. Initialisation du DAO pour charger les référentiels
-    DonneeDAO donneeDao = new DonneeDAO();
-    
-    // 2. Récupération des options pour les listes déroulantes
-    List<String> optionsBool = donneeDao.getValeursContraintes("Bool"); 
-    List<String> optionsAvis = donneeDao.getValeursContraintes("avis");
-    
-    // 3. Mise à disposition pour JSTL
-    request.setAttribute("optionsBool", optionsBool);
-    request.setAttribute("optionsAvis", optionsAvis);
-%>
 
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #2c3e50; border-bottom: 2px solid #e67e22; padding-bottom: 10px;">
@@ -96,6 +84,8 @@
             
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire final :</label>
             <textarea name="comm_avis" style="width: 100%; padding: 10px; height: 80px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+        	<input type="hidden" name="date_avis" value="CURRENT_DATE">
+        	
         </div>
 
         <%-- BOUTON DE VALIDATION --%>

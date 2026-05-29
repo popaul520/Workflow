@@ -75,7 +75,7 @@
             <textarea name="comm_avis" style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
             
             <label style="display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px;">Date de validation :</label>
-            <input type="date" name="date_avis" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <input type="hidden" name="date_avis" value="CURRENT_DATE">
         </div>
 
         <div style="text-align: right; margin-top: 20px;">

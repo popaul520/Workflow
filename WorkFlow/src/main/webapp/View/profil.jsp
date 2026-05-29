@@ -27,12 +27,13 @@
         .label { font-weight: bold; color: #4a6fa5; }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="main">
             <div class="header">
                 <h1>Mon Compte</h1>
-                <a href="login">Retour à l'accueil</a>
+                <a href="home">Retour à l'accueil</a>
             </div>
 
             <div class="profile-card">
@@ -42,6 +43,9 @@
                 </div>
                 <div class="info-group">
                     <span class="label">Login :</span> <%= user.getLogin() %>
+                </div>
+                <div class="info-group">
+                    <span class="label">Ton rôle :</span> <%= model.Utilisateur.getRole(user.getRole()) %>
                 </div>
                 <button onclick="window.location.href='logout'" style="background: #cc0000; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px;">
                     Se déconnecter
