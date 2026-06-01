@@ -9,10 +9,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
 import dao.DonneeDAO;
 import dao.ValidationDAO;
 import dao.WorkflowDAO;
 import dao.RoleDAO; 
+import dao.UtilisateurDAO; // Assure-toi d'importer ton DAO Utilisateur pour récupérer les noms
 import model.Workflow;
 import model.Utilisateur;
 
@@ -34,6 +36,7 @@ public class accueilController extends HttpServlet {
         DonneeDAO dDao = new DonneeDAO();
         ValidationDAO vDao = new ValidationDAO();
         RoleDAO roleDao = new RoleDAO(); 
+        UtilisateurDAO uDao = new UtilisateurDAO(); // Instancié pour récupérer l'identité du demandeur
 
         String status = request.getParameter("status");
         String query = request.getParameter("q");
@@ -43,7 +46,7 @@ public class accueilController extends HttpServlet {
         }
 
         try {
-            // --- 1. RÉCUPÉRATION DES WORKFLOWS BRUTS ---
+            // --- 1. RÉCUPÉRATION DES WORKFLOWS BRUTS (FILTRÉS) ---
             List<Workflow> allWorkflows;
             if (query != null && !query.trim().isEmpty()) {
                 allWorkflows = wfDao.searchWorkflows(query.trim());
@@ -69,17 +72,17 @@ public class accueilController extends HttpServlet {
                     etape = 1; 
                 }
 
-                // Récupération de l'avis selon l'avancement réel (étapes 10, 7, ou étapes courantes)
+                // Récupération dynamique du texte de décision lié à l'étape en cours
                 String avis = "";
                 if (etape == 10) {
                     avis = dDao.getValeurAttribut(wf.getId(), 10, "Avis D.C.D.");
                 } else if (etape == 7) {
                     avis = dDao.getValeurAttribut(wf.getId(), 7, "Avis D.O.P.");
                 } else {
-                    // Pour les étapes intermédiaires (2, 3, 5, 6...), on cherche un avis dynamique lié à l'étape
-                    avis = dDao.getValeurAttribut(wf.getId(), etape, "avis production");
+                    // Lecture générique séquentielle des attributs textuels de décision
+                    avis = dDao.getValeurAttribut(wf.getId(), etape, "faisable");
                     if (avis == null || avis.isEmpty()) {
-                        avis = dDao.getValeurAttribut(wf.getId(), etape, "DÚlai compatible");
+                        avis = dDao.getValeurAttribut(wf.getId(), etape, "avis production");
                     }
                     if (avis == null || avis.isEmpty()) {
                         avis = dDao.getValeurAttribut(wf.getId(), etape, "Avis logistique");
@@ -92,12 +95,12 @@ public class accueilController extends HttpServlet {
                 String cleanAvis = (avis != null) ? avis.trim() : "";
                 boolean isRefuse = "Non faisable".equalsIgnoreCase(cleanAvis) || "Défavorable".equalsIgnoreCase(cleanAvis);
 
-                // Valeurs par défaut (Bleu / En cours)
+                // Valeurs par défaut du Badge (Bleu / En cours)
                 String badgeBg = "#ebf8ff"; 
                 String badgeText = "#2c5282";
                 String libelleEtape = "Étape " + etape + "/9";
 
-                // Application dynamique des couleurs sur la base du texte de l'avis trouvé
+                // Calcul dynamique des styles de badges basés sur l'avis
                 if ("Faisable".equalsIgnoreCase(cleanAvis)) {
                     badgeBg = "#c6f6d5"; // Vert
                     badgeText = "#22543d";
@@ -113,7 +116,7 @@ public class accueilController extends HttpServlet {
                     badgeText = "#822727";
                     libelleEtape = (etape == 10) ? "Refusé" : "Non Faisable";
                 }
-                // Si aucun avis n'est encore enregistré en BDD
+                // Si l'étape n'a pas encore reçu de réponse
                 else if (cleanAvis.isEmpty()) {
                     if (etape >= 7) {
                         badgeBg = "#e2e8f0"; // Gris
@@ -126,7 +129,7 @@ public class accueilController extends HttpServlet {
                     }
                 }
 
-                // Filtrage d'affichage selon l'onglet actif (Statut)
+                // Filtrage d'affichage selon le scope de l'onglet actif
                 boolean afficher = false;
                 if ("tous".equals(status)) {
                     afficher = true;
@@ -141,14 +144,25 @@ public class accueilController extends HttpServlet {
                 }
 
                 if (afficher) {
-                    workflowsFiltered.add(new WorkflowDisplay(wf, badgeBg, badgeText, libelleEtape));
+                    // Résolution propre du nom du demandeur
+                    String nomDemandeur = "Inconnu";
+                    try {
+                        Utilisateur demandeur = uDao.findByid( Integer.parseInt(wf.getIdUtilisateur()));
+                        if (demandeur != null) {
+                            nomDemandeur = demandeur.getNom(); // Ajuste selon tes getters
+                        }
+                    } catch (Exception e) {
+                        nomDemandeur = "ID User : " + wf.getIdUtilisateur();
+                    }
+
+                    workflowsFiltered.add(new WorkflowDisplay(wf, badgeBg, badgeText, libelleEtape, nomDemandeur));
                 }
             }
 
-            // --- 3. RÉCUPÉRATION DES TÂCHES EN ATTENTE ---
+            // --- 3. RÉCUPÉRATION DES TÂCHES EN ATTENTE D'ACTION ---
             List<Workflow> pendingList = WorkflowDAO.getWorkflowsEnAttenteParRole(user.getRole());
            
-            // --- 4. ENVOI DES DONNÉES À LA JSP ---
+            // --- 4. EXPORTATION DES ATRIBUTS & ROUTAGE ---
             request.setAttribute("workflows", workflowsFiltered); 
             request.setAttribute("pendingList", pendingList);    
             request.setAttribute("currentStatus", status);       
@@ -166,23 +180,26 @@ public class accueilController extends HttpServlet {
         doGet(request, response);
     }
 
-    // Wrapper d'affichage pour la JSP
+    // Wrapper POJO d'affichage pour nettoyer la JSP
     public static class WorkflowDisplay {
-        private Workflow workflow;
-        private String badgeBg;
-        private String badgeText;
-        private String libelleEtape;
+        private final Workflow workflow;
+        private final String badgeBg;
+        private final String badgeText;
+        private final String libelleEtape;
+        private final String nomDemandeur;
 
-        public WorkflowDisplay(Workflow workflow, String badgeBg, String badgeText, String libelleEtape) {
+        public WorkflowDisplay(Workflow workflow, String badgeBg, String badgeText, String libelleEtape, String nomDemandeur) {
             this.workflow = workflow;
             this.badgeBg = badgeBg;
             this.badgeText = badgeText;
             this.libelleEtape = libelleEtape;
+            this.nomDemandeur = nomDemandeur;
         }
 
         public Workflow getWorkflow() { return workflow; }
         public String getBadgeBg() { return badgeBg; }
         public String getBadgeText() { return badgeText; }
         public String getLibelleEtape() { return libelleEtape; }
+        public String getNomDemandeur() { return nomDemandeur; }
     }
 }
