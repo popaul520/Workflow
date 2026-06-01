@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Utilisateur;
 import service.WorkflowCreationService;
 
 @WebServlet("/creer-workflow")
@@ -55,7 +56,12 @@ public class WorkflowCreateController extends HttpServlet {
             int totalChamps = (totalStr != null && !totalStr.isEmpty()) ? Integer.parseInt(totalStr) : 0;
 
             // Déclenchement de la transaction d'initialisation via le Service
-            creationService.createWorkflowInstance(titre, idTemplate, totalChamps, request);
+         // Dans WorkflowCreateController.java (doPost)
+            Utilisateur user = (Utilisateur) request.getSession().getAttribute("user");
+
+            // Appelle ton service en lui passant l'user à la fin
+            creationService.createWorkflowInstance(titre, idTemplate, totalChamps, request, user);
+           // creationService.createWorkflowInstance(titre, idTemplate, totalChamps, request);
 
             response.sendRedirect(request.getContextPath() + "/home");
 

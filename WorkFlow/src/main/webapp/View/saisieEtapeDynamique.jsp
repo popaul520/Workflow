@@ -108,7 +108,7 @@
 			</c:if>
 
 			<c:choose>
-				<c:when test="${empty donneesEtape && !canEdit}">
+				<c:when test="${empty donneesEtape && !canEdit && !currentEtape.estFinale}">
 					<div class="info-box" style="text-align: center; padding: 40px; color: #718096; background: #f7fafc; border-radius: 6px;">
 						<p>Cette étape n'a pas encore de données renseignées ou vous n'avez pas le rôle requis pour y accéder.</p>
 					</div>
@@ -119,6 +119,7 @@
 						<input type="hidden" name="id_workflow" value="${workflow.id}">
 						<input type="hidden" name="current_n" value="${numEtapeActive}">
 						<input type="hidden" name="total_champs" value="${donneesEtape.size()}">
+						<input type="hidden" name="is_etape_finale" value="${currentEtape.estFinale}">
 
 						<div class="step-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #edf2f7; padding-bottom: 15px;">
 							<h2 style="margin: 0; color: #2d3748;">Saisie : ${currentEtape.nomEtape} (Étape ${numEtapeActive})</h2>
@@ -132,6 +133,8 @@
 						</div>
 
 						<fieldset id="fs-edition" disabled style="border: none; padding: 0; margin: 0;">
+							
+							<%-- 1. BOUCLE SUR LES COMPOSANTS DYNAMIQUES DU CATALOGUE --%>
 							<c:forEach var="d" items="${donneesEtape}" varStatus="status">
 								<div class="visu-row">
 									<input type="hidden" name="id_donne_${status.index}" value="${d.idDonne}"> 
@@ -153,7 +156,7 @@
 
 										<div class="edit-mode" style="display: none;">
 											<c:choose>
-												<%-- CAS UNIQUE : Booléen Système --%>
+												<%-- CAS 1 : Booléen Système --%>
 												<c:when test="${d.refContrainte == 'Bool'}">
 													<select name="attr_${status.index}" class="form-control-dyn" ${d.estObligatoire ? 'required' : ''}>
 														<option value="">-- Sélectionner --</option>
@@ -162,7 +165,7 @@
 													</select>
 												</c:when>
 
-												<%-- CAS DYNAMIQUE : Type contraint issu du catalogue de la Base de Données --%>
+												<%-- CAS 2 : Chargement dynamique depuis l'attribut ref_contrainte (table public.type_contraint) --%>
 												<c:when test="${not empty d.refContrainte && not empty mapCatalogues[d.refContrainte]}">
 													<select name="attr_${status.index}" class="form-control-dyn" ${d.estObligatoire ? 'required' : ''}>
 														<option value="">-- Sélectionner un(e) ${d.refContrainte} --</option>
@@ -172,7 +175,7 @@
 													</select>
 												</c:when>
 
-												<%-- CAS PAR DÉFAUT : Saisie libre selon le type de composant --%>
+												<%-- CAS PAR DÉFAUT : Saisie classique --%>
 												<c:otherwise>
 													<c:choose>
 														<c:when test="${d.typeComposant == 'textarea'}">
@@ -212,6 +215,46 @@
 									</div>
 								</div>
 							</c:forEach>
+
+							<%-- 2. INJECTION CAS UNIQUE : DÉCISION FINALE SI EST_FINALE == TRUE --%>
+							<c:if test="${currentEtape.estFinale}">
+								<div class="visu-row" style="background-color: #fffaf0; border-top: 2px dashed #feebc8; margin-top: 20px; padding: 20px 12px;">
+									<div style="flex: 1; font-weight: bold; color: #7b341e;">
+										Avis de Clôture Définitif
+										<span class="required-star">*</span>
+										<div class="step-badge" style="background: #feebc8; color: #744210;">Action Finale</div>
+									</div>
+
+									<div style="flex: 1.5; padding-right: 15px;">
+										<span class="view-mode" style="font-weight: bold; color: #2c5282;">
+											${not empty workflow.dateFinalisation ? 'Dossier Traité / Clôturé' : '<em>Clôture en attente de saisie</em>'}
+										</span>
+										
+										<div class="edit-mode" style="display: none;">
+											<select name="decision_finale" class="form-control-dyn" required>
+												<option value="">-- Choisir le verdict final --</option>
+												<option value="Faisable">FAISABLE (Validation)</option>
+												<option value="Non faisable">NON FAISABLE (Refus global)</option>
+												<option value="Faisable sous condition">FAISABLE SOUS CONDITION</option>
+											</select>
+										</div>
+									</div>
+
+									<div style="flex: 1.5; display: flex; flex-direction: column; gap: 8px;">
+										<div class="view-mode" style="font-size: 0.9em; color: #4a5568;">
+											${not empty workflow.commentaire ? workflow.commentaire : ''}
+										</div>
+										<div class="edit-mode" style="display: none;">
+											<textarea name="commentaire_final" class="form-control-dyn" rows="2" placeholder="Renseigner le motif de clôture obligatoire..." required></textarea>
+										</div>
+										<div class="edit-mode" style="display: none; margin-top: 4px;">
+											<span style="font-size: 0.8em; color: #718096; font-weight: bold;">Date de Clôture (Système) :</span>
+											<input type="date" name="date_finalisation" value="${currentDateIso}" class="form-control-dyn" readonly style="background: #e2e8f0; color: #4a5568;">
+										</div>
+									</div>
+								</div>
+							</c:if>
+
 						</fieldset>
 					</form>
 				</c:otherwise>

@@ -16,7 +16,6 @@ public class TemplateListController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
         String idStr = request.getParameter("id");
-
         // --- GESTION DE LA SUPPRESSION ---
         if ("delete".equals(action) && idStr != null) {
             try {
@@ -29,7 +28,6 @@ public class TemplateListController extends HttpServlet {
                 e.printStackTrace();
             }
         }
-
         // --- AFFICHAGE DE LA LISTE ---
         request.setAttribute("templates", dao.getAllTemplates());
         request.getRequestDispatcher("/View/templateList.jsp").forward(request, response);

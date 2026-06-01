@@ -1,6 +1,10 @@
 package service;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +58,10 @@ public class SaisieEtapeService {
         boolean canEdit = (hasAccess && !isClosed && (numEtape <= etapeMaxValidee + 1));
 
         List<Map<String, Object>> donneesEtape = templateDao.getChampsEtDonnees(idWf, wf.getIdTemplateWorkflow(), numEtape);
+
+        // --- AJOUT DE LA MAP DES CATALOGUES DYNAMIQUES (Table: type_contraint) ---
+        Map<String, List<String>> mapCatalogues = this.loadCataloguesContraints();
+        context.put("mapCatalogues", mapCatalogues);
 
         context.put("workflow", wf);
         context.put("donneesEtape", donneesEtape);
@@ -135,14 +143,66 @@ public class SaisieEtapeService {
                         boolean isDefavorable = "Non faisable".equalsIgnoreCase(avisSaisi)
                                 || "Défavorable".equalsIgnoreCase(avisSaisi)
                                 || "Sous réserve".equalsIgnoreCase(avisSaisi);
-
                         if (isDefavorable) {
                             wfDao.finaliserWorkflow(idWorkflow);
                         }
                     }
                 }
-            }
+            } 
+            
             conn.commit();
+        }
+    }
+
+    /**
+     * Charge l'ensemble des catalogues d'options depuis la table type_contraint
+     * Organise les données sous forme de Map : Clef = type (ex: 'client'), Valeur = Liste d'options textuelles
+     */
+    private Map<String, List<String>> loadCataloguesContraints() {
+        Map<String, List<String>> mapCatalogues = new HashMap<>();
+        
+        // CORRECTION : Sélection de la colonne "type" à la place de "id" pour mapper correctement avec d.refContrainte
+        String sql = "SELECT type, valeur FROM public.type_contraint ORDER BY type, id ASC";
+
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                String refContrainte = rs.getString("type"); // Pivot corrigé ici ('client', etc.)
+                String valeur = rs.getString("valeur");
+
+                if (refContrainte != null && valeur != null) {
+                    mapCatalogues.computeIfAbsent(refContrainte, k -> new ArrayList<>()).add(valeur);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors du chargement de la table type_contraint : " + e.getMessage());
+            e.printStackTrace();
+        }
+        return mapCatalogues;
+    }
+
+    /**
+     * Méthode d'écriture de clôture globale appelée à l'envoi de l'étape finale.
+     * Met à jour la date de finalisation (date courante système), le commentaire de clôture et le statut global.
+     */
+    public void cloturerWorkflowStructurel(int idWorkflow, String decision, String commentaire, Utilisateur user) throws Exception {
+        String sql = "UPDATE public.workflow SET date_finalisation = CURRENT_DATE, commentaire = ?, statut = ? WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, commentaire != null ? commentaire.trim() : "");
+            ps.setString(2, decision != null ? decision.trim() : "");
+            ps.setInt(3, idWorkflow);
+            int rowsUpdated = ps.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Le dossier #" + idWorkflow + " a été structurellement clôturé avec le verdict : " + decision);
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors de la clôture structurelle du workflow #" + idWorkflow);
+            throw e;
         }
     }
 }

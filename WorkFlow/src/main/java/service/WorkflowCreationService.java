@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import dao.DBConnection;
 import dao.TemplateDAO;
 import dao.WorkflowCreationDAO;
+import model.Utilisateur; // 👈 Assure-toi d'importer le modèle Utilisateur
 
 public class WorkflowCreationService {
 
@@ -25,7 +26,6 @@ public class WorkflowCreationService {
         try {
             List<Map<String, Object>> structure = creationDao.getStructureEtape1(idTemplate);
             
-            // Construction du JSON via Stream pour éviter les concaténations manuelles fragiles
             return structure.stream().map(m -> {
                 return String.format(
                     "{\"idTemplateDonnee\":%d,\"nomChamp\":\"%s\",\"refContrainte\":\"%s\","
@@ -48,9 +48,10 @@ public class WorkflowCreationService {
 
     /**
      * Pilote l'intégralité de la transaction de création du Workflow initialisé
+     * MODIFICATION : Ajout du paramètre Utilisateur user
      */
     public void createWorkflowInstance(String titre, int idTemplate, int totalChamps, 
-                                       jakarta.servlet.http.HttpServletRequest request) throws Exception {
+                                       jakarta.servlet.http.HttpServletRequest request, Utilisateur user) throws Exception {
         
         try (Connection conn = DBConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -62,9 +63,8 @@ public class WorkflowCreationService {
                 if (totalChamps > 0) {
                     creationDao.insertDonneesBatch(conn, idWorkflow, totalChamps, request);
                 }
-
-                // 3. Validation de l'initiateur (Etape 1)
-                int currentUserId = 1; // Id utilisateur simulé ou extrait de la session
+                int currentUserId = (user != null && user.getId() != -1) ? user.getId() : 9; 
+                
                 creationDao.insertValidationInitiale(conn, idWorkflow, currentUserId);
 
                 conn.commit();
