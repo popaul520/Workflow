@@ -30,7 +30,6 @@
     }
     
     boolean isFinalise = (wf != null && wf.getDateFinalisation() != null);
-    
     dao.DonneeDAO dDao = new dao.DonneeDAO();
     List<model.Donnee> dataE1 = dDao.getDonneesByEtape(wf.getId(), 1);
     List<model.Donnee> dataE7 = dDao.getDonneesByEtape(wf.getId(), 7);

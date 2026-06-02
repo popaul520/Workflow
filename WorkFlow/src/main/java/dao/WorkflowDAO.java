@@ -5,9 +5,9 @@ import java.util.*;
 
 import model.Droit;
 import model.Workflow;
+import model.WorkflowDisplay;
 
 public class WorkflowDAO {
-
 	public List<Workflow> getAll() {
 		List<Workflow> list = new ArrayList<>();
 		String sql = "SELECT id, titre FROM workflow";
@@ -100,32 +100,35 @@ public class WorkflowDAO {
 	}
 
 	public int create(model.Workflow wf) {
-		// On n'utilise que les colonnes qui existent vraiment dans ta table : titre et
-		// date_creation
-		String sql = "INSERT INTO workflow (titre, date_creation) VALUES (?, ?)";
-		int generatedId = -1;
+	    // Intégration de la colonne id_utilisateur dans la requête d'insertion
+	    String sql = "INSERT INTO workflow (titre, date_creation, id_utilisateur) VALUES (?, ?, ?)";
+	    int generatedId = -1;
 
-		try (Connection con = DBConnection.getConnection();
-				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+	    try (Connection con = DBConnection.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-			// Paramètre 1 : titre
-			ps.setString(1, wf.getTitre());
+	        // Paramètre 1 : titre
+	        ps.setString(1, wf.getTitre());
 
-			// Paramètre 2 : date_creation
-			ps.setTimestamp(2, new java.sql.Timestamp(wf.getDateCreation().getTime()));
+	        // Paramètre 2 : date_creation
+	        ps.setTimestamp(2, new java.sql.Timestamp(wf.getDateCreation().getTime()));
 
-			ps.executeUpdate();
+	        // Paramètre 3 : id_utilisateur (Récupéré depuis l'objet Workflow)
+	        // Si ton ID utilisateur dans l'objet est un int, utilise String.valueOf(wf.getIdUtilisateur())
+	        ps.setString(3, wf.getIdUtilisateur());
 
-			try (ResultSet rs = ps.getGeneratedKeys()) {
-				if (rs.next()) {
-					generatedId = rs.getInt(1);
-				}
-			}
-		} catch (SQLException e) {
-			System.err.println("Erreur lors de la création du workflow : " + e.getMessage());
-			e.printStackTrace();
-		}
-		return generatedId;
+	        ps.executeUpdate();
+
+	        try (ResultSet rs = ps.getGeneratedKeys()) {
+	            if (rs.next()) {
+	                generatedId = rs.getInt(1);
+	            }
+	        }
+	    } catch (SQLException e) {
+	        System.err.println("Erreur lors de la création du workflow avec id_utilisateur : " + e.getMessage());
+	        e.printStackTrace();
+	    }
+	    return generatedId;
 	}
 
 	/**
@@ -305,6 +308,8 @@ public class WorkflowDAO {
 				PreparedStatement ps = conn.prepareStatement(sql);
 				ResultSet rs = ps.executeQuery()) {
 
+			
+			
 			while (rs.next()) {
 				Workflow w = new Workflow();
 				w.setId(rs.getInt("id"));
@@ -399,6 +404,122 @@ public class WorkflowDAO {
 	    } catch (Exception e) { e.printStackTrace(); }
 	    return list;
 	}
+	
+	public List<WorkflowDisplay> getWorkflowsWithDetailsByStatus(String status) {
+	    List<WorkflowDisplay> list = new ArrayList<>();
+	    
+	    // Le calcul extrait le MAX(etape) de la table validation et lui ajoute +1 
+	    // Si aucune validation n'existe, COALESCE donne 0, +1 = Étape 1 (Début du dossier)
+	    String sql = 
+	        "SELECT w.*, u.nom AS nom_demandeur, " +
+	        "  (COALESCE((SELECT MAX(CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id), 0) + 1) AS etape_actuelle, " +
+	        "  COALESCE((SELECT d.attribut FROM donnee d " +
+	        "   WHERE d.id_workflow = w.id " +
+	        "     AND CAST(d.nb_etape AS INT) = COALESCE((SELECT MAX(CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id), 0) " +
+	        "     AND d.type IN ('Avis D.C.D.', 'Avis D.O.P.', 'faisable', 'avis production', 'Avis logistique', 'Avis Q.H.E.') " +
+	        "   LIMIT 1), '') AS raw_avis " +
+	        "FROM workflow w " +
+	        "LEFT JOIN utilisateur u ON CAST(w.id_utilisateur AS VARCHAR) = CAST(u.id AS VARCHAR) ";
+
+	    // Application dynamique des filtres d'onglets
+	    if ("en_cours".equals(status)) {
+	        sql += "WHERE w.date_finalisation IS NULL ";
+	    } else if ("termine".equals(status)) {
+	        sql += "WHERE w.date_finalisation IS NOT NULL AND LOWER(w.statut) LIKE '%termin%' ";
+	    } else if ("annule".equals(status)) {
+	        sql += "WHERE w.date_finalisation IS NOT NULL AND LOWER(w.statut) NOT LIKE '%termin%' ";
+	    }
+	    
+	    sql += "ORDER BY w.date_creation DESC";
+
+	    try (Connection con = DBConnection.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        while (rs.next()) {
+	            Workflow wf = new Workflow();
+	            wf.setId(rs.getInt("id"));
+	            wf.setTitre(rs.getString("titre"));
+	            wf.setDateCreation(rs.getTimestamp("date_creation"));
+	            wf.setDateFinalisation(rs.getTimestamp("date_finalisation"));
+	            wf.setStatut(rs.getString("statut"));
+
+	            String nomDemandeur = rs.getString("nom_demandeur");
+	            if (nomDemandeur == null) {
+	                nomDemandeur = (rs.getString("id_utilisateur") != null) ? "ID : " + rs.getString("id_utilisateur") : "Inconnu";
+	            }
+
+	            list.add(new WorkflowDisplay(
+	                wf, 
+	                nomDemandeur, 
+	                rs.getInt("etape_actuelle"), 
+	                rs.getString("raw_avis")
+	            ));
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return list;
+	}
+
+    // 2. Récupération par Barre de Recherche
+    public List<WorkflowDisplay> searchWorkflowsWithDetails(String query) {
+        String condition = "WHERE CAST(w.id AS VARCHAR) LIKE ? OR LOWER(w.titre) LIKE ? ";
+        return executeAggregationQuery(condition, "%" + query.toLowerCase() + "%");
+    }
+
+    // Cœur SQL : Récupère Workflow + Demandeur + Étape + Avis en 1 seul aller-retour
+    private List<WorkflowDisplay> executeAggregationQuery(String conditionClause, String searchParam) {
+        List<WorkflowDisplay> list = new ArrayList<>();
+        
+        String sql = 
+            "SELECT w.*, u.nom AS nom_demandeur, " +
+            "  COALESCE((SELECT MAX(CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id), 1) AS etape_actuelle, " +
+            "  (SELECT d.attribut FROM donnee d " +
+            "   WHERE d.id_workflow = w.id " +
+            "     AND CAST(d.etape AS INT) = COALESCE((SELECT MAX(CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id), 1) " +
+            "     AND d.type IN ('Avis D.C.D.', 'Avis D.O.P.', 'faisable', 'avis production', 'Avis logistique', 'Avis Q.H.E.') " +
+            "   LIMIT 1) AS raw_avis " +
+            "FROM workflow w " +
+            "LEFT JOIN utilisateur u ON CAST(w.id_utilisateur AS VARCHAR) = CAST(u.id AS VARCHAR) " +
+            conditionClause +
+            "ORDER BY w.date_creation DESC";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            if (searchParam != null) {
+                ps.setString(1, searchParam);
+                ps.setString(2, searchParam);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Workflow wf = new Workflow();
+                    wf.setId(rs.getInt("id"));
+                    wf.setTitre(rs.getString("titre"));
+                    wf.setDateCreation(rs.getTimestamp("date_creation"));
+                    wf.setDateFinalisation(rs.getTimestamp("date_finalisation"));
+                    wf.setStatut(rs.getString("statut"));
+
+                    String nomDemandeur = rs.getString("nom_demandeur");
+                    if (nomDemandeur == null) {
+                        nomDemandeur = (rs.getString("id_utilisateur") != null) ? "ID : " + rs.getString("id_utilisateur") : "Inconnu";
+                    }
+                    
+                    list.add(new WorkflowDisplay(
+                        wf, 
+                        nomDemandeur, 
+                        rs.getInt("etape_actuelle"), 
+                        rs.getString("raw_avis") != null ? rs.getString("raw_avis") : ""
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 
 	// 1. REQUÊTE : Trouver les dossiers dont l'étape vient de se TERMINER et qui n'ont PAS ENCORE été annoncés
 	public static List<Workflow> getWorkflowsTerminesPourRole(int roleId) {
@@ -447,3 +568,4 @@ public class WorkflowDAO {
 	    }
 	}
 }
+

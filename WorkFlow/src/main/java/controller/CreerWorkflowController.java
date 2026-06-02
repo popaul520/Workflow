@@ -44,8 +44,12 @@ public class CreerWorkflowController extends HttpServlet {
         model.Workflow wf = new model.Workflow();
         wf.setTitre(titre);
         wf.setDateCreation(new java.util.Date());
-        // Si ton modèle accepte le créateur, associe-le ici :
-        // wf.setCreateur(user); 
+
+        // =========================================================================
+        // AJOUT : Association de l'ID utilisateur connecté au Workflow
+        // =========================================================================
+
+        wf.setIdUtilisateur(String.valueOf(user.getId())); 
 
         // Insertion du Workflow et récupération de son ID de série (SERIAL)
         int idWf = wfDao.create(wf); 
@@ -85,9 +89,9 @@ public class CreerWorkflowController extends HttpServlet {
                 }
             }
 
-            // =========================================================================
-            // 🚀 CORRECTION : INSERTION DE LA VALIDATION POUR L'ÉTAPE 1
-            // =========================================================================
+            // ==========================================
+            //  INSERTION DE LA VALIDATION POUR L'ÉTAPE 1
+            // ==========================================
             try {
                 // On utilise 'idWf' (le bon ID généré) et 'user.getId()' (l'ID de session)
                 valDao.validerEtape(idWf, user.getId(), 1);

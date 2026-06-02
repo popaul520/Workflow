@@ -10,6 +10,7 @@ public class Workflow {
     private Date dateFinalisation;
     private String commentaire;
     private String idUtilisateur;
+    private String statut;
 
     public Workflow() {
     }
@@ -21,12 +22,14 @@ public class Workflow {
     
     //@ManyToOne
     private Utilisateur createur;
-
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
     public String getTitre() { return titre; }
     public void setTitre(String titre) { this.titre = titre; }
+
+    public String getStatut() {return statut;}
+    public void setStatut(String statut) {this.statut = statut;}
 
     public Date getDateCreation() { return dateCreation; }
     public void setDateCreation(Date dateCreation) { this.dateCreation = dateCreation; }

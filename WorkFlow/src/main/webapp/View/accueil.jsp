@@ -8,7 +8,6 @@
     <meta charset="UTF-8">
     <title>Accueil Workflow</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-    
     <style>
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .search-bar { padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; width: 300px; outline: none; }
@@ -27,7 +26,6 @@
     </style>
 </head>
 <body>
-
     <div class="sidebar">
         <h3>Workflow</h3>
         <ul>
@@ -42,7 +40,7 @@
             </li>
             <li class="${currentStatus == 'annule' ? 'active' : ''}">
                 <a href="home?status=annule">❌ Annulé</a>
-            </li>
+            </li> 
 
             <%-- Accès dministrateur dynamique --%>
             <c:if test="${roleDAO.canAccessEtape(user.role, 11)}">
@@ -66,20 +64,17 @@
                 <form action="home" method="get">
                     <input type="text" name="q" class="search-bar" placeholder="ID ou Nom du dossier..." value="${param.q}">
                 </form>
-                <c:choose>
-                    <c:when test="${not empty sessionScope.user}">
-                        <a href="profil" class="profile-btn">Mon Profil</a>
-                        <a href="logout" class="logout-link">Déconnexion</a>
-                    </c:when>
-                    <c:choose>
-                        <c:otherwise>
-                            <a href="login" class="profile-btn login-btn">Connexion</a>
-                        </c:otherwise>
-                    </c:choose>
-                </c:choose>
+				<c:choose>
+				    <c:when test="${not empty sessionScope.user}">
+				        <a href="profil" class="profile-btn">Mon Profil</a>
+				        <a href="logout" class="logout-link">Déconnexion</a>
+				    </c:when>
+				    <c:otherwise>
+				        <a href="login" class="profile-btn login-btn">Connexion</a>
+				    </c:otherwise>
+				</c:choose>
             </div>
         </div>
-
         <h2>
             <c:choose>
                 <c:when test="${currentStatus == 'en_cours'}">Dossiers en cours</c:when>
@@ -125,7 +120,7 @@
                                         </span>
                                     </td>
                                     <td><a href="details?id=${wd.workflow.id}" class="btn-view">Voir</a></td>
-                                </tr>
+                                </tr> 
                             </c:forEach>
                         </c:when>
                         <c:otherwise>
