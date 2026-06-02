@@ -13,7 +13,7 @@ public class TypeContraintDAO {
         List<TypeContraint> liste = new ArrayList<>();
         String sql = "SELECT id, type, valeur FROM type_contraint ORDER BY type ASC, valeur ASC";
         
-        // Remplace par ton système de connexion
+        // Remplace par ton systaème de connexion
         try (Connection conn = DBConnection.getConnection(); 
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -30,7 +30,6 @@ public class TypeContraintDAO {
         }
         return liste;
     }
-
     // Ajouter une nouvelle valeur de contrainte
     public boolean create(TypeContraint tc) {
         String sql = "INSERT INTO type_contraint (type, valeur) VALUES (?, ?)";
@@ -46,7 +45,6 @@ public class TypeContraintDAO {
             return false;
         }
     }
-
     // Modifier une valeur existante
     public boolean update(TypeContraint tc) {
         String sql = "UPDATE type_contraint SET type = ?, valeur = ? WHERE id = ?";

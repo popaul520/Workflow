@@ -18,6 +18,8 @@
             --sidebar-width: 290px;
             --nav-btn-bg: #f8fafc;
             --nav-btn-hover: #e2e8f0;
+            --warning: #f59e0b;
+            --warning-hover: #d97706;
         }
 
         body {
@@ -225,6 +227,8 @@
         .btn-primary:hover { background-color: var(--primary-hover); }
         .btn-secondary { background-color: #64748b; color: white; }
         .btn-secondary:hover { background-color: #475569; }
+        .btn-warning { background-color: var(--warning); color: white; }
+        .btn-warning:hover { background-color: var(--warning-hover); }
         .btn-danger { background-color: var(--danger); color: white; padding: 5px 10px; font-size: 12px; }
         .btn-danger:hover { background-color: var(--danger-hover); }
         
@@ -264,7 +268,10 @@
             font-size: 14px;
         }
 
-        tr:hover { background-color: #f8fafc; }
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row:hover { background-color: #f8fafc; }
 
         .catalog-inline-badge {
             display: inline-block;
@@ -322,7 +329,7 @@
         
         <ul class="catalog-list" id="catalogGroupList">
             <li class="catalog-item active" data-target="ALL">
-                <span>TOUS LES CATALOGUES </span>
+                <span>🌍 TOUS LES CATALOGUES </span>
                 <span class="count-badge" id="totalCount">0</span>
             </li>
         </ul>
@@ -345,11 +352,11 @@
                 
                 <div class="search-action-bar">
                     <input type="text" id="mainSearchInput" class="form-control input-flex" placeholder="Saisissez un mot-clé...">
-                    <button type="button" id="btnSearch" class="btn btn-primary">🔍 Rechercher</button>
+                    <button type="button" id="btnSearch" class="btn btn-primary"> Rechercher</button>
                     <button type="button" id="btnReset" class="btn btn-secondary">Réinitialiser</button>
                     
                     <button type="button" id="btnToggleOrder" class="btn btn-outline" title="Inverser l'ordre alphabétique">
-                        <span id="sortIcon">⬇️</span> Ordre : <strong id="sortLabel">A-Z</strong>
+                        <span id="sortIcon"></span> Ordre : <strong id="sortLabel">A-Z</strong>
                     </button>
                 </div>
 
@@ -365,12 +372,12 @@
                         </thead>
                         <tbody id="tableBody">
                             <c:forEach var="c" items="${listeContraintes}">
-                                <tr data-catalog="${c.type}">
+                                <tr class="clickable-row" data-id="${c.id}" data-catalog="${c.type}">
                                     <td><span style="color: #94a3b8;">#${c.id}</span></td>
                                     <td><span class="catalog-inline-badge">${c.type}</span></td>
                                     <td class="cell-value"><strong>${c.valeur}</strong></td>
-                                    <td style="text-align: right;">
-                                        <form action="${pageContext.request.contextPath}/View/type_contraint" method="post" style="display:inline;" onsubmit="return confirm('Supprimer définitivement la valeur \'${c.valeur}\' ?');">
+                                    <td style="text-align: right;" onclick="event.stopPropagation();">
+                                        <form action="${pageContext.request.contextPath}/catalogues" method="post" style="display:inline;" onsubmit="return confirm('Supprimer définitivement la valeur \'${c.valeur}\' ?');">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="${c.id}">
                                             <button type="submit" class="btn btn-danger">Supprimer</button>
@@ -385,10 +392,11 @@
             </div>
 
             <div class="card">
-                <div class="card-header">Nouvelle Entrée</div>
+                <div class="card-header" id="formCardHeader">Nouvelle Entrée</div>
                 <div class="form-panel">
-                    <form action="${pageContext.request.contextPath}/View/type_contraint" method="post">
-                        <input type="hidden" name="action" value="add">
+                    <form id="persistForm" action="${pageContext.request.contextPath}/catalogues" method="post">
+                        <input type="hidden" id="formAction" name="action" value="add">
+                        <input type="hidden" id="entryId" name="id" value="">
                         
                         <div class="form-group">
                             <label for="type">Nom du Catalogue</label>
@@ -397,9 +405,10 @@
 
                         <div class="form-group">
                             <label for="valeur">Valeur textuelle</label>
-                            <input type="text" id="valeur" name="valeur" class="form-control w-full" placeholder="ex: des pâtes" required>
+                            <input type="text" id="valeur" name="valeur" class="form-control w-full" placeholder="ex: France" required>
                         </div>
-                        <button type="submit" class="btn btn-primary w-full" style="margin-top: 10px;"> Enregistrer</button>
+                        <button type="submit" id="btnSubmitForm" class="btn btn-primary w-full" style="margin-top: 10px;">💾 Enregistrer</button>
+                        <button type="button" id="btnCancelEdit" class="btn btn-secondary w-full" style="margin-top: 8px; display: none;">Annuler la modification</button>
                     </form>
                 </div>
             </div>
@@ -423,6 +432,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const sortLabel = document.getElementById("sortLabel");
     const totalVisibleCounter = document.getElementById("totalVisibleCounter");
 
+    // Éléments du formulaire dynamique
+    const formCardHeader = document.getElementById("formCardHeader");
+    const formAction = document.getElementById("formAction");
+    const entryId = document.getElementById("entryId");
+    const inputType = document.getElementById("type");
+    const inputValeur = document.getElementById("valeur");
+    const btnSubmitForm = document.getElementById("btnSubmitForm");
+    const btnCancelEdit = document.getElementById("btnCancelEdit");
+
     let activeCatalog = "ALL";
     let isDescending = false;
 
@@ -436,13 +454,12 @@ document.addEventListener("DOMContentLoaded", function() {
     });
     document.getElementById("totalCount").textContent = tableRows.length;
 
-    // 2. Remplissage de la liste avec le nom dynamique du catalogue associé explicite
+    // 2. Remplissage de la liste avec correction du nom affiché
     Object.keys(stats).sort().forEach(cat => {
         const li = document.createElement("li");
         li.className = "catalog-item";
         li.setAttribute("data-target", cat);
-        // Ajout visuel : Icône de dossier + Nom du catalogue mis en avant
-        li.innerHTML = `<span> ${stats[cat]}</span><span class="count-badge">${stats[cat]}</span>`;
+        li.innerHTML = `<span> ${cat.toUpperCase()}</span><span class="count-badge">${stats[cat]}</span>`;
         catalogGroupList.appendChild(li);
     });
 
@@ -489,8 +506,7 @@ document.addEventListener("DOMContentLoaded", function() {
         applyGlobalFilterAndSort();
     });
 
-    // 5. Sélection d'un catalogue
-    // Ajout d'un écouteur global délégué pour prendre en compte les éléments injectés en JS
+    // 5. Sélection d'un catalogue dans la sidebar
     catalogGroupList.addEventListener("click", function(e) {
         const item = e.target.closest(".catalog-item");
         if (!item) return;
@@ -501,13 +517,49 @@ document.addEventListener("DOMContentLoaded", function() {
         activeCatalog = item.getAttribute("data-target");
         currentCatalogTitle.textContent = activeCatalog === "ALL" ? "Toutes les valeurs" : "Catalogue : " + activeCatalog.toUpperCase();
         
-        if(activeCatalog !== "ALL") {
-            document.getElementById("type").value = activeCatalog;
+        if(activeCatalog !== "ALL" && formAction.value === "add") {
+            inputType.value = activeCatalog;
         }
         applyGlobalFilterAndSort();
     });
 
-    // 6. Recherches
+    // 6. Gestion du mode Modification au clic sur une ligne
+    tableBody.addEventListener("click", function(e) {
+        const row = e.target.closest(".clickable-row");
+        if (!row) return;
+
+        const id = row.getAttribute("data-id");
+        const catalog = row.getAttribute("data-catalog");
+        const valeur = row.querySelector(".cell-value").textContent.trim();
+
+        // Remplissage du formulaire
+        entryId.value = id;
+        inputType.value = catalog;
+        inputValeur.value = valeur;
+
+        // Mutation visuelle vers le mode modification
+        formCardHeader.textContent = "Modifier l'Entrée #" + id;
+        formAction.value = "update";
+        btnSubmitForm.textContent = " Appliquer la modification";
+        btnSubmitForm.className = "btn btn-warning w-full";
+        btnCancelEdit.style.display = "block";
+    });
+
+    // Annuler la modification
+    function resetFormToCreation() {
+        entryId.value = "";
+        inputType.value = activeCatalog === "ALL" ? "" : activeCatalog;
+        inputValeur.value = "";
+        formCardHeader.textContent = "Nouvelle Entrée";
+        formAction.value = "add";
+        btnSubmitForm.textContent = " Enregistrer";
+        btnSubmitForm.className = "btn btn-primary w-full";
+        btnCancelEdit.style.display = "none";
+    }
+
+    btnCancelEdit.addEventListener("click", resetFormToCreation);
+
+    // 7. Recherches et filtres
     btnSearch.addEventListener("click", applyGlobalFilterAndSort);
     mainSearchInput.addEventListener("keypress", function(e) {
         if (e.key === "Enter") applyGlobalFilterAndSort();
@@ -528,6 +580,7 @@ document.addEventListener("DOMContentLoaded", function() {
             else item.style.display = "none";
         });
     });
+
     applyGlobalFilterAndSort();
 });
 </script>

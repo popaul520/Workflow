@@ -49,7 +49,6 @@
                     <a href="admin-roles" style="color: #63b3ed; font-weight: bold;">⚙️ Gestion rôle</a>
                 </li>
             </c:if>
-
             <%-- 2. SEUL LE RÔLE 1 ET LE PATRON PEUVENT CRÉER --%>
             <c:if test="${roleDAO.canAccessEtape(user.role, 1) || roleDAO.canAccessEtape(user.role, 11)}">
                 <li style="margin-top: 30px;">

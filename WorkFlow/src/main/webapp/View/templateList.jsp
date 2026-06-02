@@ -35,7 +35,6 @@
             </a>
         </div>
     </div>
-
     <div class="table-container shadow-sm">
         <table class="table table-hover align-middle">
             <thead class="table-light">
@@ -61,7 +60,6 @@
                                 <a href="template-workflow?id=${t.id}" class="btn btn-outline-warning btn-sm" title="Modifier infos">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
-                                
                                 <a href="workflow-design?id_workflow=${t.id}" class="btn btn-primary btn-sm" title="Designer le workflow">
                                     <i class="fa-solid fa-diagram-project me-1"></i> Designer
                                 </a>
@@ -102,9 +100,7 @@
                     <p class="text-muted small">
                         Permet d'ajouter une option (ex: Famille -> Électronique).
                     </p>
-                    
                     <input type="hidden" name="id_contraint" value="0">
-                    
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-secondary">Type (Famille / Catégorie)</label>
                         <input type="text" name="type_nom" class="form-control" placeholder="Ex: Bool, client, rayon, marque..." required>
@@ -125,7 +121,6 @@
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
