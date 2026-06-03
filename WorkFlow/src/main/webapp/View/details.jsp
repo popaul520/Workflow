@@ -156,7 +156,6 @@
 		            <p><strong>${d.type} :</strong> ${d.attribut}</p>
 		        </c:forEach>
 		    </div>
-		
 		    <c:if test="<%= isFinalise %>">
 		        <div class="status-banner <%= etapeMax < 10 ? "status-rejete" : "status-valide" %>">
 		            <h3>⚠️ DOSSIER CLÔTURÉ LE <fmt:formatDate value="${wf.dateFinalisation}" pattern="dd/MM/yyyy"/></h3>

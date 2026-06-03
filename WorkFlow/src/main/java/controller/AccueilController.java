@@ -20,7 +20,6 @@ import service.WorkflowService;
 public class AccueilController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    // Injection / Instanciation des services et DAO nécessaires
     private final WorkflowService workflowService = new WorkflowService();
     private final RoleDAO roleDao = new RoleDAO(); 
 
@@ -31,33 +30,27 @@ public class AccueilController extends HttpServlet {
         HttpSession session = request.getSession();
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
-        // 1. Gardien de Sécurité : Redirection si l'utilisateur n'est pas connecté
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        // Récupération des critères de filtrage et de recherche
         String status = request.getParameter("status");
         String query = request.getParameter("q");
 
-        // Normalisation du statut par défaut pour éviter les comportements imprévus dans la vue
         if (status == null || status.trim().isEmpty()) {
             status = "tous";
         }
 
         try {
-            // 2. Orchestration Métier via la couche Service
             List<WorkflowDisplay> workflowsFiltered = workflowService.getDashboardWorkflows(status, query);
             List<Workflow> pendingList = WorkflowDAO.getWorkflowsEnAttenteParRole(user.getRole());
 
-            // 3. Alimentation du contexte de requête pour la JSP
             request.setAttribute("workflows", workflowsFiltered);
             request.setAttribute("pendingList", pendingList);
             request.setAttribute("currentStatus", status);
             request.setAttribute("roleDAO", roleDao); 
 
-            // 4. Passage de relais à la Vue
             request.getRequestDispatcher("/View/accueil.jsp").forward(request, response);
 
         } catch (Exception e) {

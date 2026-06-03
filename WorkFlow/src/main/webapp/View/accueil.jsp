@@ -8,7 +8,6 @@
     <meta charset="UTF-8">
     <title>Accueil Workflow</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-    
     <style>
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .search-bar { padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; width: 300px; outline: none; }
@@ -43,13 +42,11 @@
                 <a href="home?status=annule">❌ Annulé </a>
             </li>
 
-            <%-- 1. SEUL L'ADMIN (ID 11) VOIT LA GESTION DES RÔLES --%>
             <c:if test="${roleDAO.canAccessEtape(user.role, 11)}">
                 <li style="background: #2d3748; margin-top: 10px; border-radius: 4px;">
                     <a href="admin-roles" style="color: #63b3ed; font-weight: bold;">⚙️ Gestion rôle</a>
                 </li>
             </c:if>
-            <%-- 2. SEUL LE RÔLE 1 ET LE PATRON PEUVENT CRÉER --%>
             <c:if test="${roleDAO.canAccessEtape(user.role, 1) || roleDAO.canAccessEtape(user.role, 11)}">
                 <li style="margin-top: 30px;">
                     <a href="creer-workflowV1" style="color: var(--success); font-weight: bold;">➕ Créer Workflow</a>
@@ -89,7 +86,6 @@
             </div>
         </div>
 
-        <%-- Détermination dynamique du titre de la section --%>
         <h2>
             <c:choose>
                 <c:when test="${currentStatus == 'en_cours'}">Dossiers en cours</c:when>
@@ -99,7 +95,6 @@
             </c:choose>
         </h2>
 
-        <%-- Tableau principal des dossiers --%>
         <div class="box">
             <table>
                 <thead>
@@ -129,7 +124,7 @@
                                             </c:choose>
                                         </span>
                                     </td>
-                                    <td><span style="color: #888; font-size: 0.9em;">Admin</span></td>
+                                    <td><span style="color: #888; font-size: 0.9em;"><c:out value="${wd.nomDemandeur}"/></span></td>
                                     <td>
                                         <span style="font-size: 0.85em; background: ${wd.badgeBg}; color: ${wd.badgeText}; padding: 4px 12px; border-radius: 12px; font-weight: bold; display: inline-block; min-width: 100px; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
                                             <c:out value="${wd.libelleEtape}"/>
@@ -147,7 +142,6 @@
             </table>
         </div>
 
-        <%-- Tableau des actions en attente --%>
         <h2>⚠️ En attente de votre action</h2>
         <div class="box">
             <table style="border-left: 5px solid #e74c3c;">

@@ -1,10 +1,86 @@
 package dao;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import model.Workflow;
+import model.WorkflowDisplay;
 
 public class WorkflowDAO {
+	public List<WorkflowDisplay> getWorkflowsWithDetailsByStatus(String status, String query) {
+	    List<WorkflowDisplay> list = new ArrayList<>();
+	    
+	    // On passe le filtre de l'avis en LOWER() pour éviter les pièges de majuscules
+	    String sql = 
+	        "SELECT w.*, u.nom AS nom_demandeur, " +
+	        "  (COALESCE((SELECT MAX(CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id), 0) + 1) AS etape_actuelle, " +
+	        "  COALESCE((SELECT d.attribut FROM donnee d " +
+	        "   WHERE d.id_workflow = w.id " + 
+	        "     AND CAST(d.nb_etape AS INT) = COALESCE((SELECT MAX(CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id), 0) " +
+	        "     AND LOWER(d.type) IN ('avis d.c.d.', 'avis d.o.p.', 'faisable', 'avis production', 'avis logistique', 'avis q.h.e.') " +
+	        "   LIMIT 1), '') AS raw_avis " +
+	        "FROM workflow w " +
+	        "LEFT JOIN utilisateur u ON CAST(w.id_utilisateur AS VARCHAR) = CAST(u.id AS VARCHAR) ";
+
+	    // Filtre de recherche textuelle
+	    if (query != null && !query.trim().isEmpty()) {
+	        sql += "AND (CAST(w.id AS VARCHAR) LIKE ? OR LOWER(w.titre) LIKE ?) ";
+	    }
+
+	    // Gestion des onglets ultra-souple (basée uniquement sur la date de fin)
+	    if ("en_cours".equals(status)) {
+	        sql += "AND w.date_finalisation IS NULL ";
+	    } else if ("termine".equals(status)) {
+	        sql += "AND w.date_finalisation IS NOT NULL ";
+	    } else if ("annule".equals(status)) {
+	        // Si tu as une colonne spécifique pour l'annulation, ajuste ici. 
+	        // En attendant, on affiche les finalisés pour ne pas bloquer l'affichage.
+	        sql += "AND w.date_finalisation IS NOT NULL "; 
+	    } 
+	   /* bon on va faire un gros ajout pour diviser les différents workflow_template et regrouper les mêmes sur la page home selon le choix
+	    avec une page en avant qui est une mosaique de bouton enfin avec le commentaire la version et le nom du template_workflow */
+	    
+	    
+	    
+	    sql += "ORDER BY w.date_creation DESC";
+
+	    try (Connection con = DBConnection.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	        
+	        int paramIndex = 1;
+	        if (query != null && !query.trim().isEmpty()) {
+	            String searchPattern = "%" + query.trim().toLowerCase() + "%";
+	            ps.setString(paramIndex++, searchPattern);
+	            ps.setString(paramIndex++, searchPattern);
+	        }
+
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                Workflow wf = new Workflow();
+	                wf.setId(rs.getInt("id"));
+	                wf.setTitre(rs.getString("titre"));
+	                wf.setDateCreation(rs.getTimestamp("date_creation"));
+	                wf.setDateFinalisation(rs.getTimestamp("date_finalisation"));
+	                wf.setStatut(rs.getString("statut"));
+	                String nomDemandeur = rs.getString("nom_demandeur");
+	                if (nomDemandeur == null) {
+	                    // Si la jointure utilisateur ne trouve rien, on affiche l'ID brut pour comprendre
+	                    nomDemandeur = (rs.getString("id_utilisateur") != null) ? "User ID: " + rs.getString("id_utilisateur") : "Admin";
+	                }
+
+	                list.add(new WorkflowDisplay(
+	                    wf, 
+	                    nomDemandeur, 
+	                    rs.getInt("etape_actuelle"), 
+	                    rs.getString("raw_avis")
+	                ));
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return list;
+	}
 
 	public List<Workflow> getAll() {
 	    List<Workflow> list = new ArrayList<>();
