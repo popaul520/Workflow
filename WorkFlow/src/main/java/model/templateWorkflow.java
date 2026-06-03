@@ -2,7 +2,6 @@ package model;
 
 import java.util.Date;
 
-import org.eclipse.tags.shaded.org.apache.xpath.operations.Bool;
 
 public class templateWorkflow {
     private int id;
@@ -22,14 +21,12 @@ public class templateWorkflow {
         this.id = id;
         this.titre = titre;
     }*/
-    
     //@ManyToOne
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
     public String getTitre() { return titre; }
     public void setTitre(String titre) { this.titre = titre; }
-    
     public int getVersion() { return version; }
     public void setVersion(int version) { this.version = version; }
 

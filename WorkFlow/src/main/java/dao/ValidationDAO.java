@@ -17,7 +17,7 @@ public class ValidationDAO {
 	                 "DO UPDATE SET id_personne = EXCLUDED.id_personne, date = CURRENT_DATE";
 
 	    try (Connection conn = dao.DBConnection.getConnection(); 
-	         PreparedStatement ps = conn.prepareStatement(sql)) {
+	         PreparedStatement ps = conn.prepareStatement(sql)) { 
 	        ps.setInt(1, idWf);
 	        ps.setInt(2, idUser);
 	        ps.setString(3, String.valueOf(nEtape));

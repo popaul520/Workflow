@@ -236,4 +236,34 @@ public class TemplateDAO {
         }
         return liste;
     }
+    
+
+    public List<templateWorkflow> getTemplatesActifs() {
+        List<templateWorkflow> list = new ArrayList<>();
+        String sql = "SELECT id, nom, version, description, date_creation, id_createur, est_actif " +
+                     "FROM template_workflow WHERE est_actif = true";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                templateWorkflow tpl = new templateWorkflow();
+                tpl.setId(rs.getInt("id"));
+                tpl.setTitre(rs.getString("nom")); // Reste aligné sur le setter de ton model actuel
+                tpl.setVersion(rs.getInt("version"));
+                tpl.setCommentaire(rs.getString("description")); // Reste aligné sur ton model actuel
+                tpl.setDateCreation(rs.getTimestamp("date_creation"));
+                tpl.setCreateur(rs.getInt("id_createur"));
+                tpl.setEstActif(rs.getBoolean("est_actif"));
+                list.add(tpl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    
+    
 }

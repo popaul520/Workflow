@@ -17,9 +17,7 @@ public class WorkflowDisplay {
         this.etapeActuelle = etapeActuelle;
         this.rawAvis = rawAvis;
     }
-
     // Getters et Setters
-    
     public Workflow getWorkflow() { return workflow; }
     public void setWorkflow(Workflow workflow) { this.workflow = workflow; }
     public String getNomDemandeur() { return nomDemandeur; }
