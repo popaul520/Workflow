@@ -90,7 +90,7 @@ public class WorkflowDAO {
 					wf.setDateCreation(rs.getDate("date_creation"));
 					wf.setDateFinalisation(rs.getDate("date_finalisation"));
 					wf.setCommentaire(rs.getString("commentaire"));
-					wf.setIdUtilisateur(rs.getString("id_utilisateur"));
+					wf.setIdUtilisateur(rs.getInt("id_utilisateur"));
 				}
 			}
 		} catch (Exception e) {
@@ -101,7 +101,14 @@ public class WorkflowDAO {
 
 	public int create(model.Workflow wf) {
 	    // Intégration de la colonne id_utilisateur dans la requête d'insertion
-	    String sql = "INSERT INTO workflow (titre, date_creation, id_utilisateur) VALUES (?, ?, ?)";
+		
+		String sql ;
+        if(wf.getIdUtilisateur() == -1 ) {
+
+        	sql = "INSERT INTO workflow (titre, date_creation) VALUES (?, ?)";
+        }else {
+    	    sql = "INSERT INTO workflow (titre, date_creation, id_utilisateur) VALUES (?, ?, ?)";
+        }
 	    int generatedId = -1;
 
 	    try (Connection con = DBConnection.getConnection();
@@ -115,7 +122,12 @@ public class WorkflowDAO {
 
 	        // Paramètre 3 : id_utilisateur (Récupéré depuis l'objet Workflow)
 	        // Si ton ID utilisateur dans l'objet est un int, utilise String.valueOf(wf.getIdUtilisateur())
-	        ps.setString(3, wf.getIdUtilisateur());
+	        if(wf.getIdUtilisateur() == -1 ) {
+
+	        }else {
+		        ps.setInt(3, wf.getIdUtilisateur());
+
+	        }
 
 	        ps.executeUpdate();
 

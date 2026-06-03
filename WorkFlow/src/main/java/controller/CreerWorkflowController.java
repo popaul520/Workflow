@@ -49,7 +49,7 @@ public class CreerWorkflowController extends HttpServlet {
         // AJOUT : Association de l'ID utilisateur connecté au Workflow
         // =========================================================================
 
-        wf.setIdUtilisateur(String.valueOf(user.getId())); 
+        wf.setIdUtilisateur(user.getId()); 
 
         // Insertion du Workflow et récupération de son ID de série (SERIAL)
         int idWf = wfDao.create(wf); 

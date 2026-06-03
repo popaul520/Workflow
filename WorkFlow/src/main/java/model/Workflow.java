@@ -9,7 +9,7 @@ public class Workflow {
     private Date dateCreation;
     private Date dateFinalisation;
     private String commentaire;
-    private String idUtilisateur;
+    private int idUtilisateur;
     private String statut;
 
     public Workflow() {
@@ -43,10 +43,10 @@ public class Workflow {
     public Utilisateur getCreateur() { return createur; }
     public void setCreateur(Utilisateur createur) { this.createur = createur; }
     
-    public String getIdUtilisateur() { 
+    public int getIdUtilisateur() { 
         return idUtilisateur; 
     }
-    public void setIdUtilisateur(String idUtilisateur) { 
+    public void setIdUtilisateur(int idUtilisateur) { 
         this.idUtilisateur = idUtilisateur; 
     }
 }
