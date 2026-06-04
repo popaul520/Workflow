@@ -28,9 +28,8 @@
 
         <%-- --- BLOC 1 : MARQUAGE TRAÇABILITÉ --- --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f8f9fa;">
-            <input type="hidden" name="type_tracab" value="Marquage traçabilité"> 
+            <input type="hidden" name="type_tracab" value="Spécificité marquage"> 
             <input type="hidden" name="ref_tracab" value="normalite"> 
-            
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Marquage traçabilité conforme :</label>
             <input type="text" name="attr_tracab" placeholder="" 
             style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">	

@@ -317,7 +317,6 @@ public int create(model.Workflow wf) {
 	// 1. REQUÊTE : Trouver les dossiers qui ATTENDENT une étape précise (et qui n'ont pas encore été signés)
 	public static List<Workflow> getWorkflowsEnAttentePourEtape(int etape) {
 	    List<Workflow> list = new ArrayList<>();
-	    
 	    // Règle SQL de base pour filtrer l'étape en cours
 	    String conditionEtape = "";
 	    if (etape == 1) {
@@ -438,7 +437,6 @@ public int create(model.Workflow wf) {
 
 	    try (Connection conn = DBConnection.getConnection(); 
 	         PreparedStatement ps = conn.prepareStatement(sql)) {
-	        
 	        ps.setInt(1, roleId);
 	        
 	        try (ResultSet rs = ps.executeQuery()) {
@@ -457,8 +455,30 @@ public int create(model.Workflow wf) {
 	    return liste;
 	}
 	
+	public List<Workflow> getAllbyTemplate(String nom_template) {
+	    List<Workflow> list = new ArrayList<>();
+	    // Utilisation de IN à la place de =
+	    String sql = "SELECT id, titre FROM workflow WHERE id_template_workflow IN (SELECT id FROM template_workflow WHERE nom = ?)";
+	    
+	    try (Connection con = DBConnection.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	         
+	        ps.setString(1, nom_template);
+	        
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                list.add(new Workflow(rs.getInt("id"), rs.getString("titre")));
+	            }
+	        }
+	        System.out.println("DAO DEBUG: j'ai trouvé " + list.size() + " lignes pour le template : " + nom_template);
+	    } catch (Exception e) {
+	        System.err.println("ERREUR DAO: " + e.getMessage());
+	        e.printStackTrace();
+	    }
+	    return list;
+	}
 	
-	
+
 
 }
 

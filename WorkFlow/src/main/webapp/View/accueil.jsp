@@ -23,23 +23,28 @@
         .btn-view:hover { background: var(--accent); color: white; }
         h2 { color: var(--primary); border-left: 5px solid var(--accent); padding-left: 15px; margin-bottom: 20px; }
         .active a { font-weight: bold; color: var(--accent) !important; }
+        .template-banner { background: #edf2f7; padding: 10px 15px; border-radius: 6px; font-size: 0.9em; margin-bottom: 20px; color: #2d3748; border-left: 4px solid var(--success); }
     </style>
 </head>
 <body>
+    <%-- Détermination de la cible (home si filtré par template, sinon home) --%>
+    <c:set var="targetServlet" value="${not empty selectedTemplate ? 'homep' : 'home'}" />
+    <c:set var="templateParam" value="${not empty selectedTemplate ? '&template='.concat(selectedTemplate) : ''}" />
+
     <div class="sidebar">
         <h3>Workflow</h3>
         <ul>
             <li class="${currentStatus == 'tous' ? 'active' : ''}">
-                <a href="home?status=tous">🏠 Tous les dossiers</a>
+                <a href="${targetServlet}?status=tous${templateParam}">🏠 Tous les dossiers</a>
             </li>
             <li class="${currentStatus == 'en_cours' ? 'active' : ''}">
-                <a href="home?status=en_cours">⏳ En cours</a>
+                <a href="${targetServlet}?status=en_cours${templateParam}">⏳ En cours</a>
             </li>
             <li class="${currentStatus == 'termine' ? 'active' : ''}">
-                <a href="home?status=termine">✅ Terminé</a>
+                <a href="${targetServlet}?status=termine${templateParam}">✅ Terminé</a>
             </li>
             <li class="${currentStatus == 'annule' ? 'active' : ''}">
-                <a href="home?status=annule">❌ Annulé </a>
+                <a href="${targetServlet}?status=annule${templateParam}">❌ Annulé </a>
             </li>
 
             <c:if test="${roleDAO.canAccessEtape(user.role, 11)}">
@@ -71,7 +76,12 @@
         <div class="header-flex">
             <h1>Accueil WorkFlow</h1>
             <div class="user-controls">
-                <form action="home" method="get">
+                <%-- Le formulaire pointe vers la bonne servlet et conserve l'onglet de statut et le template --%>
+                <form action="${targetServlet}" method="get">
+                    <input type="hidden" name="status" value="<c:out value='${currentStatus}'/>">
+                    <c:if test="${not empty selectedTemplate}">
+                        <input type="hidden" name="template" value="<c:out value='${selectedTemplate}'/>">
+                    </c:if>
                     <input type="text" name="q" class="search-bar" placeholder="ID ou Nom du dossier..." value="<c:out value='${param.q}'/>">
                 </form>
                 <c:choose>
@@ -85,6 +95,13 @@
                 </c:choose>
             </div>
         </div>
+
+        <c:if test="${not empty selectedTemplate}">
+            <div class="template-banner">
+                Filtre actif par modèle : <strong><c:out value="${selectedTemplate}"/></strong> 
+                | <a href="home" >Retour au Hub</a>
+            </div>
+        </c:if>
 
         <h2>
             <c:choose>

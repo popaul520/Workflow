@@ -10,6 +10,10 @@ public class WorkflowDisplay {
     private String badgeBg;
     private String badgeText;
     private String libelleEtape;
+    
+    public WorkflowDisplay() {
+    	
+    }
 
     public WorkflowDisplay(Workflow workflow, String nomDemandeur, int etapeActuelle, String rawAvis) {
         this.workflow = workflow;
