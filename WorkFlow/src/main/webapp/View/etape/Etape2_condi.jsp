@@ -14,12 +14,34 @@
         <input type="hidden" name="id_workflow" value="${param.id_workflow}">
         <input type="hidden" name="current_n" value="2">
 
-        <%-- BLOC 1 : CONFIGURATION MACHINE --- --%>
+        <%-- BLOC 1 : CONFIGURATION & COMPATIBILITÉ MACHINE --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
             <input type="hidden" name="type_machine" value="Configuration Machine">
+            
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Routage machine (Attribut) :</label>
             <input type="text" name="attr_machine" placeholder="Ex: Ligne 4, Cellule B..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">	
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire technique :</label>
+            
+            <%-- Ajout Compatibilité Machine --%>
+            <input type="hidden" name="type_compatibilite" value="Compatibilité machine">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Compatibilité machine * :</label>
+            <select name="attr_compatibilite" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">-- Sélectionner la compatibilité --</option>
+                <option value="Compatible">Compatible</option>
+                <option value="Compatible sous condition">Compatible sous condition</option>
+                <option value="Incompatible">Incompatible</option>
+            </select>
+
+            <%-- Ajout Capacitaire --%>
+            <input type="hidden" name="type_capacitaire" value="Capacitaire">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Capacitaire / Cadence prévue :</label>
+            <input type="text" name="attr_capacitaire" placeholder="Ex: 45 coups/min, Volume OK..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+
+            <%-- Ajout Adaptations Nécessaires --%>
+            <input type="hidden" name="type_adaptations" value="Adaptations nécessaires">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Adaptations nécessaires (Outillages, formats...) :</label>
+            <textarea name="comm_adaptations" placeholder="Précisez les modifications ou outillages à prévoir..." style="width: 100%; padding: 10px; height: 60px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire technique général :</label>
             <textarea name="comm_machine" style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
         </div>
 
@@ -40,13 +62,14 @@
             <input type="date" name="date_essais" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
 
-        <%-- --- BLOC 3 : AVIS PRODUCTION --- --%>
+        <%-- --- BLOC 3 : AVIS cONDITIONNEMENT --- --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
-            <input type="hidden" name="type_avis" value="avis production"> 
+            <input type="hidden" name="type_avis" value="avis CONDITIONNEMNT"> 
             <input type="hidden" name="ref_avis" value="avis"> 
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Décision finale (Attribut) :</label>
             <select name="attr_avis" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Choisir un avis --</option>
+                
                 <c:forEach var="opt" items="${optionsAvis}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>

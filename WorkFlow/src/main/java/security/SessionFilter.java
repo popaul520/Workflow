@@ -14,9 +14,18 @@ public class SessionFilter implements Filter {
             throws IOException, ServletException {
         
         HttpServletRequest req = (HttpServletRequest) request;
+        String uri = req.getRequestURI();
+
+        // 1. SÉCURITÉ & PERFORMANCE : On ignore le filtre pour le contrôleur PDF et les assets statiques
+        // Évite de forcer une session ou d'altérer le contexte lors d'un stream binaire
+        if (uri.contains("/pdf") || uri.contains("/fonts/") || uri.contains("/css/") || uri.contains("/js/")) {
+            chain.doFilter(request, response);
+            return; // On sort immédiatement, le filtre ne fait rien pour ces fichiers
+        }
+
         HttpSession session = req.getSession();
 
-        // On vérifie si l'utilisateur est déjà en session
+        // 2. On vérifie si l'utilisateur est déjà en session
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
         if (user == null) {

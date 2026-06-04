@@ -15,8 +15,9 @@
             <input type="hidden" name="type_sdi" value="Cohérence S.D.I.">
             <input type="hidden" name="ref_sdi" value="Bool">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Cohérence S.D.I. (Attribut) :</label>
-            <select name="attr_sdi" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Cohérence S.D.I. (Attribut) * :</label>
+            <select name="attr_sdi" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="" disabled selected>-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>
@@ -31,8 +32,9 @@
             <input type="hidden" name="type_flux" value="Gestion flux/stocks">
             <input type="hidden" name="ref_flux" value="flux/stock">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Gestion flux/stocks (Attribut) :</label>
-            <select name="attr_flux" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Gestion flux/stocks (Attribut) * :</label>
+            <select name="attr_flux" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="" disabled selected>-- Sélectionner la gestion des flux/stocks --</option>
                 <c:forEach var="opt" items="${optionsFlux}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>
@@ -47,8 +49,9 @@
             <input type="hidden" name="type_planif" value="Compatibilité planification">
             <input type="hidden" name="ref_planif" value="Bool">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Compatibilité planification (Attribut) :</label>
-            <select name="attr_planif" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Compatibilité planification (Attribut) * :</label>
+            <select name="attr_planif" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="" disabled selected>-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>
@@ -63,24 +66,23 @@
             <input type="hidden" name="type_avis" value="Avis S.C.M.">
             <input type="hidden" name="ref_avis" value="avis">
             
-            <label style="display: block; font-weight: bold; color: #8e44ad; margin-bottom: 5px;">Avis S.C.M. (Attribut) :</label>
+            <label style="display: block; font-weight: bold; color: #8e44ad; margin-bottom: 5px;">Avis S.C.M. (Attribut) * :</label>
             <select name="attr_avis" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #9b59b6; border-radius: 4px;">
-                <option value="">-- Choisir un avis --</option>
+                <option value="" disabled selected>-- Choisir un avis --</option>
                 <c:forEach var="opt" items="${optionsAvis}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>
             </select>
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) de l'avis :</label>
             <textarea name="comm_avis" style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
             
-            <label style="display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px;">Date de validation :</label>
             <input type="hidden" name="date_avis" value="CURRENT_DATE">
         </div>
 
         <div style="text-align: right; margin-top: 20px;">
             <button type="submit" 
-                    style="background-color: #9b59b6; color: white; padding: 15px 40px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px;">
+                    style="background-color: #9b59b6; color: white; padding: 15px 40px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background 0.3s;">
                  Valider l'étape S.C.M.
             </button>
         </div>

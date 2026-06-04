@@ -103,8 +103,6 @@ public class accueilController extends HttpServlet {
         wd.setBadgeText(badgeText);
         wd.setLibelleEtape(libelleEtape);
     }
-
-    
     protected void javaPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doGet(request, response);
     }

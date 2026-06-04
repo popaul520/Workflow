@@ -1,8 +1,8 @@
 package security;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -22,7 +22,7 @@ public class PdfDocument {
     private PDPageContentStream contentStream;
     private int y;
 
-    // Polices TrueType chargées dynamiquement pour le support UTF-8 intégral
+    // Polices chargées depuis le système d'exploitation (évite le dossier /fonts/)
     private PDType0Font fontRegular;
     private PDType0Font fontBold;
     private PDType0Font fontItalic;
@@ -32,20 +32,31 @@ public class PdfDocument {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            // 1. CHARGEMENT DES POLICES TRUE TYPE (Nécessaire pour les accents français)
-            // On charge les fichiers de police depuis le classpath
-            try (InputStream inReg = getClass().getResourceAsStream("/fonts/Arial.ttf");
-                 InputStream inBold = getClass().getResourceAsStream("/fonts/Arial-Bold.ttf");
-                 InputStream inItalic = getClass().getResourceAsStream("/fonts/Arial-Italic.ttf")) {
-                
-                if (inReg == null) {
-                    // Repli de secours si tes fichiers de ressources ne sont pas encore prêts
-                    throw new IOException("Fichiers de polices .ttf introuvables dans les ressources (/fonts/)");
-                }
-                
-                fontRegular = PDType0Font.load(document, inReg);
-                fontBold = PDType0Font.load(document, inBold);
-                fontItalic = PDType0Font.load(document, inItalic);
+            // CHARGEMENT DE SÉCURITÉ : On pioche directement dans les polices de l'OS pour avoir les accents (é, è, à...)
+            String os = System.getProperty("os.name").toLowerCase();
+            File fontDir;
+            
+            if (os.contains("win")) {
+                fontDir = new File("C:/Windows/Fonts/");
+            } else if (os.contains("mac")) {
+                fontDir = new File("/Library/Fonts/");
+            } else {
+                fontDir = new File("/usr/share/fonts/truetype/dejavu/"); // Linux de secours
+            }
+
+            // Liaison dynamique avec les fichiers de l'OS (Zéro fichier à ajouter dans ton projet Java)
+            File fReg = new File(fontDir, os.contains("win") ? "arial.ttf" : "Arial.ttf");
+            File fBold = new File(fontDir, os.contains("win") ? "arialbd.ttf" : "Arial Bold.ttf");
+            File fItalic = new File(fontDir, os.contains("win") ? "ariali.ttf" : "Arial Italic.ttf");
+
+            if (fReg.exists()) {
+                fontRegular = PDType0Font.load(document, fReg);
+                fontBold = PDType0Font.load(document, fBold);
+                fontItalic = PDType0Font.load(document, fItalic);
+            } else {
+                // Si l'OS est ultra-restreint ou n'a pas Arial, on utilise le fallback standard de PDFBox
+                // Attention : Les accents risquent de sauter ou de générer des erreurs sans fichier ttf.
+                throw new IOException("Impossible de mapper les polices système pour l'UTF-8.");
             }
 
             // Initialisation de la première page
@@ -83,12 +94,9 @@ public class PdfDocument {
                     }
 
                     // --- LIGNE DE DONNÉE 
-                    // Sécurité saut de page avant d'insérer la ligne 
                     verifierEspaceEtSauter(20);
 
                     contentStream.beginText();
-                    
-                   
                     contentStream.setFont(fontRegular, 9);
                     contentStream.newLineAtOffset(50, y);
                     String strDate = (d.getDate() != null) ? dateFormat.format(d.getDate()) : "          "; 
@@ -132,12 +140,9 @@ public class PdfDocument {
         return out.toByteArray();
     }
 
-    /**
-     *  Génère une nouvelle page blanche et ferme le flux de la précédente si elle existe.
-     */
     private void nouvellePage() throws IOException {
         if (contentStream != null) {
-            contentStream.close(); // Ferme la page
+            contentStream.close(); 
         }
         currentPage = new PDPage();
         document.addPage(currentPage);
@@ -145,11 +150,7 @@ public class PdfDocument {
         y = 750; 
     }
 
-    /**
-     *  Détecte si le texte va dépasser la marge basse et force le passage à la page suivante
-     */
     private void verifierEspaceEtSauter(int espaceNecessaire) throws IOException {
-        // Si le curseur actuel moins l'espace requis descend sous la marge de sécurité (60)
         if ((y - espaceNecessaire) < 60) {
             nouvellePage();
         }

@@ -3,7 +3,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="dao.DonneeDAO" %>
 <%
-    // Initialisation du DAO pour charger le référentiel de saisonnalité nécessaire à l'étape 1
+    // Initialisation du DAO pour charger le référentiel de saisonnalité
     DonneeDAO donneeDao = new DonneeDAO();
     List<String> optionsSaisonalite = donneeDao.getValeursContraintes("saisonalite");
     request.setAttribute("optionsSaisonalite", optionsSaisonalite);
@@ -105,41 +105,13 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group full">
                             <label>Priorité réponse *</label>
                             <input type="hidden" name="ref_reponse" value="reponse">
                             <select name="attr_reponse" required>
                                 <option value="" disabled selected>-- Sélectionnez la priorité --</option>
                                 <c:forEach var="opt" items="${optionsReponse}"><option value="${opt}">${opt}</option></c:forEach>
                             </select>
-                        </div>
-
-                        <div class="form-group">
-                            <input type="hidden" name="type_prev_lancement" value="Prévision lancement">
-                            <label>Volume de lancement prévu (kilo)</label>
-                            <input type="text" name="attr_prev_lancement" min="0" required placeholder="Ex: 50000">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>prévisionnell anuelle (kilo)</label>
-                            <input type="text" name="attr_prev_lancement_annuel" required placeholder="80000 KILO de caviar ">
-                        </div>
-
-                        <div class="form-group">
-                            <input type="hidden" name="type_saisonalite" value="Saisonalité"> 
-                            <input type="hidden" name="ref_saisonalite" value="saisonalite"> 
-                            <label>Saisonnalité forte attendue *</label>
-                            <select name="attr_saisonalite" required>
-                                <option value="" disabled selected>-- Choisir une saison --</option>
-                                <c:forEach var="opt" items="${optionsSaisonalite}">
-                                    <option value="${opt}">${opt}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
-
-                        <div class="form-group full">
-                            <label>Commentaire lié à la saisonnalité</label>
-                            <textarea name="comm_saisonalite" placeholder="Précisez les contraintes de calendrier ou détails ici..."></textarea>
                         </div>
                     </div>
                     <div class="button-group">
@@ -149,8 +121,14 @@
                 </div>
 
                 <div class="form-step" id="step-2">
-                    <h2>Unité de vente consommateur</h2>
+                    <h2>2 - Unité de vente consommateur</h2>
                     <div class="grid-form">
+                        
+                        <div class="form-group full">
+                            <label>Libellé article *</label>
+                            <input type="text" name="attr_libelle_article" required placeholder="Libellé complet de l'article">
+                        </div>
+
                         <div class="form-group">
                             <label>Rayon *</label>
                             <input type="hidden" name="ref_rayon" value="rayon">
@@ -170,14 +148,44 @@
                         </div>
 
                         <div class="form-group">
+                            <label>Volume de lancement prévu (kg) *</label>
+                            <input type="hidden" name="type_prev_lancement" value="Prévision lancement">
+                            <input type="text" name="attr_prev_lancement" min="0" required placeholder="Ex: 50000">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Volume prévisionnel annuel (kg) *</label>
+                            <input type="text" name="attr_prev_lancement_annuel" required placeholder="Ex: 80000">
+                        </div>
+
+                        <div class="form-group">
+                            <input type="hidden" name="type_saisonalite" value="Saisonalité"> 
+                            <input type="hidden" name="ref_saisonalite" value="saisonalite"> 
+                            <label>Saisonnalité forte attendue *</label>
+                            <select name="attr_saisonalite" required>
+                                <option value="" disabled selected>-- Choisir une saison --</option>
+                                <c:forEach var="opt" items="${optionsSaisonalite}">
+                                    <option value="${opt}">${opt}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
                             <label>Date départ usine souhaitée *</label>
                             <input type="date" name="attr_date_souhaite" required>
+                        </div>
+
+                        <div class="form-group full">
+                            <label>Commentaire et/ou descriptif de l’attendu</label>
+                            <textarea name="comm_saisonalite" placeholder="Précisez ici les commentaires et détails attendus..."></textarea>
                         </div>
 
                         <div class="form-group">
                             <label>Code référence équivalente</label>
                             <input type="text" name="attr_code_ref" placeholder="Code interne">
                         </div>
+
+
                     </div>
                     <div class="button-group">
                         <button type="button" class="btn btn-prev" onclick="goToStep(1)">⬅ Précédent</button>
@@ -186,7 +194,7 @@
                 </div>
 
                 <div class="form-step" id="step-3">
-                    <h2>Unité logistique</h2>
+                    <h2>3 - Unité logistique</h2>
                     <div class="grid-form">
                         <div class="form-group">
                             <label>Unité d'œuvre *</label>
@@ -209,7 +217,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Piece par unité de Mise en œuvre (Unité PCB))</label>
+                            <label>Piece par unité de Mise en œuvre (Unité PCB)</label>
                             <input type="number" name="attr_pcs_colis" min="1" required placeholder="Nombre de pièces">
                         </div>
 
@@ -242,6 +250,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-group">
+                            <label>Colis par couche *</label>
+                            <input type="number" name="attr_colis_couche" min="1" required placeholder="Nombre de colis">
+                        </div>
+
+                        <div class="form-group full">
+                            <label>Couches par palette *</label>
+                            <input type="number" name="attr_couches_palette" min="1" required placeholder="Nombre de couches">
+                        </div>
                     <div class="button-group">
                         <button type="button" class="btn btn-prev" onclick="goToStep(2)">⬅ Précédent</button>
                         <button type="submit" class="btn btn-submit">🚀 LANCER LE WORKFLOW</button>
