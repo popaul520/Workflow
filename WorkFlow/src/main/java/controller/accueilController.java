@@ -79,9 +79,9 @@ public class accueilController extends HttpServlet {
         String badgeText = "#2c5282";
         String libelleEtape = "Étape " + etape + "/9";
 
-        if ("Faisable".equalsIgnoreCase(cleanAvis)) {
+        if ("Favorable".equalsIgnoreCase(cleanAvis)) {
             badgeBg = "#c6f6d5"; badgeText = "#22543d";
-            libelleEtape = (etape >= 10) ? "Terminé" : "Faisable";
+            libelleEtape = (etape >= 10) ? "Terminé" : "Favorable";
         } 
         else if ("Faisable sous condition".equalsIgnoreCase(cleanAvis) || "Faisable s.c.".equalsIgnoreCase(cleanAvis)) {
             badgeBg = "#feebc8"; badgeText = "#744210";
