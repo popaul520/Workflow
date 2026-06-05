@@ -6,7 +6,7 @@ import jakarta.servlet.http.*;
 import model.Utilisateur;
 import java.io.IOException;
 
-@WebFilter("/*") // S'applique à toutes les URLs de l'application
+@WebFilter("/*") 
 public class SessionFilter implements Filter {
 
     @Override
@@ -16,16 +16,16 @@ public class SessionFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         String uri = req.getRequestURI();
 
-        // 1. SÉCURITÉ & PERFORMANCE : On ignore le filtre pour le contrôleur PDF et les assets statiques
-        // Évite de forcer une session ou d'altérer le contexte lors d'un stream binaire
-        if (uri.contains("/pdf") || uri.contains("/fonts/") || uri.contains("/css/") || uri.contains("/js/")) {
+        // 1. SÉCURITÉ & PERFORMANCE : Conversion en minuscules pour s'affranchir de la sensibilité à la casse du serveur
+        String uriLower = uri.toLowerCase();
+        if (uriLower.contains("/pdf") || uriLower.contains("/fonts/") || uriLower.contains("/css/") || uriLower.contains("/js/")) {
             chain.doFilter(request, response);
-            return; // On sort immédiatement, le filtre ne fait rien pour ces fichiers
+            return; 
         }
 
         HttpSession session = req.getSession();
 
-        // 2. On vérifie si l'utilisateur est déjà en session
+        // 2. Vérification / Initialisation de la session utilisateur
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
         if (user == null) {
@@ -34,10 +34,9 @@ public class SessionFilter implements Filter {
             guest.setId(-1);
             guest.setNom("Invite");
             guest.setPrenom("Visiteur");
-            guest.setRole(12); // Rôle restreint
+            guest.setRole(12); // Rôle restreint de consultation
             guest.setLogin("guest");
             
-            // On le place en session
             session.setAttribute("user", guest);
         }
 

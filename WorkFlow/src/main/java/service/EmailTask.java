@@ -11,91 +11,91 @@ public class EmailTask implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("=== Début de la Task Email Dynamique (Basée sur les Rôles) ===");
+        System.out.println("=== Début de la Task Email Dynamique Unifiée ===");
 
         try {
-            // On récupère tous les utilisateurs groupés par rôle
+            // 1. Récupération globale des workflows terminés à annoncer (Recherche unique)
+            List<Workflow> terminesGlobaux = WorkflowDAO.getWorkflowsTerminesPourRole(0); 
+            boolean aDesTermines = (terminesGlobaux != null && !terminesGlobaux.isEmpty());
+
+            // 2. Récupération de tous les utilisateurs groupés par rôle
             Map<Integer, List<Utilisateur>> usersParRole = UtilisateurDAO.getAllUsersGroupedByRole();
 
-            // Séquence : On traite chaque rôle présent en base de données
+            // 3. Traitement par rôle
             for (int roleId : usersParRole.keySet()) {
                 
+                // EXCLUSION : Si c'est le rôle 0, on n'envoie rien du tout
+                if (roleId == 0) {
+                    System.out.println("Saut du rôle 0 (Exclu des envois)");
+                    continue;
+                }
+
                 List<Utilisateur> destinataires = usersParRole.get(roleId);
-                
-                // Si personne n'a ce rôle, inutile de bosser
                 if (destinataires == null || destinataires.isEmpty()) {
                     continue; 
                 }
 
-                // ------------------------------------------------------------------
-                // PARTICULE 1 : DOSSIERS EN ATTENTE DE VALIDATION POUR CE RÔLE
-                // ------------------------------------------------------------------
-                // On utilise ta méthode unifiée magique qui sait gérer le 2, 6, 11...
+                // 4. Récupération des dossiers spécifiques à valider pour CE rôle
                 List<Workflow> aValider = WorkflowDAO.getWorkflowsEnAttenteParRole(roleId);
 
+                // Si rien à valider ET aucun workflow terminé globalement, on n'envoie pas de mail vide
+                if (aValider.isEmpty() && !aDesTermines) {
+                    continue;
+                }
+
+                // 5. Construction du corps de l'email unique
+                String sujet = "Point sur vos dossiers de processus et workflows";
+                StringBuilder templateCorps = new StringBuilder();
+                templateCorps.append("Bonjour %USER%,\n\nVoici le point sur les dossiers de l'application :\n\n");
+
+                // SECTION 1 : À valider (Propre à ce rôle)
                 if (!aValider.isEmpty()) {
-                    String sujet = "Dossiers de processus en attente de votre action";
-                    StringBuilder corps = new StringBuilder();
-                    corps.append("Bonjour,\n\nLes workflows suivants attendent une action de validation de votre part :\n\n");
-                    
+                    templateCorps.append(" À VALIDER (Action requise de votre part) :\n");
                     for (Workflow w : aValider) {
-                        corps.append("- Workflow N°").append(w.getId()).append(" : ").append(w.getTitre()).append("\n");
+                        templateCorps.append("• N°").append(w.getId()).append(" : ").append(w.getTitre()).append("\n");
                     }
-                    corps.append("\nMerci de vous connecter à l'application pour les traiter.\nCordialement.");
-
-                    // Envoi individuel et personnalisé à chaque membre ayant ce rôle
-                    for (Utilisateur u : destinataires) {
-                        if (u.getMail() != null && !u.getMail().isEmpty()) {
-                            String msgPerso = corps.toString().replace("Bonjour,", "Bonjour " + u.getPrenom() + " " + u.getNom() + ",");
-                            try {
-                                MailSender.send(u.getMail(), sujet, msgPerso);
-                            } catch (Exception e) {
-                                System.err.println("❌ Échec d'envoi à " + u.getMail() + " : " + e.getMessage());
-                            }
-                        }
-                    }
-                    System.out.println("[Rôle " + roleId + "] " + aValider.size() + " alertes de validation envoyées.");
+                    templateCorps.append("\n Merci de vous connecter à l'application pour les traiter.\n\n");
                 }
 
-                // ------------------------------------------------------------------
-                // PARTICULE 2 : TRAITEMENT DES DOSSIERS TERMINÉS (NOTIFICATION DE FIN)
-                // ------------------------------------------------------------------
-                // Ici, on récupère les dossiers finalisés pour les étapes associées à ce rôle
-                List<Workflow> termines = WorkflowDAO.getWorkflowsTerminesPourRole(roleId);
-                if (termines != null && !termines.isEmpty()) {
-                    String sujet = "Notification : Finalisation de dossiers";
-                    StringBuilder corps = new StringBuilder();
-                    corps.append("Bonjour,\n\nNous vous informons que les processus suivants associés à vos droits sont terminés :\n\n");
-                    
-                    for (Workflow w : termines) {
-                        corps.append("- Workflow N°").append(w.getId()).append(" : ").append(w.getTitre()).append("\n");
+                // SECTION 2 : Terminés (Visibles par tout le monde sauf rôle 0)
+                if (aDesTermines) {
+                    templateCorps.append(" DOSSIERS FINALISÉS (Pour information générale) :\n");
+                    for (Workflow w : terminesGlobaux) {
+                        templateCorps.append("• N°").append(w.getId()).append(" : ").append(w.getTitre()).append("\n");
                     }
-                    corps.append("\nCe message est purement informatif.\nCordialement.");
+                    templateCorps.append("\n");
+                }
 
-                    // Envoi individuel à chaque membre du rôle
-                    for (Utilisateur u : destinataires) {
-                        if (u.getMail() != null && !u.getMail().isEmpty()) {
-                            String msgPerso = corps.toString().replace("Bonjour,", "Bonjour " + u.getNom() + ",");
-                            try {
-                                MailSender.send(u.getMail(), sujet, msgPerso);
-                            } catch (Exception e) {
-                                System.err.println("❌ Échec d'envoi d'annonce à " + u.getMail());
-                            }
+                templateCorps.append("Cordialement,\nL'équipe Support informatique.");
+                String corpsDeBase = templateCorps.toString();
+
+                // 6. Envoi personnalisé aux membres de ce rôle
+                for (Utilisateur u : destinataires) {
+                    if (u.getMail() != null && !u.getMail().isEmpty()) {
+                        String msgPerso = corpsDeBase.replace("%USER%", u.getNom());
+                        try {
+                            MailSender.send(u.getMail(), sujet, msgPerso);
+                        } catch (Exception e) {
+                            System.err.println("❌ Échec d'envoi à " + u.getMail() + " : " + e.getMessage());
                         }
                     }
-                    
-                    // Verrouillage pour ne pas renvoyer l'annonce le lendemain matin
-                    for (Workflow w : termines) {
-                        WorkflowDAO.marquerAnnonceTerminee(w.getId()); 
-                    }
-                    System.out.println("[Rôle " + roleId + "] " + termines.size() + " annonces de finalisation envoyées et verrouillées.");
                 }
+                System.out.println("[Rôle " + roleId + "] Récapitulatif envoyé.");
+            }
+
+            // 7. VERROUILLAGE : Une fois que tous les rôles admissibles ont été bouclés,
+            // on marque les workflows terminés comme annoncés pour ne plus les ré-envoyer demain.
+            if (aDesTermines) {
+                for (Workflow w : terminesGlobaux) {
+                    WorkflowDAO.marquerAnnonceTerminee(w.getId()); 
+                }
+                System.out.println("🔒 " + terminesGlobaux.size() + " annonces de fin définitivement verrouillées en BDD.");
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Erreur critique dans EmailTask :");
+            System.err.println("Erreur critique dans EmailTask :");
             e.printStackTrace();
         }
-        System.out.println("===Fin de la Task Email Dynamique ===");
+        System.out.println("=== Fin de la Task Email Dynamique Unifiée ===");
     }
 }

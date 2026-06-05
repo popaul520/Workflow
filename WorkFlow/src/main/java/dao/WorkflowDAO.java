@@ -541,16 +541,12 @@ public class WorkflowDAO {
 	    // ET on vérifie dans une table d'historique (ou via une logique de droits) que ce rôle précis n'a pas encore reçu l'alerte.
 	    
 	    String sql = "SELECT DISTINCT w.id, w.titre FROM workflow w " +
-	                 "JOIN droit d ON d.etape = 10 " + 
 	                 "WHERE w.statut = 'TERMINER' " +
-	                 "  AND w.annonce_termine = false " + 
-	                 "  AND d.role = ?"; // On s'assure que le rôle a le droit sur cette fin de processus
+	                 "  AND w.annonce_termine = false "  ; // On s'assure que le rôle a le droit sur cette fin de processus
 
 	    try (Connection conn = DBConnection.getConnection();
 	         PreparedStatement ps = conn.prepareStatement(sql)) {
-	        
-	        ps.setInt(1, roleId);
-	        try (ResultSet rs = ps.executeQuery()) {
+	        	        try (ResultSet rs = ps.executeQuery()) {
 	            while (rs.next()) {
 	                Workflow w = new Workflow();
 	                w.setId(rs.getInt("id"));

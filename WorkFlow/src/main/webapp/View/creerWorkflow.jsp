@@ -56,6 +56,7 @@
         .btn-submit { background: var(--success); color: white; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
+        @pragma-box { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -175,9 +176,9 @@
                             <input type="date" name="attr_date_souhaite" required>
                         </div>
 
-                        <div class="form-group full">
-                            <label>Commentaire et/ou descriptif de l’attendu</label>
-                            <textarea name="comm_saisonalite" placeholder="Précisez ici les commentaires et détails attendus..."></textarea>
+                        <div class="form-group">
+                            <label>Marge attendue (%) *</label>
+                            <input type="text" name="comm_marge" placeholder="Ex: 15%" required>
                         </div>
 
                         <div class="form-group">
@@ -185,6 +186,34 @@
                             <input type="text" name="attr_code_ref" placeholder="Code interne">
                         </div>
 
+                        <div class="form-group full">
+                            <label>Commentaire et/ou descriptif de l’attendu</label>
+                            <textarea name="comm_saisonalite" placeholder="Précisez ici les commentaires et détails attendus..."></textarea>
+                        </div>
+
+                        <div class="form-group full">
+                            <label>Produit destiné à l'export ? *</label>
+                            <input type="hidden" name="ref_export" value="Bool">
+                            <select name="attr_export" id="exportSelect" onchange="toggleExportFields()" required>
+                                <option value="" disabled selected>-- Sélectionnez une option --</option>
+                                <option value="Oui">Oui</option>
+                                <option value="Non">Non</option>
+                            </select>
+                        </div>
+
+                        <div id="exportFields" class="export-conditional">
+                            <div class="form-group">
+                                <label>Pays destinataire *</label>
+                                <input type="hidden" name="ref_pays_destinataire" value="pays">
+                                <input type="text" name="attr_pays_destinataire" id="paysInput" placeholder="Ex: Allemagne, Canada">
+                            </div>
+
+                            <div class="form-group">
+                                <label>D.D.M attendu (en j) *</label>
+                                <input type="hidden" name="ref_ddm_export" value="ddm">
+                                <input type="text" name="attr_ddm_export" id="ddmInput" placeholder="Ex: MM/AAAA ou JJ/MM/AAAA">
+                            </div>
+                        </div>
 
                     </div>
                     <div class="button-group">
@@ -217,40 +246,11 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Piece par unité de Mise en œuvre (Unité PCB)</label>
+                            <label>Unité PCB</label>
                             <input type="number" name="attr_pcs_colis" min="1" required placeholder="Nombre de pièces">
                         </div>
 
                         <div class="form-group">
-                            <label>Marge attendue (%) *</label>
-                            <input type="text" name="comm_marge" placeholder="Ex: 15%" required>
-                        </div>
-
-                        <div class="form-group full">
-                            <label>Produit destiné à l'export ? *</label>
-                            <input type="hidden" name="ref_export" value="Bool">
-                            <select name="attr_export" id="exportSelect" onchange="toggleExportFields()" required>
-                                <option value="" disabled selected>-- Sélectionnez une option --</option>
-                                <option value="Oui">Oui</option>
-                                <option value="Non">Non</option>
-                            </select>
-                        </div>
-
-                        <div id="exportFields" class="export-conditional">
-                            <div class="form-group">
-                                <label>Pays destinataire *</label>
-                                <input type="hidden" name="ref_pays_destinataire" value="pays">
-                                <input type="text" name="attr_pays_destinataire" id="paysInput" placeholder="Ex: Allemagne, Canada">
-                            </div>
-
-                            <div class="form-group">
-                                <label>D.D.M attendu *</label>
-                                <input type="hidden" name="ref_ddm_export" value="ddm">
-                                <input type="text" name="attr_ddm_export" id="ddmInput" placeholder="Ex: MM/AAAA ou JJ/MM/AAAA">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
                             <label>Colis par couche *</label>
                             <input type="number" name="attr_colis_couche" min="1" required placeholder="Nombre de colis">
                         </div>
@@ -259,6 +259,7 @@
                             <label>Couches par palette *</label>
                             <input type="number" name="attr_couches_palette" min="1" required placeholder="Nombre de couches">
                         </div>
+                    </div>
                     <div class="button-group">
                         <button type="button" class="btn btn-prev" onclick="goToStep(2)">⬅ Précédent</button>
                         <button type="submit" class="btn btn-submit">🚀 LANCER LE WORKFLOW</button>
@@ -337,7 +338,7 @@
 
             if (!isFormValid) {
                 e.preventDefault();
-                alert("Veuillez finaliser la saisie logistique et d'exportation avant d'envoyer.");
+                alert("Veuillez finaliser la saisie logistique avant d'envoyer.");
             }
         });
     </script>

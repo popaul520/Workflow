@@ -20,7 +20,7 @@
             <input type="hidden" name="type_codes" value="Création code(s)"> 
             <input type="hidden" name="ref_codes" value="Bool"> 
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Création code(s) effectué :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Création code(s) :</label>
             <select name="attr_codes" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Sélectionner --</option>
                 <c:forEach var="opt" items="${optionsBool}">
@@ -38,7 +38,7 @@
             <input type="hidden" name="type_nomen" value="Création nomenclature"> 
             <input type="hidden" name="ref_nomen" value="Bool"> 
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Nomenclature créée :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Création nomenclature :</label>
             <select name="attr_nomen" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Sélectionner --</option>
                 <c:forEach var="opt" items="${optionsBool}">
@@ -56,7 +56,7 @@
             <input type="hidden" name="type_gamme" value="Création gamme"> 
             <input type="hidden" name="ref_gamme" value="Bool"> 
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Gamme de fabrication créée :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Création gamme :</label>
             <select name="attr_gamme" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Sélectionner --</option>
                 <c:forEach var="opt" items="${optionsBool}">

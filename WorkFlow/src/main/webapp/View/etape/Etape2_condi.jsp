@@ -49,27 +49,31 @@
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
             <input type="hidden" name="type_essais" value="Besoin d'essais"> 
             <input type="hidden" name="ref_essais" value="Bool"> 
+            
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Besoin d'essais ? (Attribut) :</label>
-            <select name="attr_essais" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+            <select name="attr_essais" id="selectEssais" onchange="gererObligationDate()" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>
             </select>
+            
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Détails (Commentaire) :</label>
             <textarea name="comm_essais" style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
-            <label style="display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px;">Date prévisionnelle :</label>
-            <input type="date" name="date_essais" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            
+            <label style="display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px;">
+                Date prévisionnelle <span id="asterisqueDate" style="color: red; display: none;">*</span> :
+            </label>
+            <input type="date" name="date_essais" id="inputDate" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
 
-        <%-- --- BLOC 3 : AVIS cONDITIONNEMENT --- --%>
+        <%-- --- BLOC 3 : AVIS CONDITIONNEMENT --- --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
             <input type="hidden" name="type_avis" value="avis CONDITIONNEMNT"> 
             <input type="hidden" name="ref_avis" value="avis"> 
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Décision finale (Attribut) :</label>
             <select name="attr_avis" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Choisir un avis --</option>
-                
                 <c:forEach var="opt" items="${optionsAvis}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>
@@ -88,3 +92,29 @@
         </div>
     </form>
 </div>
+
+<script>
+function gererObligationDate() {
+    var selectEssais = document.getElementById("selectEssais");
+    var inputDate = document.getElementById("inputDate");
+    var asterisque = document.getElementById("asterisqueDate");
+
+    if (selectEssais.value === "Oui") {
+        inputDate.setAttribute("required", "required");
+        asterisque.style.display = "inline"; // Affiche l'astérisque rouge
+    } else {
+        inputDate.removeAttribute("required");
+        asterisque.style.display = "none";  // Cache l'astérisque rouge
+        
+        // Optionnel : vide le champ date si l'utilisateur change d'avis et met "Non"
+        if (selectEssais.value === "Non") {
+            inputDate.value = ""; 
+        }
+    }
+}
+
+// Lancement au chargement de la page pour initialiser le comportement si le formulaire contient déjà des données
+document.addEventListener("DOMContentLoaded", function() {
+    gererObligationDate();
+});
+</script>

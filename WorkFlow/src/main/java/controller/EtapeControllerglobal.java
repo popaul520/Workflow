@@ -92,6 +92,18 @@ public class EtapeControllerglobal extends HttpServlet {
         request.setAttribute("hasAccess", hasAccess);
         request.setAttribute("canEdit", canEdit);
         request.setAttribute("isClosed", isClosed);
+        
+        int idWorkflow = Integer.parseInt(request.getParameter("id_workflow"));
+
+     // 1. Récupérer le C.R.I de l'étape 9 (On cherche le type précis)
+        List<Donnee> listeCri = donneeDao.getDonneesParTypeEtWorkflow("Calcul du C.R.I.", idWorkflow);
+        if (listeCri != null && !listeCri.isEmpty()) {
+            // On prend le dernier calcul du C.R.I. enregistré
+            Donnee donneeCri = listeCri.get(listeCri.size() - 1);
+            request.setAttribute("donneeCri", donneeCri);
+        } else {
+            request.setAttribute("donneeCri", null);
+        }
 
         if ((donneesEtape != null && !donneesEtape.isEmpty()) || isClosed || !canEdit) {
             request.getRequestDispatcher("/View/etape/visualisationDonnee.jsp").forward(request, response);

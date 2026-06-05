@@ -238,4 +238,39 @@ public void creerEtapeWorkflow(int idWorkflow, int nbEtape) {
 	    // On retourne une chaîne vide si rien n'est trouvé, pour éviter les NullPointerException dans la JSP
 	    return (valeur != null) ? valeur : "";
 	}
+	public List<Donnee> getDonneesParTypeEtWorkflow(String type, int idWorkflow) {
+        List<Donnee> liste = new ArrayList<>();
+        
+        // Requête SQL de sélection ordonnée par l'ID unique croissant
+        String sql = "SELECT id_donne, type, attribut, commentaire, date, id_workflow, nb_etape " +
+                     "FROM donnee " + // Remplace par 'donnees' ou le nom exact de ta table
+                     "WHERE TRIM(LOWER(type)) = TRIM(LOWER(?)) AND id_workflow = ? " +
+                     "ORDER BY id_donne ASC";
+
+        // Utilisation du try-with-resources pour fermer automatiquement les ressources JDBC
+        try (Connection conn = DBConnection.getConnection(); // Ajuste l'appel selon ta gestion de connexion
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, type);
+            ps.setInt(2, idWorkflow);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Donnee d = new Donnee();
+                    d.setIdDonne(rs.getLong("id_donne"));
+                    d.setType(rs.getString("type"));
+                    d.setAttribut(rs.getString("attribut"));
+                    d.setCommentaire(rs.getString("commentaire"));
+                    d.setDate(rs.getDate("date"));
+                    
+                    liste.add(d);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des données par type et workflow : " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return liste;
+    }
 }

@@ -1,14 +1,14 @@
 package security;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import model.Donnee;
 import model.Utilisateur;
 
@@ -16,49 +16,21 @@ public class PdfDocument {
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     
-    // Variables globales pour gérer la pagination dynamique
     private PDDocument document;
     private PDPage currentPage;
     private PDPageContentStream contentStream;
     private int y;
 
-    // Polices chargées depuis le système d'exploitation (évite le dossier /fonts/)
-    private PDType0Font fontRegular;
-    private PDType0Font fontBold;
-    private PDType0Font fontItalic;
+    // Utilisation des polices standards intégrées à PDFBox (Zéro fichier externe requis)
+    private final PDFont fontRegular = PDType1Font.HELVETICA;
+    private final PDFont fontBold = PDType1Font.HELVETICA_BOLD;
+    private final PDFont fontItalic = PDType1Font.HELVETICA_OBLIQUE;
 
     public byte[] creationPdf(int idWorkflow, List<Donnee> toutesDonnees) throws IOException {
         document = new PDDocument();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            // CHARGEMENT DE SÉCURITÉ : On pioche directement dans les polices de l'OS pour avoir les accents (é, è, à...)
-            String os = System.getProperty("os.name").toLowerCase();
-            File fontDir;
-            
-            if (os.contains("win")) {
-                fontDir = new File("C:/Windows/Fonts/");
-            } else if (os.contains("mac")) {
-                fontDir = new File("/Library/Fonts/");
-            } else {
-                fontDir = new File("/usr/share/fonts/truetype/dejavu/"); // Linux de secours
-            }
-
-            // Liaison dynamique avec les fichiers de l'OS (Zéro fichier à ajouter dans ton projet Java)
-            File fReg = new File(fontDir, os.contains("win") ? "arial.ttf" : "Arial.ttf");
-            File fBold = new File(fontDir, os.contains("win") ? "arialbd.ttf" : "Arial Bold.ttf");
-            File fItalic = new File(fontDir, os.contains("win") ? "ariali.ttf" : "Arial Italic.ttf");
-
-            if (fReg.exists()) {
-                fontRegular = PDType0Font.load(document, fReg);
-                fontBold = PDType0Font.load(document, fBold);
-                fontItalic = PDType0Font.load(document, fItalic);
-            } else {
-                // Si l'OS est ultra-restreint ou n'a pas Arial, on utilise le fallback standard de PDFBox
-                // Attention : Les accents risquent de sauter ou de générer des erreurs sans fichier ttf.
-                throw new IOException("Impossible de mapper les polices système pour l'UTF-8.");
-            }
-
             // Initialisation de la première page
             nouvellePage();
 
@@ -66,7 +38,7 @@ public class PdfDocument {
             contentStream.beginText();
             contentStream.setFont(fontBold, 18);
             contentStream.newLineAtOffset(50, y);
-            contentStream.showText("Récapitulatif Workflow #" + idWorkflow);
+            contentStream.showText("Recapitulatif Workflow #" + idWorkflow);
             contentStream.endText();
 
             y -= 40; 
@@ -76,19 +48,20 @@ public class PdfDocument {
                 for (Donnee d : toutesDonnees) {
 
                     // TITRE DE L'ÉTAPE
-                    int currentNbEtape = d.getEtape().getNbEtape();
+                    // Sécurité si d.getEtape() est nul
+                    int currentNbEtape = (d.getEtape() != null) ? d.getEtape().getNbEtape() : 0;
                     if (currentNbEtape != derniereEtapeAffichee) {
                         derniereEtapeAffichee = currentNbEtape;
                         String nomRole = Utilisateur.getRole(currentNbEtape);
+                        if (nomRole == null) nomRole = "Utilisateur";
                         
-                        // Sécurité saut de page avant d'insérer un titre de section 
                         verifierEspaceEtSauter(45);
                         
                         y -= 25;
                         contentStream.beginText();
                         contentStream.setFont(fontBold, 12);
                         contentStream.newLineAtOffset(50, y);
-                        contentStream.showText("--- " + currentNbEtape + ". " + nomRole + " ---");
+                        contentStream.showText("--- " + currentNbEtape + ". " + purgerTexte(nomRole) + " ---");
                         contentStream.endText();
                         y -= 20;
                     }
@@ -107,8 +80,9 @@ public class PdfDocument {
                     
                     String type = (d.getType() != null) ? d.getType() : "Champ";
                     String valeur = (d.getAttribut() != null) ? d.getAttribut() : "";
-                    contentStream.showText("- " + type + " : " + valeur); 
                     
+                    String ligneTexte = "- " + type + " : " + valeur;
+                    contentStream.showText(purgerTexte(ligneTexte)); 
                     contentStream.endText();
 
                     // --- COMMENTAIRE
@@ -120,7 +94,7 @@ public class PdfDocument {
                         contentStream.beginText();
                         contentStream.setFont(fontItalic, 9);
                         contentStream.newLineAtOffset(135, y); 
-                        contentStream.showText(d.getCommentaire());
+                        contentStream.showText(purgerTexte(d.getCommentaire()));
                         contentStream.endText();
                     }
                     
@@ -128,14 +102,20 @@ public class PdfDocument {
                 }
             }
 
-            // Fermeture propre
+            // Fermeture propre du flux de contenu avant sauvegarde
             if (contentStream != null) {
                 contentStream.close();
+                contentStream = null;
             }
 
             document.save(out);
         } finally {
-            document.close();
+            if (contentStream != null) {
+                contentStream.close();
+            }
+            if (document != null) {
+                document.close();
+            }
         }
         return out.toByteArray();
     }
@@ -154,5 +134,30 @@ public class PdfDocument {
         if ((y - espaceNecessaire) < 60) {
             nouvellePage();
         }
+    }
+
+    /**
+     * Méthode essentielle de nettoyage pour éviter le crash de PDFBox (Helvetica Standard).
+     * Supprime les retours à la ligne et remplace les caractères accentués français 
+     * pour éviter les "unmappable character" sur les serveurs de production Linux.
+     */
+    private String purgerTexte(String texte) {
+        if (texte == null) return "";
+        
+        // Nettoyage des sauts de ligne incompatibles avec showText
+        String resultat = texte.replace("\n", " ").replace("\r", "").trim();
+        
+        // Remplacement des caractères accentués pour Helvetica Standard
+        resultat = resultat.replaceAll("[éèêë]", "e")
+                           .replaceAll("[àâä]", "a")
+                           .replaceAll("[ùûü]", "u")
+                           .replaceAll("[îï]", "i")
+                           .replaceAll("[ôö]", "o")
+                           .replaceAll("[ç]", "c")
+                           .replaceAll("[ÉÈÊË]", "E")
+                           .replaceAll("[ÀÂÄ]", "A")
+                           .replaceAll("[Ç]", "C");
+                           
+        return resultat;
     }
 }

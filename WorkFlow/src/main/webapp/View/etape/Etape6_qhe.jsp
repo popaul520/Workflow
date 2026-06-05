@@ -27,19 +27,23 @@
         <input type="hidden" name="current_n" value="6">
 
         <%-- --- BLOC 1 : MARQUAGE TRAÇABILITÉ --- --%>
-        <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f8f9fa;">
-            <input type="hidden" name="type_tracab" value="Marquage traçabilité"> 
-            <input type="hidden" name="ref_tracab" value="normalite"> 
-            
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Marquage traçabilité conforme :</label>
-            <input type="text" name="attr_tracab" placeholder="" 
-            style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">	
-            
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) marquage :</label>
-            <textarea name="comm_tracab" placeholder="Précisez le type de jet d'encre, étiquetage, positionnement du lot..." 
-                      style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
-        </div>
-normalite pour spécifique marquage comme select option 
+		<div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f8f9fa;">
+		    <input type="hidden" name="type_tracab" value="Marquage traçabilité"> 
+		    <input type="hidden" name="ref_tracab" value="normalite"> 
+		    
+		    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Spécificité marquage *</label>
+		    <select name="attr_tracab" required
+		            style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: white; font-family: inherit; font-size: 14px;">
+		        <option value="" disabled selected>-- Choisissez une spécificité --</option>
+		        <c:forEach var="opt" items="${optionsNormalite}">
+		            <option value="${opt}">${opt}</option>
+		        </c:forEach>
+		    </select>	
+		    
+		    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) marquage :</label>
+		    <textarea name="comm_tracab" placeholder="Précisez le type de jet d'encre, étiquetage, positionnement du lot..." 
+		              style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+		</div>
         <%-- --- BLOC 2 : D.D.M. AU CONDI. --- --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
             <input type="hidden" name="type_ddm" value="D.D.M. au condi."> 
