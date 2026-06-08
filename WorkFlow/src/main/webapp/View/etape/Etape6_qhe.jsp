@@ -32,8 +32,7 @@
             <input type="hidden" name="ref_tracab" value="normalite"> 
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Marquage traçabilité conforme :</label>
             <input type="text" name="attr_tracab" placeholder="" 
-            style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">	
-            
+            style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) marquage :</label>
             <textarea name="comm_tracab" placeholder="Précisez le type de jet d'encre, étiquetage, positionnement du lot..." 
                       style="width: 100%; padding: 10px; height: 60px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>

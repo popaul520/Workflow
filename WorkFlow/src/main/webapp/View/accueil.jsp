@@ -111,7 +111,6 @@
                 <c:otherwise>Tous les dossiers</c:otherwise>
             </c:choose>
         </h2>
-
         <div class="box">
             <table>
                 <thead>
