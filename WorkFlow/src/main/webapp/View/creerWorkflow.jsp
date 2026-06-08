@@ -178,7 +178,7 @@
 
                         <div class="form-group">
                             <label>Marge attendue (%) *</label>
-                            <input type="text" name="comm_marge" placeholder="Ex: 15%" required>
+                            <input type="text" name="attr_marge" placeholder="Ex: 15%" required>
                         </div>
 
                         <div class="form-group">

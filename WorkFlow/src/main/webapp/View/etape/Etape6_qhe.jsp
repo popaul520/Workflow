@@ -47,7 +47,7 @@
             <input type="hidden" name="type_ddm" value="D.D.M. au condi."> 
             
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">D.D.M. au conditionnement * :</label>
-            <input type="text" name="attr_ddm" required placeholder="Ex: 45 jours, JJ/MM/AAAA, Fin de mois..." 
+            <input type="text" name="attr_ddm" required placeholder="Ex: 45 jours" 
                    style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"> 
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Commentaire(s) DDM :</label>
             <textarea name="comm_ddm" placeholder="Règle de calcul de la DDM, gestion du report..." 
