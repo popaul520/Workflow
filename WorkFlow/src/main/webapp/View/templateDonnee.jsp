@@ -51,8 +51,8 @@
 			<a href="template-list" class="btn btn-outline-secondary btn-sm">Retour
 				à la liste</a>
 			<button type="button" class="btn btn-outline-primary btn-sm"
-				data-bs-toggle="modal" data-bs-target="#modalQuickType">
-				<i class="bi bi-gear-fill"></i> + Nouveau typelist
+			        onClick="window.location.href='${pageContext.request.contextPath}/catalogues'">
+			    <i class="bi bi-gear-fill"></i> + Nouveau typelist
 			</button>
 		</div>
 

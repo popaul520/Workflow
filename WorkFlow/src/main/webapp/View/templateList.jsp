@@ -26,10 +26,10 @@
         <h2><i class="fa-solid fa-list-check me-2 text-primary"></i>Templates de Workflow</h2>
         
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalTypeContraint">
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"  onClick="window.location.href='${pageContext.request.contextPath}/catalogues'">
                 <i class="fa-solid fa-gear me-1"></i> Gérer Référentiels
             </button>
-            
+                        
             <a href="template-workflow" class="btn btn-success">
                 <i class="fa-solid fa-plus me-1"></i> Créer un nouveau Template
             </a>
@@ -105,7 +105,6 @@
                         <label class="form-label fw-bold small text-secondary">Type (Famille / Catégorie)</label>
                         <input type="text" name="type_nom" class="form-control" placeholder="Ex: Bool, client, rayon, marque..." required>
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-secondary">Valeur</label>
                         <input type="text" name="valeur_nom" class="form-control" placeholder="Ex: Oui, Non, Marketing, Épargne..." required>
