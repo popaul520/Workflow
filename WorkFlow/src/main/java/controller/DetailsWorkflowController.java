@@ -16,7 +16,6 @@ public class DetailsWorkflowController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             
@@ -26,7 +25,6 @@ public class DetailsWorkflowController extends HttpServlet {
                 // Récupérer l'historique des données
                 DonneeDAO donneeDAO = new DonneeDAO();
                 List<Donnee> listeDonnees = donneeDAO.getDonneesByWorkflow(id); 
-
                 request.setAttribute("wf", wf);
                 request.setAttribute("historique", listeDonnees);
                 request.getRequestDispatcher("/View/details.jsp").forward(request, response);

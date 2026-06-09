@@ -83,10 +83,10 @@
 
         <%-- 5. AVIS APPRO --%>
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #e67e22; border-radius: 5px;">
-            <input type="hidden" name="type_avis" value="Avis Appro.">
+            <input type="hidden" name="type_avis" value="Avis Appro">
             <input type="hidden" name="ref_avis" value="avis">
             
-            <label style="display: block; font-weight: bold; color: #d35400; margin-bottom: 5px;">Avis Appro. (Attribut) * :</label>
+            <label style="display: block; font-weight: bold; color: #d35400; margin-bottom: 5px;">Avis Appro (Attribut) * :</label>
             <select name="attr_avis" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #e67e22; border-radius: 4px;">
                 <option value="" disabled selected>-- Sélectionner Un AVIS --</option>
                 <c:forEach var="opt" items="${optionsAvis}">

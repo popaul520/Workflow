@@ -156,7 +156,7 @@
                         
                         <div class="form-group">
                             <label>Volume prévisionnel annuel (kg) *</label>
-                            <input type="text" name="attr_prev_lancement_annuel" required placeholder="Ex: 80000">
+                            <input type="text" name="attr_prevision annuel" required placeholder="Ex: 80000">
                         </div>
 
                         <div class="form-group">
@@ -188,7 +188,7 @@
 
                         <div class="form-group full">
                             <label>Commentaire et/ou descriptif de l’attendu</label>
-                            <textarea name="comm_saisonalite" placeholder="Précisez ici les commentaires et détails attendus..."></textarea>
+                            <textarea name="comm_saisonalite commentaire" placeholder="Précisez ici les commentaires et détails attendus..."></textarea>
                         </div>
 
                         <div class="form-group full">
@@ -204,8 +204,8 @@
                         <div id="exportFields" class="export-conditional">
                             <div class="form-group">
                                 <label>Pays destinataire *</label>
-                                <input type="hidden" name="ref_pays_destinataire" value="pays">
-                                <input type="text" name="attr_pays_destinataire" id="paysInput" placeholder="Ex: Allemagne, Canada">
+                                <input type="hidden" name="ref_pays destinataire" value="pays">
+                                <input type="text" name="attr_pays destinataire" id="paysInput" placeholder="Ex: Allemagne, Canada">
                             </div>
 
                             <div class="form-group">
@@ -227,8 +227,8 @@
                     <div class="grid-form">
                         <div class="form-group">
                             <label>Unité d'œuvre *</label>
-                            <input type="hidden" name="ref_uo" value="unite oeuvre">
-                            <select name="attr_uo" required>
+                            <input type="hidden" name="ref_unité logistique" value="unite oeuvre">
+                            <select name="attr_unité logistique" required>
                                 <option value="" disabled selected>-- Choisissez l'UO --</option>
                                 <c:forEach var="opt" items="${optionsUO}"><option value="${opt}">${opt}</option></c:forEach>
                                 <option value="Prêt à vendre">Prêt à vendre</option>
@@ -247,7 +247,7 @@
 
                         <div class="form-group">
                             <label>Unité PCB</label>
-                            <input type="number" name="attr_pcs_colis" min="1" required placeholder="Nombre de pièces">
+                            <input type="number" name="attr_pcs colis" min="1" required placeholder="Nombre de pièces">
                         </div>
 
                         <div class="form-group">
