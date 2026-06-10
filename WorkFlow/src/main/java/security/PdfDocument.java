@@ -39,7 +39,7 @@ public class PdfDocument {
 
                 for (Donnee d : toutesDonnees) {
 
-                    // 🔥 Gestion saut de page
+                    // Gestion saut de page
                     if (y < 80) {
                         contentStream.close();
 
@@ -59,16 +59,12 @@ public class PdfDocument {
                         derniereEtapeAffichee = currentNbEtape;
 
                         y -= 25;
-
                         contentStream.beginText();
                         contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
                         contentStream.newLineAtOffset(50, y);
-
                         String nomRole = Utilisateur.getRole(currentNbEtape);
                         contentStream.showText("--- " + currentNbEtape + ". " + nomRole + " ---");
-
                         contentStream.endText();
-
                         y -= 20;
                     }
 
@@ -103,7 +99,7 @@ public class PdfDocument {
 
                         y -= 12;
 
-                        // 🔥 Vérification espace avant écriture commentaire
+                        // Vérification espace avant écriture commentaire
                         if (y < 80) {
                             contentStream.close();
 

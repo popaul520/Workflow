@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import model.Etape;
 import model.templateWorkflow;
 import model.template_etape;
 
@@ -190,6 +191,34 @@ public class TemplateEtapeDAO {
         }
     }
 
+    /*
+     * Recupere un role
+     *  retourne les template_workflows qui possède ce role dans leur etape
+     */
+    public static List<Integer> templateWorkflowByRole(int role) {
+        List<Integer> etape = new java.util.ArrayList<>(); 
+        
+        // La requête récupère les templates du rôle principal ET des rôles associés dans la table 'droit'
+        String sql = "SELECT DISTINCT id_template_workflow FROM template_etape "
+                   + "WHERE role_associe = ? "
+                   + "OR role_associe IN (SELECT etape FROM droit WHERE role = ?)";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setInt(1, role);
+            ps.setInt(2, role); // Deuxième paramètre pour la sous-requête 'droit'
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    etape.add(rs.getInt("id_template_workflow"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return etape;
+    }
 
     public void saveOrUpdate(template_etape etape) {
         try (Connection conn = DBConnection.getConnection()) {

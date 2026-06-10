@@ -130,6 +130,29 @@ public class TemplateDAO {
         return id;
     }
     
+    public templateWorkflow getTemplateByTitre(String titre) {
+        templateWorkflow template = null;
+        String sql = "SELECT id, nom, description  FROM template_workflow WHERE LOWER(nom) = LOWER(?)";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setString(1, titre);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    template = new templateWorkflow();
+                    template.setId(rs.getInt("id"));
+                    template.setTitre(rs.getString("nom"));
+                    template.setCommentaire(rs.getString("description"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return template;
+    }
+    
     // 7. Récupérer la configuration d'une étape précise
     public template_etape getEtapeConfig(int idTemplate, int numEtape) {
         template_etape etape = null;
