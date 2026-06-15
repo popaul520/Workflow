@@ -150,20 +150,20 @@
 
                         <div class="form-group">
                             <label>Volume de lancement prévu (kg) *</label>
-                            <input type="hidden" name="type_prev_lancement" value="Prévision lancement">
-                            <input type="text" name="attr_prev_lancement" min="0" required placeholder="Ex: 50000">
+                            <input type="hidden" name="type_prevision_lancement" value="Prévision lancement">
+                            <input type="text" name="attr_prevision_lancement" min="0" required placeholder="Ex: 50000">
                         </div>
                         
                         <div class="form-group">
                             <label>Volume prévisionnel annuel (kg) *</label>
-                            <input type="text" name="attr_prevision annuel" required placeholder="Ex: 80000">
+                            <input type="text" name="attr_prevision_annuelle" required placeholder="Ex: 80000">
                         </div>
 
                         <div class="form-group">
-                            <input type="hidden" name="type_saisonalite" value="Saisonalité"> 
-                            <input type="hidden" name="ref_saisonalite" value="saisonalite"> 
+                            <input type="hidden" name="type_saisonnalité" value="Saisonalité"> 
+                            <input type="hidden" name="ref_saisonnalité" value="saisonalite"> 
                             <label>Saisonnalité forte attendue *</label>
-                            <select name="attr_saisonalite" required>
+                            <select name="ref_saisonnalité" required>
                                 <option value="" disabled selected>-- Choisir une saison --</option>
                                 <c:forEach var="opt" items="${optionsSaisonalite}">
                                     <option value="${opt}">${opt}</option>
@@ -173,7 +173,7 @@
 
                         <div class="form-group">
                             <label>Date départ usine souhaitée *</label>
-                            <input type="date" name="attr_date_souhaite" required>
+                            <input type="date" name="attr_date_souhaitée" required>
                         </div>
 
                         <div class="form-group">
@@ -183,7 +183,7 @@
 
                         <div class="form-group">
                             <label>Code référence équivalente</label>
-                            <input type="text" name="attr_code_ref" placeholder="Code interne">
+                            <input type="text" name="attr_code_ref_similaire" placeholder="Code interne">
                         </div>
 
                         <div class="form-group full">
@@ -209,9 +209,9 @@
                             </div>
 
                             <div class="form-group">
-                                <label>D.D.M attendu (en j) *</label>
+                                <label>D.D.M attendue (en j) *</label>
                                 <input type="hidden" name="ref_ddm_export" value="ddm">
-                                <input type="text" name="attr_ddm_export" id="ddmInput" placeholder="Ex: MM/AAAA ou JJ/MM/AAAA">
+                                <input type="text" name="attr_ddm_export" id="ddmInput" placeholder="Ex: 50j">
                             </div>
                         </div>
 
@@ -238,16 +238,16 @@
 
                         <div class="form-group">
                             <label>Création emballage *</label>
-                            <input type="hidden" name="ref_emballage" value="Bool">
-                            <select name="attr_emballage" required>
+                            <input type="hidden" name="ref_nouvel emballage" value="Bool">
+                            <select name="attr_nouvel emballage" required>
                                 <option value="" disabled selected>-- Requis ? --</option>
                                 <c:forEach var="opt" items="${optionsBool}"><option value="${opt}">${opt}</option></c:forEach>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label>Unité PCB</label>
-                            <input type="number" name="attr_pcs colis" min="1" required placeholder="Nombre de pièces">
+                            <label>PCB</label>
+                            <input type="number" name="attr_pcs" min="1" required placeholder="Nombre de pièces">
                         </div>
 
                         <div class="form-group">

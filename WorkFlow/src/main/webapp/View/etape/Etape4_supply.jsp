@@ -15,7 +15,7 @@
             <input type="hidden" name="type_sdi" value="Cohérence S.D.I.">
             <input type="hidden" name="ref_sdi" value="Bool">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Cohérence S.D.I. (Attribut) * :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Cohérence S.D.I.* :</label>
             <select name="attr_sdi" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="" disabled selected>-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">
@@ -32,7 +32,7 @@
             <input type="hidden" name="type_flux" value="Gestion flux/stocks">
             <input type="hidden" name="ref_flux" value="flux/stock">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Gestion flux/stocks (Attribut) * :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Gestion flux/stocks* :</label>
             <select name="attr_flux" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="" disabled selected>-- Sélectionner la gestion des flux/stocks --</option>
                 <c:forEach var="opt" items="${optionsFlux}">
@@ -49,7 +49,7 @@
             <input type="hidden" name="type_planif" value="Compatibilité planification">
             <input type="hidden" name="ref_planif" value="Bool">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Compatibilité planification (Attribut) * :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Compatibilité planification* :</label>
             <select name="attr_planif" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="" disabled selected>-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">

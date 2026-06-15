@@ -18,7 +18,7 @@
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
             <input type="hidden" name="type_machine" value="Configuration Machine">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Routage machine (Attribut) :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Routage machine :</label>
             <input type="text" name="attr_machine" placeholder="Ex: Ligne 4, Cellule B..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">	
             
             <%-- Ajout Compatibilité Machine --%>
@@ -33,7 +33,7 @@
 
             <%-- Ajout Capacitaire --%>
             <input type="hidden" name="type_capacitaire" value="Capacitaire">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Capacitaire / Cadence prévue :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Capacitaire disponible :</label>
             <input type="text" name="attr_capacitaire" placeholder="Ex: 45 coups/min, Volume OK..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
 
             <%-- Ajout Adaptations Nécessaires --%>
@@ -50,7 +50,7 @@
             <input type="hidden" name="type_essais" value="Besoin d'essais"> 
             <input type="hidden" name="ref_essais" value="Bool"> 
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Besoin d'essais ? (Attribut) :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Besoin d'essais ? :</label>
             <select name="attr_essais" id="selectEssais" onchange="gererObligationDate()" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">
@@ -71,7 +71,7 @@
         <div class="bloc-donnee" style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
             <input type="hidden" name="type_avis" value="avis CONDITIONNEMNT"> 
             <input type="hidden" name="ref_avis" value="avis"> 
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Décision finale (Attribut) :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Décision finale :</label>
             <select name="attr_avis" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">-- Choisir un avis --</option>
                 <c:forEach var="opt" items="${optionsAvis}">

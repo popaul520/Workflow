@@ -18,7 +18,7 @@
             <input type="hidden" name="type_intrants" value="Création intrant(s)">
             <input type="hidden" name="ref_intrants" value="Bool">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Création intrant(s) (Attribut) * :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Création intrant(s)* :</label>
             <select name="attr_intrants" required style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="" disabled selected>-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">
@@ -52,7 +52,7 @@
             <input type="hidden" name="type_delai" value="Délai compatible">
             <input type="hidden" name="ref_delai" value="Bool">
             
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Délai compatible (Attribut) * :</label>
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Délai compatible* :</label>
             <select name="attr_delai" required style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="" disabled selected>-- Sélectionner (Oui/Non) --</option>
                 <c:forEach var="opt" items="${optionsBool}">
@@ -86,9 +86,9 @@
             <input type="hidden" name="type_avis" value="Avis Appro">
             <input type="hidden" name="ref_avis" value="avis">
             
-            <label style="display: block; font-weight: bold; color: #d35400; margin-bottom: 5px;">Avis Appro (Attribut) * :</label>
+            <label style="display: block; font-weight: bold; color: #d35400; margin-bottom: 5px;">Avis Appro* :</label>
             <select name="attr_avis" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #e67e22; border-radius: 4px;">
-                <option value="" disabled selected>-- Sélectionner Un AVIS --</option>
+                <option value="" disabled selected>-- Sélectionner --</option>
                 <c:forEach var="opt" items="${optionsAvis}">
                     <option value="${opt}">${opt}</option>
                 </c:forEach>

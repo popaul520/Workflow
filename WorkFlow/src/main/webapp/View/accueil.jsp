@@ -27,7 +27,7 @@
 </head>
 <body>
     <div class="sidebar">
-        <h3>Workflow</h3>
+        <h3>Demande de faisabilité</h3>
         <ul>
             <li class="${currentStatus == 'tous' ? 'active' : ''}">
                 <a href="home?status=tous">🏠 Tous les dossiers</a>
@@ -51,7 +51,7 @@
             
             <c:if test="${roleDAO.canAccessEtape(user.role, 1) || roleDAO.canAccessEtape(user.role, 11)}">
                 <li style="margin-top: 30px;">
-                    <a href="creer-workflow" style="color: var(--success); font-weight: bold;">➕ Créer Workflow</a>
+                    <a href="creer-workflow" style="color: var(--success); font-weight: bold;">➕ Créer demande de faisabilité</a>
                 </li>
             </c:if>
         </ul>
@@ -59,7 +59,7 @@
 
     <div class="main-container">
         <div class="header-flex">
-            <h1>Accueil WorkFlow</h1>
+            <h1>Accueil de demande de faisabilité</h1>
             <div class="user-controls">
                 <form action="home" method="get">
                     <input type="text" name="q" class="search-bar" placeholder="ID ou Nom du dossier..." value="${param.q}">
