@@ -124,12 +124,7 @@
                 <div class="form-step" id="step-2">
                     <h2>2 - Unité de vente consommateur</h2>
                     <div class="grid-form">
-                        
-                        <div class="form-group full">
-                            <label>Libellé article *</label>
-                            <input type="text" name="attr_libelle_article" required placeholder="Libellé complet de l'article">
-                        </div>
-
+                       
                         <div class="form-group">
                             <label>Rayon *</label>
                             <input type="hidden" name="ref_rayon" value="rayon">

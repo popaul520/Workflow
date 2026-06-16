@@ -256,4 +256,3 @@ function annulerEdition() {
     if(fs) fs.disabled = true;
 }
 </script>
-prend le style pour que la visualisation soit plus visible et fait en sorte que il y a une bonne visibilité 

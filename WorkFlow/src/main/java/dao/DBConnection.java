@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 //setup /Host:postgres User Name: postgres Password:1234 port:5432 
 public class DBConnection {
 
-    private static final String URL = "jdbc:postgresql://localhost:5432/bd_workflow";
+    private static final String URL = "jdbc:postgresql://localhost:5432/bd_workflowv1?charSet=UTF-8\";";
     private static final String USER = "postgres";
     private static final String PASSWORD = "root"; 
 

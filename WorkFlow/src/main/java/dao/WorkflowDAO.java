@@ -260,38 +260,57 @@ public class WorkflowDAO {
 		return list;
 	}
 
-	// PREMIÈRE FONCTION : Récupère les workflows en attente du rôle spécifié
 	public static List<Workflow> getWorkflowsEnAttenteParRole(int roleId) {
 	    List<Workflow> liste = new ArrayList<>();
 	    
-	    // Une seule requête dynamique basée sur la table 'droit'
 	    String sql = 
-	        "SELECT DISTINCT w.id, w.titre, w.commentaire "
+	        "WITH complet_droit AS ( "
+	      + "    SELECT role, etape FROM droit "
+	      + "    UNION "
+	      + "    /* Génère automatiquement la règle par défaut : Rôle X = Étape X pour X de 1 à 10 */ "
+	      + "    SELECT gs AS role, gs AS etape FROM generate_series(1, 10) gs "
+	      + ") "
+	      + "SELECT DISTINCT w.id, w.titre, w.commentaire "
 	      + "FROM workflow w "
-	      + "JOIN droit d ON d.role = ? " // On récupère toutes les étapes associées à ce rôle
+	      + "JOIN complet_droit d ON d.role = ? "
 	      + "WHERE (w.statut IS NULL OR LOWER(w.statut) NOT LIKE 'termin%') "
 	      + "  AND w.date_finalisation IS NULL "
-	      + "  -- RÈGLE DE BASE : L'étape du droit ne doit pas encore être validée -- "
-	      + "  AND NOT EXISTS (SELECT 1 FROM validation v WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) = CAST(d.etape AS INT)) "
+	      + "  "
+	      + "  /* RÈGLE 1 : L'étape ne doit pas encore être validée pour ce dossier */ "
+	      + "  AND NOT EXISTS ( "
+	      + "      SELECT 1 FROM validation v "
+	      + "      WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) = CAST(d.etape AS INT) "
+	      + "  ) "
+	      + "  "
+	      + "  /* RÈGLE 2 : Logique de déclenchement des étapes */ "
 	      + "  AND ( "
-	      + "    (CAST(d.etape AS INT) BETWEEN 1 AND 6 "
-	      + "     AND (CAST(d.etape AS INT) = 1 OR EXISTS ( "
+	      + "    /* Cas 1 : Étapes 1 à 6 (Disponibles en parallèle) */ "
+	      + "    (CAST(d.etape AS INT) BETWEEN 1 AND 6) "
+	      + "    "
+	      + "    OR "
+	      + "    "
+	      + "    /* Cas 2 : Étape 7 (Attend que les 6 premières soient TOUTES faites) */ "
+	      + "    (CAST(d.etape AS INT) = 7 "
+	      + "     AND ( "
+	      + "         SELECT COUNT(DISTINCT CAST(v.etape AS INT)) "
+	      + "         FROM validation v "
+	      + "         WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) BETWEEN 1 AND 6 "
+	      + "     ) = 6 "
+	      + "    ) "
+	      + "    "
+	      + "    OR "
+	      + "    "
+	      + "    /* Cas 3 : Étapes 8, 9, 10 (Séquentielles : attendent l'étape précédente) */ "
+	      + "    (CAST(d.etape AS INT) BETWEEN 8 AND 10 "
+	      + "     AND EXISTS ( "
 	      + "         SELECT 1 FROM validation v "
 	      + "         WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) = CAST(d.etape AS INT) - 1 "
 	      + "     )) "
-	      + "    ) "
-	      + "    OR "
-	      + "    -- 2️⃣ CAS DES ÉTAPES EN SÉRIE (7 et plus) -- "
-	      + "    (CAST(d.etape AS INT) >= 7 "
-	      + "     AND (SELECT COUNT(DISTINCT CAST(v.etape AS INT)) FROM validation v WHERE v.id_workflow = w.id AND CAST(v.etape AS INT) BETWEEN 1 AND 6) = 6 "
-	      + "     AND (SELECT COALESCE(MAX(CAST(v.etape AS INT)), 0) + 1 FROM validation v WHERE v.id_workflow = w.id) = CAST(d.etape AS INT) "
-	      + "    ) "
 	      + "  );";
 
 	    try (Connection conn = DBConnection.getConnection(); 
 	         PreparedStatement ps = conn.prepareStatement(sql)) {
 	        
-	        // Un seul paramètre à injecter : le rôle de l'utilisateur connecté
 	        ps.setInt(1, roleId);
 	        
 	        try (ResultSet rs = ps.executeQuery()) {
@@ -309,7 +328,9 @@ public class WorkflowDAO {
 	    }
 	    return liste;
 	}
-
+	
+	
+	
 	// DEUXIÈME FONCTION : Récupère les workflows terminés qui n'ont pas encore été
 	// annoncés
 	public static List<Workflow> getWorkflowsTerminesNonAnnonces() {
