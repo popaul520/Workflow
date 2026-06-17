@@ -102,7 +102,6 @@ public class accueilTemplateController extends HttpServlet {
                     return !idStr.contains(lowerQuery) && !titre.contains(lowerQuery);
                 });
             }
-
             // Chargement et filtrage de la "pendingList" (Actions urgentes) pour ce template
             List<Workflow> pendingList = WorkflowDAO.getWorkflowsEnAttenteParRole(user.getRole());
             if (pendingList != null) {
@@ -117,7 +116,7 @@ public class accueilTemplateController extends HttpServlet {
             request.setAttribute("pendingList", pendingList);
             request.setAttribute("currentStatus", status);
             request.setAttribute("roleDAO", roleDao); 
-
+            
             request.getRequestDispatcher("/View/accueil.jsp").forward(request, response);
             return;
         } catch (Exception e) {
@@ -129,8 +128,49 @@ public class accueilTemplateController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        doGet(request, response);
+        
+        // 1. Récupération des paramètres du formulaire
+        int idWorkflow = Integer.parseInt(request.getParameter("id_workflow"));
+        int currentEtape = Integer.parseInt(request.getParameter("current_n"));
+        
+        // Traitement et enregistrement des champs dynamiques (attr_0, attr_1...)
+        //    et insertion de la ligne dans la table 'validation'.
+        
+        // 3. Extraction et détection d'un avis bloquant/négatif dans les paramètres soumis
+        boolean estAnnule = false;
+        java.util.Enumeration<String> paramNames = request.getParameterNames();
+        while (paramNames.hasMoreElements()) {
+            String paramName = paramNames.nextElement();
+            if (paramName.startsWith("attr_")) {
+                String val = request.getParameter(paramName);
+                if ("Non faisable".equalsIgnoreCase(val) || "Défavorable".equalsIgnoreCase(val)) {
+                    estAnnule = true;
+                    break;
+                }
+            }
+        }
+
+        // 4. Vérification du cycle de vie du workflow
+        int derniereEtape = dao.TemplateEtapeDAO.getNumeroDerniereEtape(idWorkflow);
+
+        if (estAnnule) {
+            // Option A : Décision négative -> Clôture immédiate (Le workflow passe en "annulé")
+            dao.TemplateDAO.finaliserWorkflow(idWorkflow);
+            response.sendRedirect(request.getContextPath() + "/homeport?status=annule&template=" + request.getParameter("template"));
+            return;
+            
+        } else if (currentEtape >= derniereEtape) {
+            // Option B : Dernière étape atteinte -> Clôture finale (Le workflow passe en "terminé")
+            dao.TemplateDAO.finaliserWorkflow(idWorkflow);
+            response.sendRedirect(request.getContextPath() + "/homeport?status=termine&template=" + request.getParameter("template"));
+            return;
+            
+        } else {
+            // Option C : Étape intermédiaire franchie -> Le workflow reste "en cours"
+            response.sendRedirect(request.getContextPath() + "/homeport?status=en_cours&template=" + request.getParameter("template"));
+            return;
+        }
     }
 }

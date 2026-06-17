@@ -287,6 +287,21 @@ public class TemplateDAO {
         return list;
     }
     
+    /* pour un workflow terminé et le modifier en base de donnee*/
+    public static void finaliserWorkflow(int idWorkflow) {
+        String sql = "UPDATE workflow SET date_finalisation = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            ps.setInt(2, idWorkflow);
+            ps.executeUpdate();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     
     
 }

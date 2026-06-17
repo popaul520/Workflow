@@ -12,9 +12,9 @@
 .grid-boutons { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
 .btn-etape { border: none; border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; min-height: 75px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.2s; width: 100%; border: 1px solid #cbd5e0; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); }
 .btn-etape:hover:not(.etape-bloquee) { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08); }
-.etape-validee { background-color: #d1e7dd !important; color: #0f5132 !important; border-left: 6px solid #198754 !important; }
+.etape-validee { background-color: #d1e7dd !important; color: #0f5132 !important; border-left: 6px solid #198754 !important; font-weight: bold; }
 .etape-non-faite { background-color: #cfe2ff !important; color: #084298 !important; border-left: 6px solid #0d6efd !important; }
-.etape-bloquee { background-color: #e2e8f0 !important; color: #64748b !important; opacity: 0.6; cursor: not-allowed; border-left: 6px solid #94a3b8 !important; }
+.etape-bloquee { background-color: #e2e8f0 !important; color: #94a3b8 !important; opacity: 0.5; cursor: not-allowed !important; border-left: 6px solid #cbd5e0 !important; }
 .state-active-focus { outline: 3px solid #0d6efd !important; outline-offset: 2px; font-weight: bold; }
 .visu-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); margin-top: 30px; }
 .visu-row { display: flex; align-items: center; padding: 15px 12px; border-bottom: 1px solid #edf2f7; }
@@ -36,7 +36,7 @@
 	<div class="sidebar">
 		<h3>Actions</h3>
 		<ul>
-			<li><a href="home">🏠 Retour Accueil</a></li>
+			<li><a href="homeport">🏠 Retour Accueil</a></li>
 			<li><a href="template-list">⚙️ Liste des Templates</a></li>
 		</ul>
 	</div>
@@ -74,9 +74,24 @@
 
 			<div class="grid-boutons">
 				<c:forEach var="etape" items="${etapesTemplate}">
+					
+					<%-- RENDU VERT : Si la place de l'étape est inférieure ou égale à la dernière étape enregistrée --%>
 					<c:set var="isValidee" value="${etape.place <= derniereEtape}" />
-					<c:set var="isEnCours" value="${etape.place == (derniereEtape + 1)}" />
-					<c:set var="isBloquee" value="${etape.place > (derniereEtape + 1)}" />
+
+					<%-- GESTION DU DÉBLOCAGE NON-LINÉAIRE (attente_place) --%>
+					<c:choose>
+						<%-- Pas de contrainte d'attente -> Libre --%>
+						<c:when test="${empty etape.attentePlace || etape.attentePlace == 0}">
+							<c:set var="parentFait" value="true" />
+						</c:when>
+						<%-- Contrainte présente -> Débloqué uniquement si l'étape attendue est validée --%>
+						<c:otherwise>
+							<c:set var="parentFait" value="${etape.attentePlace <= derniereEtape}" />
+						</c:otherwise>
+					</c:choose>
+
+					<c:set var="isEnCours" value="${!isValidee && parentFait}" />
+					<c:set var="isBloquee" value="${!isValidee && !parentFait}" />
 
 					<c:choose>
 						<c:when test="${isValidee}"><c:set var="colorClass" value="etape-validee" /></c:when>
@@ -88,9 +103,14 @@
 
 					<button type="button"
 						<c:if test="${!isBloquee}">onclick="window.location.href='saisie-etape?id_workflow=${workflow.id}&num_etape=${etape.place}'"</c:if>
-						class="btn-etape ${colorClass} ${activeFocusClass}">
+						class="btn-etape ${colorClass} ${activeFocusClass}"
+						<c:if test="${isBloquee}">disabled="disabled" style="cursor: not-allowed;"</c:if>>
 						<div style="font-size: 0.85em; font-weight: bold; opacity: 0.8;">Étape ${etape.place}</div>
 						<div class="step-role" style="font-size: 0.95em; text-align: center;">${etape.nomEtape}</div>
+						
+						<c:if test="${isBloquee}">
+							<div style="font-size: 0.75em; color: #e53e3e; margin-top: 4px; font-weight: bold;">🔒 Bloqué</div>
+						</c:if>
 					</button>
 				</c:forEach>
 			</div>
@@ -102,7 +122,7 @@
 					<span style="font-size: 24px; margin-right: 15px;">🔒</span>
 					<div>
 						<strong style="color: #c53030;">Dossier Clôturé</strong><br>
-						<small style="color: #4a5568;">Finalisé le : ${workflow.dateFinalisation}</small>
+						<small style="color: #4a5568;">Finalisé le : <fmt:formatDate value="${workflow.dateFinalisation}" pattern="dd/MM/yyyy" /></small>
 					</div>
 				</div>
 			</c:if>
@@ -115,6 +135,16 @@
 				</c:when>
 
 				<c:otherwise>
+					<c:set var="modeEditionForce" value="true" />
+					<c:forEach var="d" items="${donneesEtape}">
+						<c:if test="${not empty d.attribut}">
+							<c:set var="modeEditionForce" value="false" />
+						</c:if>
+					</c:forEach>
+					<c:if test="${isClosed}">
+						<c:set var="modeEditionForce" value="false" />
+					</c:if>
+
 					<form action="${pageContext.request.contextPath}/saisie-etape" method="post">
 						<input type="hidden" name="id_workflow" value="${workflow.id}">
 						<input type="hidden" name="current_n" value="${numEtapeActive}">
@@ -126,15 +156,16 @@
 
 							<div>
 								<c:if test="${canEdit && !isClosed}">
-									<button type="button" id="btn-modifier" onclick="activerEdition()" class="btn-action" style="background: #3182ce; color: white;">Modifier</button>
-									<button type="submit" id="btn-enregistrer" class="btn-action" style="display: none; background: #38a169; color: white;">Enregistrer et Valider</button>
+									<button type="button" id="btn-modifier" onclick="activerEdition()" class="btn-action" 
+											style="background: #3182ce; color: white; ${modeEditionForce ? 'display: none;' : ''}">Modifier</button>
+									<button type="submit" id="btn-enregistrer" class="btn-action" 
+											style="background: #38a169; color: white; ${modeEditionForce ? 'display: inline-block;' : 'display: none;'}">Enregistrer et Valider</button>
 								</c:if>
 							</div>
 						</div>
 
-						<fieldset id="fs-edition" disabled style="border: none; padding: 0; margin: 0;">
+						<fieldset id="fs-edition" ${modeEditionForce ? '' : 'disabled'} style="border: none; padding: 0; margin: 0;">
 							
-							<%-- 1. BOUCLE SUR LES COMPOSANTS DYNAMIQUES DU CATALOGUE --%>
 							<c:forEach var="d" items="${donneesEtape}" varStatus="status">
 								<div class="visu-row">
 									<input type="hidden" name="id_donne_${status.index}" value="${d.idDonne}"> 
@@ -150,13 +181,12 @@
 									</div>
 
 									<div style="flex: 1.5; padding-right: 15px;">
-										<span class="view-mode" style="font-size: 15px; color: #2d3748;">
+										<span class="view-mode" style="font-size: 15px; color: #2d3748; ${modeEditionForce ? 'display: none;' : ''}">
 											${not empty d.attribut ? d.attribut : '<em>(Vide)</em>'}
 										</span>
 
-										<div class="edit-mode" style="display: none;">
+										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
 											<c:choose>
-												<%-- CAS 1 : Booléen Système --%>
 												<c:when test="${d.refContrainte == 'Bool'}">
 													<select name="attr_${status.index}" class="form-control-dyn" ${d.estObligatoire ? 'required' : ''}>
 														<option value="">-- Sélectionner --</option>
@@ -165,7 +195,6 @@
 													</select>
 												</c:when>
 
-												<%-- CAS 2 : Chargement dynamique depuis l'attribut ref_contrainte (table public.type_contraint) --%>
 												<c:when test="${not empty d.refContrainte && not empty mapCatalogues[d.refContrainte]}">
 													<select name="attr_${status.index}" class="form-control-dyn" ${d.estObligatoire ? 'required' : ''}>
 														<option value="">-- Sélectionner un(e) ${d.refContrainte} --</option>
@@ -175,7 +204,6 @@
 													</select>
 												</c:when>
 
-												<%-- CAS PAR DÉFAUT : Saisie classique --%>
 												<c:otherwise>
 													<c:choose>
 														<c:when test="${d.typeComposant == 'textarea'}">
@@ -195,10 +223,10 @@
 									<div style="flex: 1.5; display: flex; flex-direction: column; gap: 6px;">
 										<c:if test="${d.aCommentaire}">
 											<div>
-												<div class="view-mode" style="color: #718096; font-size: 0.85em; font-style: italic;">
+												<div class="view-mode" style="color: #718096; font-size: 0.85em; font-style: italic; ${modeEditionForce ? 'display: none;' : ''}">
 													Com. : ${not empty d.commentaire ? d.commentaire : '(Aucun)'}
 												</div>
-												<div class="edit-mode" style="display: none;">
+												<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
 													<input type="text" name="comm_${status.index}" value="${d.commentaire}" class="form-control-dyn" placeholder="Ajouter une remarque...">
 												</div>
 											</div>
@@ -206,8 +234,8 @@
 
 										<c:if test="${d.aDate}">
 											<div style="margin-top: 4px;">
-												<div class="view-mode" style="font-size: 0.8em; color: #4a5568;">Date : ${not empty d.date ? d.date : '(Non renseignée)'}</div>
-												<div class="edit-mode" style="display: none;">
+												<div class="view-mode" style="font-size: 0.8em; color: #4a5568; ${modeEditionForce ? 'display: none;' : ''}">Date : ${not empty d.date ? d.date : '(Non renseignée)'}</div>
+												<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
 													<input type="date" name="date_${status.index}" value="${d.date}" class="form-control-dyn">
 												</div>
 											</div>
@@ -216,7 +244,6 @@
 								</div>
 							</c:forEach>
 
-							<%-- 2. INJECTION CAS UNIQUE : DÉCISION FINALE SI EST_FINALE == TRUE --%>
 							<c:if test="${currentEtape.estFinale}">
 								<div class="visu-row" style="background-color: #fffaf0; border-top: 2px dashed #feebc8; margin-top: 20px; padding: 20px 12px;">
 									<div style="flex: 1; font-weight: bold; color: #7b341e;">
@@ -226,28 +253,31 @@
 									</div>
 
 									<div style="flex: 1.5; padding-right: 15px;">
-										<span class="view-mode" style="font-weight: bold; color: #2c5282;">
-											${not empty workflow.dateFinalisation ? 'Dossier Traité / Clôturé' : '<em>Clôture en attente de saisie</em>'}
+										<span class="view-mode" style="font-weight: bold; color: #2c5282; ${modeEditionForce ? 'display: none;' : ''}">
+											<c:choose>
+												<c:when test="${not empty workflow.dateFinalisation}">Dossier Traité / Clôturé</c:when>
+												<c:otherwise><em>Clôture en attente de saisie</em></c:otherwise>
+											</c:choose>
 										</span>
 										
-										<div class="edit-mode" style="display: none;">
+										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
 											<select name="decision_finale" class="form-control-dyn" required>
 												<option value="">-- Choisir le verdict final --</option>
-												<option value="Faisable">FAISABLE (Validation)</option>
-												<option value="Non faisable">NON FAISABLE (Refus global)</option>
-												<option value="Faisable sous condition">FAISABLE SOUS CONDITION</option>
+												<option value="Faisable">Faisable (Validation)</option>
+												<option value="Non Faisable">Non Faisable (Refus global)</option>
+												<option value="Faisable sous condition">Faisable sous condition</option>
 											</select>
 										</div>
 									</div>
 
 									<div style="flex: 1.5; display: flex; flex-direction: column; gap: 8px;">
-										<div class="view-mode" style="font-size: 0.9em; color: #4a5568;">
+										<div class="view-mode" style="font-size: 0.9em; color: #4a5568; ${modeEditionForce ? 'display: none;' : ''}">
 											${not empty workflow.commentaire ? workflow.commentaire : ''}
 										</div>
-										<div class="edit-mode" style="display: none;">
+										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
 											<textarea name="commentaire_final" class="form-control-dyn" rows="2" placeholder="Renseigner le motif de clôture obligatoire..." required></textarea>
 										</div>
-										<div class="edit-mode" style="display: none; margin-top: 4px;">
+										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'} margin-top: 4px;">
 											<span style="font-size: 0.8em; color: #718096; font-weight: bold;">Date de Clôture (Système) :</span>
 											<input type="date" name="date_finalisation" value="${currentDateIso}" class="form-control-dyn" readonly style="background: #e2e8f0; color: #4a5568;">
 										</div>

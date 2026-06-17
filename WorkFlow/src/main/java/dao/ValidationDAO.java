@@ -37,6 +37,23 @@ public class ValidationDAO {
 	    }
 	    return 0;
 	}
+	/* recupere les donnees pour le worflow avec toute les etape différenets*/ 
+    public List<Integer> getEtapesValidees(int idWf) throws Exception {
+        List<Integer> etapes = new ArrayList<>();
+        String sql = "SELECT etape FROM validation WHERE id_workflow = ?";
+        
+        try (Connection conn = DBConnection.getConnection(); // Modifie selon ta gestion de connexion
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idWf);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    etapes.add(rs.getInt("etape"));
+                }
+            }
+        }
+        return etapes;
+    }
 	
 	public boolean sontEtapes1a6Validees(int idWf) throws SQLException {
 	    String sql = "SELECT COUNT(DISTINCT etape) FROM validation WHERE id_workflow = ? AND CAST(etape AS INTEGER) BETWEEN 1 AND 6";

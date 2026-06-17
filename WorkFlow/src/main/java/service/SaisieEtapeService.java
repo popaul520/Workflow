@@ -47,19 +47,36 @@ public class SaisieEtapeService {
             }
         }
 
-        int etapeMaxValidee = 0;
+        // 1. Récupération de TOUTES les étapes validées en BDD pour ce dossier
+        List<Integer> etapesValidees = new ArrayList<>();
         try {
-            etapeMaxValidee = validationDao.getDerniereEtapeValidee(idWf);
+            etapesValidees = validationDao.getEtapesValidees(idWf);
         } catch (Exception e) {
-            // Log managé
+            e.printStackTrace();
         }
 
         boolean isClosed = (wf.getDateFinalisation() != null);
-        boolean canEdit = (hasAccess && !isClosed && (numEtape <= etapeMaxValidee + 1));
+        
+        // 2. NOUVELLE LOGIQUE CANEDIT BASÉE SUR ATTENTE_PLACE
+        boolean conditionAttenteRespectee = false;
+        
+        if (configEtape != null) {
+            Integer attente = configEtape.getAttentePlace(); // Doit retourner l'int ou null de attente_place
+            
+            // Si pas d'attente (premières étapes), c'est accessible d'office
+            if (attente == null || attente == 0) {
+                conditionAttenteRespectee = true;
+            } else {
+                // Sinon, l'étape prérequise doit être présente dans notre liste d'étapes validées
+                conditionAttenteRespectee = etapesValidees.contains(attente);
+            }
+        }
+
+        // L'utilisateur peut éditer si : accès rôle OK + dossier ouvert + prérequis BDD validé
+        boolean canEdit = (hasAccess && !isClosed && conditionAttenteRespectee);
 
         List<Map<String, Object>> donneesEtape = templateDao.getChampsEtDonnees(idWf, wf.getIdTemplateWorkflow(), numEtape);
 
-        // --- AJOUT DE LA MAP DES CATALOGUES DYNAMIQUES (Table: type_contraint) ---
         Map<String, List<String>> mapCatalogues = this.loadCataloguesContraints();
         context.put("mapCatalogues", mapCatalogues);
 
@@ -68,7 +85,10 @@ public class SaisieEtapeService {
         context.put("numEtapeActive", numEtape);
         context.put("currentEtape", configEtape);
         context.put("etapesTemplate", templateDao.getEtapesByTemplate(wf.getIdTemplateWorkflow()));
-        context.put("derniereEtape", etapeMaxValidee);
+        
+        // 3. On envoie la liste complète des IDs validés à la JSP pour qu'elle puisse colorer en vert/bloquer
+        context.put("etapesValideesIds", etapesValidees);
+        
         context.put("isAdmin", isAdmin);
         context.put("hasAccess", hasAccess);
         context.put("isClosed", isClosed);
@@ -77,7 +97,6 @@ public class SaisieEtapeService {
 
         return context;
     }
-
     /**
      * Gère la sauvegarde transactionnelle des formulaires dynamiques
      */

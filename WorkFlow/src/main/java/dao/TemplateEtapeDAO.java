@@ -306,6 +306,30 @@ public class TemplateEtapeDAO {
             e.printStackTrace();
         }
     }
+    
+    /* obtenir le bon nombre de l'étape pour faire que fin ou non du workflow*/
+    public static int getNumeroDerniereEtape(int idWorkflow) {
+        int maxEtape = 1;
+        // On cherche la 'place' la plus haute (ici: 4) définie dans le template de ce workflow
+        String sql = "SELECT MAX(te.place) AS max_etape " +
+                     "FROM template_etape te " +
+                     "JOIN workflow w ON w.id_template_workflow = te.id_template_workflow " +
+                     "WHERE w.id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idWorkflow);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    maxEtape = rs.getInt("max_etape");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return maxEtape;
+    }
 }
 
 
