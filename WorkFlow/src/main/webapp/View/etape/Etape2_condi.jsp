@@ -4,6 +4,12 @@
 <%@ page import="dao.DonneeDAO" %>
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 
+<%
+    // Initialisation du DAO et chargement de la liste de contrainte pour la cadence
+    DonneeDAO donneeDao = new DonneeDAO();
+    List<String> optionsCadence = donneeDao.getValeursContraintes("cadence");
+    request.setAttribute("optionsCadence", optionsCadence);
+%>
 <div class="form-container" style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: 'Segoe UI', Arial, sans-serif;">
     <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
         Étape 2 : Faisabilité Conditionnement
@@ -32,10 +38,18 @@
             </select>
 
             <%-- Ajout Capacitaire --%>
-            <input type="hidden" name="type_capacitaire" value="Capacitaire">
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Capacitaire disponible :</label>
-            <input type="text" name="attr_capacitaire" placeholder="Ex: 45 coups/min, Volume OK..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-
+            <div class="form-group">
+			    <input type="hidden" name="type_capacitaire" value="Capacitaire disponible"> 
+			    <input type="hidden" name="ref_capacitaire" value="cadence"> 
+			    
+			    <label>Capacitaire disponible *</label>
+			    <select name="attr_capacitaire" required class="form-control-dyn">
+			        <option value="" disabled selected>-- Choisir une option --</option>
+			        <c:forEach var="opt" items="${optionsCadence}">
+			            <option value="${opt}">${opt}</option>
+			        </c:forEach>
+			    </select>
+			</div>
             <%-- Ajout Adaptations Nécessaires --%>
             <input type="hidden" name="type_adaptations" value="Adaptations nécessaires">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Adaptations nécessaires (Outillages, formats...) :</label>

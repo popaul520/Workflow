@@ -158,7 +158,7 @@
                             <input type="hidden" name="type_saisonnalité" value="Saisonalité"> 
                             <input type="hidden" name="ref_saisonnalité" value="saisonalite"> 
                             <label>Saisonnalité forte attendue *</label>
-                            <select name="ref_saisonnalité" required>
+                            <select name="attr_saisonnalité" required>
                                 <option value="" disabled selected>-- Choisir une saison --</option>
                                 <c:forEach var="opt" items="${optionsSaisonalite}">
                                     <option value="${opt}">${opt}</option>
@@ -183,7 +183,7 @@
 
                         <div class="form-group full">
                             <label>Commentaire et/ou descriptif de l’attendu</label>
-                            <textarea name="comm_saisonalite commentaire" placeholder="Précisez ici les commentaires et détails attendus..."></textarea>
+                            <textarea name="comm_saisonalite" placeholder="Précisez ici les commentaires et détails attendus..."></textarea>
                         </div>
 
                         <div class="form-group full">
