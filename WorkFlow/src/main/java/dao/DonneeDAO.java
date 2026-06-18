@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import model.Donnee;
 import model.Etape;
@@ -314,5 +315,25 @@ public class DonneeDAO {
 			e.printStackTrace();
 		}
 		return liste;
+	}
+	
+	public List<Map<String, Object>> getAllContraintesReferentiel() throws Exception {
+	    List<Map<String, Object>> liste = new ArrayList<>();
+	    String sql = "SELECT id, contrainte, texte FROM contrainte ORDER BY contrainte ASC";
+	    
+	    try (Connection conn = DBConnection.getConnection();
+	         PreparedStatement ps = conn.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+	        
+	        while (rs.next()) {
+	            Map<String, Object> contrainte = new java.util.HashMap<>();
+	            // Attributs utilisés dans la boucle c:forEach de la JSP : ${c.id}, ${c.contrainte}, ${c.texte}
+	            contrainte.put("id", rs.getInt("id"));
+	            contrainte.put("contrainte", rs.getString("contrainte"));
+	            contrainte.put("texte", rs.getBoolean("texte"));
+	            liste.add(contrainte);
+	        }
+	    }
+	    return liste;
 	}
 }

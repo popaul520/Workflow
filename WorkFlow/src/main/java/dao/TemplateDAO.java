@@ -302,6 +302,57 @@ public class TemplateDAO {
         }
     }
     
-    
+    /**
+     * 1. Récupère les métadonnées complètes d'un champ cible (template_donnee)
+     */
+    public Map<String, Object> getTemplateDonneeById(int idDonneeCible) throws Exception {
+        Map<String, Object> row = null;
+        String sql = "SELECT id, id_template_etape, nom_champ, type_composant, ordre_affichage, ref_contrainte " +
+                     "FROM template_donnee WHERE id = ?";
+                     
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idDonneeCible);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("id_template_etape", rs.getInt("id_template_etape"));
+                    row.put("nomChamp", rs.getString("nom_champ")); // utilisé comme ${donneeActive.nomChamp}
+                    row.put("typeComposant", rs.getString("type_composant"));
+                    row.put("ordreAffichage", rs.getInt("ordre_affichage")); // utilisé comme ${donneeActive.ordreAffichage}
+                    row.put("ref_contrainte", rs.getString("ref_contrainte"));
+                }
+            }
+        }
+        return row;
+    }
+
+    /**
+     * 2. Récupère les informations d'une étape spécifique (template_etape)
+     */
+    public Map<String, Object> getEtapeById(int idEtape) throws Exception {
+        Map<String, Object> row = null;
+        String sql = "SELECT id, nom_etape, place, id_template_workflow FROM template_etape WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idEtape);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    row = new HashMap<>();
+                    row.put("id", rs.getInt("id"));
+                    row.put("nomEtape", rs.getString("nom_etape"));
+                    row.put("place", rs.getInt("place")); // utilisé comme ${etapeActive.place}
+                    row.put("idTemplateWorkflow", rs.getInt("id_template_workflow"));
+                }
+            }
+        }
+        return row;
+    }
+
+
     
 }

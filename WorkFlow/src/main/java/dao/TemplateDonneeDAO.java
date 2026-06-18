@@ -3,6 +3,7 @@ package dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import model.templateWorkflow;
 import model.template_donnee;
@@ -187,5 +188,28 @@ public class TemplateDonneeDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    public Map<String, Object> getTemplateDonneeById(int idDonnee) throws Exception {
+        Map<String, Object> donnee = null;
+        // Ajuste "template_donnee", "nom_champ" ou "type_composant" selon tes colonnes exactes
+        String sql = "SELECT id, nom_champ, type_composant FROM template_donnee WHERE id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idDonnee);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    donnee = new java.util.HashMap<>();
+                    donnee.put("id", rs.getInt("id"));
+                    // key "nomChamp" utilisée dans la JSP : ${donneeActive.nomChamp}
+                    donnee.put("nomChamp", rs.getString("nom_champ")); 
+                    // key "typeComposant" utilisée dans la JSP : ${donneeActive.typeComposant}
+                    donnee.put("typeComposant", rs.getString("type_composant"));
+                }
+            }
+        }
+        return donnee;
     }
 }
