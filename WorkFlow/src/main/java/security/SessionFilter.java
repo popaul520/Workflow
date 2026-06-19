@@ -20,7 +20,7 @@ public class SessionFilter implements Filter {
         Utilisateur user = (Utilisateur) session.getAttribute("user");
 
         if (user == null) {
-            // Création de l'utilisateur Invité (uniquement en mémoire)
+            // Création de l'utilisateur Invité (uniquement en mémoire) n'existe pas en D
             Utilisateur guest = new Utilisateur();
             guest.setId(-1);
             guest.setNom("Invite");

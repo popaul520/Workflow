@@ -82,6 +82,27 @@ public class ValidationDAO {
 	    return etapes;
 	}
 	
+	public List<Integer> getEtapesValideesPourWorkflow(int idWorkflow) {
+        List<Integer> etapesValidees = new ArrayList<>();
+        // On cible uniquement le id_workflow passé en paramètre
+        String sql = "SELECT etape FROM validation WHERE id_workflow = ?;";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idWorkflow);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    etapesValidees.add(rs.getInt("etape"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return etapesValidees;
+    }
+	
 
 	
 	

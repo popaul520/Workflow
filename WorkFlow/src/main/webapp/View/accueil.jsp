@@ -56,9 +56,6 @@
                 <li style="margin-top: 30px;">
                     <a href="creer-workflowV1" style="color: var(--success); font-weight: bold;">➕ Créer Workflow</a>
                 </li>
-                <li style="margin-top: 10px;">
-                    <a href="admin-roles" style="color: var(--success); font-weight: bold;">⚙️ Gestion des rôles</a>
-                </li>
                 <li style="margin-top: 15px; padding: 0 15px; color: #a0aec0; font-size: 0.85em;">
                     <p>V2 en production testable sous réserve de bugs (pas beaucoup mais un peu)</p>
                 </li>

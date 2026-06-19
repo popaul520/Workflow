@@ -35,7 +35,7 @@
 
 	<div class="sidebar">
 		<h3>Actions</h3>
-		<ul>
+		<ul> 
 			<li><a href="homeport">🏠 Retour Accueil</a></li>
 			<li><a href="template-list">⚙️ Liste des Templates</a></li>
 		</ul>
@@ -72,50 +72,57 @@
 		<div class="navigation-etapes" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);">
 			<h3 style="border-left: 5px solid #3498db; padding-left: 15px; margin-top: 0;">Cycle de validation du modèle</h3>
 
-			<div class="grid-boutons">
-				<c:forEach var="etape" items="${etapesTemplate}">
-					
-					<%-- RENDU VERT : Si la place de l'étape est inférieure ou égale à la dernière étape enregistrée --%>
-					<c:set var="isValidee" value="${etape.place <= derniereEtape}" />
+<div class="grid-boutons">
+    <c:forEach var="etape" items="${etapesTemplate}">
+        
+        <%-- 1. Est-ce que l'étape elle-même est déjà validée ? --%>
+        <c:set var="cleEtape" value="[${etape.place}]" />
+        <c:set var="isValidee" value="${fn:contains(etapesValideesChaine, cleEtape)}" />
 
-					<%-- GESTION DU DÉBLOCAGE NON-LINÉAIRE (attente_place) --%>
-					<c:choose>
-						<%-- Pas de contrainte d'attente -> Libre --%>
-						<c:when test="${empty etape.attentePlace || etape.attentePlace == 0}">
-							<c:set var="parentFait" value="true" />
-						</c:when>
-						<%-- Contrainte présente -> Débloqué uniquement si l'étape attendue est validée --%>
-						<c:otherwise>
-							<c:set var="parentFait" value="${etape.attentePlace <= derniereEtape}" />
-						</c:otherwise>
-					</c:choose>
+        <%-- 2. APPLICATION STRICTE DE TA RÈGLE DE DÉBLOCAGE SUR ATTENTE_PLACE --%>
+        <c:choose>
+            <%-- Cas A : Pas de prérequis configuré (NULL ou <= 0) -> Débloquée d'office --%>
+            <c:when test="${empty etape.attentePlace || etape.attentePlace <= 0}">
+                <c:set var="parentFait" value="true" />
+            </c:when>
+            
+            <%-- Cas B : Un prérequis existe -> On vérifie s'il est présent dans la chaîne des étapes validées --%>
+            <c:otherwise>
+                <c:set var="cleAttente" value="[${etape.attentePlace}]" />
+                <c:set var="parentFait" value="${fn:contains(etapesValideesChaine, cleAttente)}" />
+            </c:otherwise>
+        </c:choose>
+        
+        <%-- 3. Déduction des états d'affichage --%>
+        <c:set var="isEnCours" value="${!isValidee && parentFait}" />
+        <c:set var="isBloquee" value="${!isValidee && !parentFait}" />
 
-					<c:set var="isEnCours" value="${!isValidee && parentFait}" />
-					<c:set var="isBloquee" value="${!isValidee && !parentFait}" />
+        <%-- 4. Attribution des classes CSS --%>
+        <c:choose>
+            <c:when test="${isValidee}"><c:set var="colorClass" value="etape-validee" /></c:when>
+            <c:when test="${isEnCours}"><c:set var="colorClass" value="etape-non-faite" /></c:when>
+            <c:otherwise><c:set var="colorClass" value="etape-bloquee" /></c:otherwise>
+        </c:choose>
 
-					<c:choose>
-						<c:when test="${isValidee}"><c:set var="colorClass" value="etape-validee" /></c:when>
-						<c:when test="${isEnCours}"><c:set var="colorClass" value="etape-non-faite" /></c:when>
-						<c:otherwise><c:set var="colorClass" value="etape-bloquee" /></c:otherwise>
-					</c:choose>
+        <c:set var="activeFocusClass" value="${etape.place == numEtapeActive ? 'state-active-focus' : ''}" />
 
-					<c:set var="activeFocusClass" value="${etape.place == numEtapeActive ? 'state-active-focus' : ''}" />
-
-					<button type="button"
-						<c:if test="${!isBloquee}">onclick="window.location.href='saisie-etape?id_workflow=${workflow.id}&num_etape=${etape.place}'"</c:if>
-						class="btn-etape ${colorClass} ${activeFocusClass}"
-						<c:if test="${isBloquee}">disabled="disabled" style="cursor: not-allowed;"</c:if>>
-						<div style="font-size: 0.85em; font-weight: bold; opacity: 0.8;">Étape ${etape.place}</div>
-						<div class="step-role" style="font-size: 0.95em; text-align: center;">${etape.nomEtape}</div>
-						
-						<c:if test="${isBloquee}">
-							<div style="font-size: 0.75em; color: #e53e3e; margin-top: 4px; font-weight: bold;">🔒 Bloqué</div>
-						</c:if>
-					</button>
-				</c:forEach>
-			</div>
-		</div>
-
+        <%-- 5. Rendu du bouton --%>
+        <button type="button"
+            <c:if test="${!isBloquee}">onclick="window.location.href='saisie-etape?id_workflow=${workflow.id}&num_etape=${etape.place}'"</c:if>
+            class="btn-etape ${colorClass} ${activeFocusClass}"
+            <c:if test="${isBloquee}">disabled="disabled" style="cursor: not-allowed;"</c:if>>
+            <div style="font-size: 0.85em; font-weight: bold; opacity: 0.8;">Étape ${etape.place}</div>
+            <div class="step-role" style="font-size: 0.95em; text-align: center;">${etape.nomEtape}</div>
+            
+            <c:if test="${isBloquee}">
+                <div style="font-size: 0.75em; color: #e53e3e; margin-top: 4px; font-weight: bold;">Bloqué</div>
+            </c:if>
+            <c:if test="${isEnCours}">
+                <div style="font-size: 0.75em; color: #0d6efd; margin-top: 4px; font-weight: bold;">À renseigner</div>
+            </c:if>
+        </button>
+    </c:forEach>
+</div>
 		<div class="visu-container">
 			<c:if test="${isClosed}">
 				<div class="status-banner" style="background-color: #fff5f5; border: 1px solid #feb2b2;">
@@ -155,19 +162,34 @@
 							<h2 style="margin: 0; color: #2d3748;">Saisie : ${currentEtape.nomEtape} (Étape ${numEtapeActive})</h2>
 
 							<div>
-								<c:if test="${canEdit && !isClosed}">
-									<button type="button" id="btn-modifier" onclick="activerEdition()" class="btn-action" 
-											style="background: #3182ce; color: white; ${modeEditionForce ? 'display: none;' : ''}">Modifier</button>
-									<button type="submit" id="btn-enregistrer" class="btn-action" 
-											style="background: #38a169; color: white; ${modeEditionForce ? 'display: inline-block;' : 'display: none;'}">Enregistrer et Valider</button>
-								</c:if>
+								<c:choose>
+									<c:when test="${canEdit && !isClosed}">
+										<button type="button" id="btn-modifier" onclick="activerEdition()" class="btn-action" 
+												style="background: #3182ce; color: white; ${modeEditionForce ? 'display: none;' : ''}">Modifier</button>
+										<button type="submit" id="btn-enregistrer" class="btn-action" 
+												style="background: #38a169; color: white; ${modeEditionForce ? 'display: inline-block;' : 'display: none;'}">Enregistrer et Valider</button>
+									</c:when>
+									<c:otherwise>
+										<span style="color: #e53e3e; font-weight: bold; font-size: 0.9em;">🔒 Consultation uniquement</span>
+									</c:otherwise>
+								</c:choose>
 							</div>
 						</div>
 
-						<fieldset id="fs-edition" ${modeEditionForce ? '' : 'disabled'} style="border: none; padding: 0; margin: 0;">
+						<fieldset id="fs-edition" ${canEdit && modeEditionForce ? '' : 'disabled'} style="border: none; padding: 0; margin: 0;">
 							
 							<c:forEach var="d" items="${donneesEtape}" varStatus="status">
-								<div class="visu-row">
+								<c:set var="isChampConditionnel" value="${d.hasContrainte && d.etapeMaitre == numEtapeActive}" />
+								<c:set var="doitEtreMasque" value="${isChampConditionnel && d.valeurActuelleMaitre != d.valeurCible}" />
+
+								<div class="visu-row row-champ" 
+									 id="row-${d.idTemplateDonnee}"
+									 style="${doitEtreMasque ? 'display: none;' : 'display: flex;'}"
+									 <c:if test="${isChampConditionnel}">
+										data-depend-de="${d.idTemplateMaitre}"
+										data-valeur-cible="${d.valeurCible}"
+									 </c:if>>
+									 
 									<input type="hidden" name="id_donne_${status.index}" value="${d.idDonne}"> 
 									<input type="hidden" name="id_template_donnee_${status.index}" value="${d.idTemplateDonnee}"> 
 									<input type="hidden" name="type_${status.index}" value="${d.nomChamp}"> 
@@ -188,15 +210,15 @@
 										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
 											<c:choose>
 												<c:when test="${d.refContrainte == 'Bool'}">
-													<select name="attr_${status.index}" class="form-control-dyn" ${d.estObligatoire ? 'required' : ''}>
+													<select name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire ? 'required' : ''}>
 														<option value="">-- Sélectionner --</option>
-														<option value="OUI" ${d.attribut == 'OUI' ? 'selected' : ''}>OUI</option>
-														<option value="NON" ${d.attribut == 'NON' ? 'selected' : ''}>NON</option>
+														<option value="Oui" ${d.attribut == 'Oui' ? 'selected' : ''}>OUI</option>
+														<option value="Non" ${d.attribut == 'Non' ? 'selected' : ''}>NON</option>
 													</select>
 												</c:when>
 
 												<c:when test="${not empty d.refContrainte && not empty mapCatalogues[d.refContrainte]}">
-													<select name="attr_${status.index}" class="form-control-dyn" ${d.estObligatoire ? 'required' : ''}>
+													<select name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire ? 'required' : ''}>
 														<option value="">-- Sélectionner un(e) ${d.refContrainte} --</option>
 														<c:forEach var="optionValeur" items="${mapCatalogues[d.refContrainte]}">
 															<option value="${optionValeur}" ${d.attribut == optionValeur ? 'selected' : ''}>${optionValeur}</option>
@@ -207,11 +229,11 @@
 												<c:otherwise>
 													<c:choose>
 														<c:when test="${d.typeComposant == 'textarea'}">
-															<textarea name="attr_${status.index}" class="form-control-dyn" ${d.estObligatoire ? 'required' : ''} placeholder="Saisir...">${d.attribut}</textarea>
+															<textarea name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire ? 'required' : ''} placeholder="Saisir...">${d.attribut}</textarea>
 														</c:when>
 														<c:otherwise>
 															<input type="${not empty d.typeComposant ? d.typeComposant : 'text'}"
-																name="attr_${status.index}" value="${d.attribut}" class="form-control-dyn"
+																name="attr_${status.index}" value="${d.attribut}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}"
 																${d.estObligatoire ? 'required' : ''} placeholder="Saisir...">
 														</c:otherwise>
 													</c:choose>
@@ -304,10 +326,36 @@
             document.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'block');
             document.getElementById('btn-modifier').style.display = 'none';
             document.getElementById('btn-enregistrer').style.display = 'inline-block';
-
             const fs = document.getElementById('fs-edition');
             if(fs) fs.removeAttribute('disabled');
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            function evaluerDependances() {
+                document.querySelectorAll('.row-champ[data-depend-de]').forEach(function(row) {
+                    const idMaitre = row.getAttribute('data-depend-de');
+                    const valeurCible = row.getAttribute('data-valeur-cible');
+                    const champMaitre = document.querySelector('.champ-declencheur[data-id-template="' + idMaitre + '"]');
+                    
+                    if (champMaitre) {
+                        if (champMaitre.value === valeurCible) {
+                            row.style.display = 'flex';
+                            row.querySelectorAll('input, select, textarea').forEach(el => el.removeAttribute('disabled'));
+                        } else {
+                            row.style.setProperty('display', 'none', 'important');
+                            row.querySelectorAll('input, select, textarea').forEach(el => el.setAttribute('disabled', 'disabled'));
+                        }
+                    }
+                });
+            }
+
+            document.querySelectorAll('.champ-declencheur').forEach(function(champ) {
+                champ.addEventListener('change', evaluerDependances);
+                champ.addEventListener('input', evaluerDependances);
+            });
+
+            evaluerDependances();
+        });
     </script>
 </body>
 </html>

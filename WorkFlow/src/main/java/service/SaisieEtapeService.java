@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,15 +30,22 @@ public class SaisieEtapeService {
     /**
      * Prépare toutes les données requises pour l'affichage de l'étape
      */
+    /**
+     * Prépare toutes les données requises pour l'affichage de l'étape
+     */
+    /**
+     * Prépare toutes les données requises pour l'affichage de l'étape
+     */
     public Map<String, Object> getEtapeSaisieContext(int idWf, int numEtape, Utilisateur user) throws Exception {
         Map<String, Object> context = new HashMap<>();
-
+        // 1. Récupération du Workflow
         Workflow wf = wfDao.getById(idWf);
         if (wf == null) return null;
 
         boolean isAdmin = (user != null && user.getRole() == 11);
         boolean hasAccess = false;
 
+        // 2. Configuration de l'étape courante 
         template_etape configEtape = templateDao.getEtapeConfig(wf.getIdTemplateWorkflow(), numEtape);
         if (user != null) {
             if (isAdmin) {
@@ -46,49 +54,88 @@ public class SaisieEtapeService {
                 hasAccess = (user.getRole() == configEtape.getRoleAssocie());
             }
         }
-
-        // 1. Récupération de TOUTES les étapes validées en BDD pour ce dossier
+        // 3. Récupération des étapes validées UNIQUEMENT pour ce dossier (idWf)
         List<Integer> etapesValidees = new ArrayList<>();
         try {
-            etapesValidees = validationDao.getEtapesValidees(idWf);
+            etapesValidees = validationDao.getEtapesValidees(idWf); // Assurez-vous que ce DAO filtre par id_workflow !
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         boolean isClosed = (wf.getDateFinalisation() != null);
         
-        // 2. NOUVELLE LOGIQUE CANEDIT BASÉE SUR ATTENTE_PLACE
+        // 4. Logique de déblocage basée sur la table template_etape et le champ attente_place
         boolean conditionAttenteRespectee = false;
         
         if (configEtape != null) {
-            Integer attente = configEtape.getAttentePlace(); // Doit retourner l'int ou null de attente_place
-            
-            // Si pas d'attente (premières étapes), c'est accessible d'office
-            if (attente == null || attente == 0) {
+            Integer attente = configEtape.getAttentePlace(); // Doit être un objet Integer dans votre modèle pour gérer le NULL
+
+            if (configEtape.getPlace() == 1) {
+                // L'étape 1 n'a pas de contrainte amont par défaut
                 conditionAttenteRespectee = true;
-            } else {
-                // Sinon, l'étape prérequise doit être présente dans notre liste d'étapes validées
+            } else if (attente != null && attente > 0) {
+                // Si attente_place est défini, on vérifie qu'il existe dans l'historique de validation de ce workflow
                 conditionAttenteRespectee = etapesValidees.contains(attente);
+            } else {
+                // Sans prérequis (NULL ou 0), l'étape est ouverte à la saisie
+                conditionAttenteRespectee = true;
             }
         }
 
-        // L'utilisateur peut éditer si : accès rôle OK + dossier ouvert + prérequis BDD validé
+        // Détermination des droits d'édition
         boolean canEdit = (hasAccess && !isClosed && conditionAttenteRespectee);
 
-        List<Map<String, Object>> donneesEtape = templateDao.getChampsEtDonnees(idWf, wf.getIdTemplateWorkflow(), numEtape);
+        // 5. Chargement et filtrage des champs dynamiques (Sécurité d'accès)
+        List<Map<String, Object>> donneesEtape = new ArrayList<>();
+        
+        if (conditionAttenteRespectee || isAdmin) {
+            // L'utilisateur a le droit de voir/remplir les données
+            donneesEtape = templateDao.getChampsEtDonnees(idWf, wf.getIdTemplateWorkflow(), numEtape);
 
+            // Application des contraintes d'affichage conditionnelles (champs maîtres / esclaves)
+            Iterator<Map<String, Object>> iterator = donneesEtape.iterator();
+            while (iterator.hasNext()) {
+                Map<String, Object> champ = iterator.next();
+                
+                Boolean hasContrainte = (Boolean) champ.get("hasContrainte");
+                if (hasContrainte != null && hasContrainte) {
+                    int etapeMaitre = (int) champ.get("etapeMaitre");
+                    int etapeCourante = numEtape;
+                    
+                    if (etapeMaitre < etapeCourante) {
+                        String valeurCible = (String) champ.get("valeurCible");
+                        String valeurActuelleMaitre = (String) champ.get("valeurActuelleMaitre");
+                        
+                        if (valeurActuelleMaitre == null || !valeurActuelleMaitre.equals(valeurCible)) {
+                            iterator.remove(); 
+                        }
+                    }
+                }
+            }
+        } else {
+            // Étape bloquée : On n'envoie aucun champ pour empêcher la lecture/saisie forcée par l'URL
+            canEdit = false;
+        }
+        
+        // 6. Chargement des catalogues globaux
         Map<String, List<String>> mapCatalogues = this.loadCataloguesContraints();
         context.put("mapCatalogues", mapCatalogues);
 
+        // 7. Formatage de la chaîne de validation au format [1][2][5] pour le tag fn:contains de la JSP
+        StringBuilder sb = new StringBuilder();
+        if (etapesValidees != null) {
+            for (Integer e : etapesValidees) {
+                sb.append("[").append(e).append("]");
+            }
+        }
+        
+        // 8. Injection des variables dans le contexte de retour
         context.put("workflow", wf);
         context.put("donneesEtape", donneesEtape);
         context.put("numEtapeActive", numEtape);
         context.put("currentEtape", configEtape);
         context.put("etapesTemplate", templateDao.getEtapesByTemplate(wf.getIdTemplateWorkflow()));
-        
-        // 3. On envoie la liste complète des IDs validés à la JSP pour qu'elle puisse colorer en vert/bloquer
-        context.put("etapesValideesIds", etapesValidees);
-        
+        context.put("etapesValideesChaine", sb.toString());        
         context.put("isAdmin", isAdmin);
         context.put("hasAccess", hasAccess);
         context.put("isClosed", isClosed);
@@ -220,8 +267,14 @@ public class SaisieEtapeService {
                 System.out.println("Le dossier #" + idWorkflow + " a été structurellement clôturé avec le verdict : " + decision);
             }
         } catch (Exception e) {
-            System.err.println("❌ Erreur lors de la clôture structurelle du workflow #" + idWorkflow);
+            System.err.println("Erreur lors de la clôture structurelle du workflow #" + idWorkflow);
             throw e;
         }
+    }
+    
+    public List<Integer> getEtapesValideesPourWorkflow(int idWorkflow) throws Exception {
+        // Utilise ton instance de DAO existante (adapte le nom de la variable si nécessaire, ex: validationDAO)
+        ValidationDAO validationDao = new ValidationDAO();
+        return validationDao.getEtapesValidees(idWorkflow);
     }
 }

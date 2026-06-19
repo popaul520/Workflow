@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn"%>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -33,57 +35,63 @@
             <p class="text-muted" style="margin: 5px 0 0 0;">Étape Actuelle : <strong>Étape ${etapeActive.place}</strong> | Ordre d'affichage : <strong>${donneeActive.ordreAffichage}</strong></p>
         </div>
 
-        <div class="grid-split">
-            <div class="card">
-                <h3 id="form-title" style="margin-top: 0;">Ajouter une contrainte de validation</h3>
-                <form action="action-contrainte" method="post" id="regleForm">
-                    <input type="hidden" name="id_donnee_cible" value="${donneeActive.id}">
-                    <input type="hidden" name="action" id="form-action" value="POST">
-                    <input type="hidden" name="id_jointure" id="id_jointure" value="">
-                    <input type="hidden" name="id_donnee_cible" value="${donneeActive.id}">
-					<input type="hidden" name="action" id="form-action" value="POST">
-					<input type="hidden" name="id_jointure" id="id_jointure" value="">
-					
-					<input type="hidden" name="select_etape_actuelle" value="${etapeActive.id}">
-                    <div class="form-group">
-                        <label>1. Choix de l'Étape *</label>
-                        <select name="select_etape" id="select_etape" required onchange="filtrerDonnees()">
-                            <option value="" disabled selected>-- Choisir une étape --</option>
-                            <c:forEach var="et" items="${etapesTemplate}">
-                                <c:if test="${et.place <= etapeActive.place}">
-                                    <option value="${et.id}" data-place="${et.place}">Étape ${et.place} - ${et.nomEtape}</option>
-                                </c:if>
-                            </c:forEach>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>2. Choix de la Donnée dépendante *</label>
-                        <select name="id_donnee_source" id="select_donnee" required onchange="filtrerConditionsEtInputs()" disabled>
-                            <option value="" disabled selected>-- Sélectionnez d'abord l'étape --</option>
-                        </select>
-                    </div>
+<div class="grid-boutons">
+    <c:forEach var="etape" items="${etapesTemplate}">
+        
+        <%-- Construit la clé de recherche, ex: "[1]" ou "[2]" --%>
+        <c:set var="cleEtape" value="[${etape.place}]" />
+        
+        <%-- 1. Une étape est validée UNIQUEMENT si son identifiant de place est présent dans l'historique BDD --%>
+        <c:set var="isValidee" value="${fn:contains(etapesValideesChaine, cleEtape)}" />
 
-                    <div class="form-group">
-                        <label>3. Choix de la Condition *</label>
-                        <select name="id_condition" id="select_condition" required disabled>
-                            <option value="" disabled selected>-- Sélectionnez une donnée --</option>
-                        </select>
-                    </div>
+        <%-- 2. GESTION DU DÉBLOCAGE STRICT (attente_place) --%>
+        <c:choose>
+            <%-- L'étape 1 est toujours accessible au départ --%>
+            <c:when test="${etape.place == 1}">
+                <c:set var="parentFait" value="true" />
+            </c:when>
+            
+            <%-- Pas de contrainte d'attente spécifiée -> Dépend de la validation de l'étape précédente (ex: place - 1) --%>
+            <c:when test="${empty etape.attentePlace || etape.attentePlace == 0}">
+                <c:set var="clePrecedente" value="[${etape.place - 1}]" />
+                <c:set var="parentFait" value="${fn:contains(etapesValideesChaine, clePrecedente)}" />
+            </c:when>
+            
+            <%-- Contrainte présente -> Débloqué uniquement si l'étape attendue spécifique est validée en BDD --%>
+            <c:otherwise>
+                <c:set var="cleAttente" value="[${etape.attentePlace}]" />
+                <c:set var="parentFait" value="${fn:contains(etapesValideesChaine, cleAttente)}" />
+            </c:otherwise>
+        </c:choose>
 
-                    <div class="form-group" id="wrapper_valeur_saisie">
-                        <label id="label_dynamique">4. Valeur limite / Contrainte attendue *</label>
-                        <div id="conteneur_input_dynamique">
-                            <input type="text" name="valeur_contrainte" id="input_valeur" required placeholder="Saisir une valeur...">
-                        </div>
-                    </div>
+        <%-- 3. Déduction de l'état visuel et des verrous d'accès --%>
+        <c:set var="isEnCours" value="${!isValidee && parentFait}" />
+        <c:set var="isBloquee" value="${!isValidee && !parentFait}" />
 
-                    <div style="margin-top: 25px; display: flex; gap: 10px;">
-                        <button type="submit" id="btn-submit" class="btn btn-success" style="flex: 1;">Valider la contrainte</button>
-                        <button type="button" id="btn-cancel" class="btn btn-secondary" style="display: none;" onclick="annulerModif()">Annuler</button>
-                    </div>
-                </form>
-            </div>
+        <c:choose>
+            <c:when test="${isValidee}"><c:set var="colorClass" value="etape-validee" /></c:when>
+            <c:when test="${isEnCours}"><c:set var="colorClass" value="etape-non-faite" /></c:when>
+            <c:otherwise><c:set var="colorClass" value="etape-bloquee" /></c:otherwise>
+        </c:choose>
+
+        <c:set var="activeFocusClass" value="${etape.place == numEtapeActive ? 'state-active-focus' : ''}" />
+
+        <button type="button"
+            <c:if test="${!isBloquee}">onclick="window.location.href='saisie-etape?id_workflow=${workflow.id}&num_etape=${etape.place}'"</c:if>
+            class="btn-etape ${colorClass} ${activeFocusClass}"
+            <c:if test="${isBloquee}">disabled="disabled" style="cursor: not-allowed;"</c:if>>
+            <div style="font-size: 0.85em; font-weight: bold; opacity: 0.8;">Étape ${etape.place}</div>
+            <div class="step-role" style="font-size: 0.95em; text-align: center;">${etape.nomEtape}</div>
+            
+            <c:if test="${isBloquee}">
+                <div style="font-size: 0.75em; color: #e53e3e; margin-top: 4px; font-weight: bold;">Bloqué</div>
+            </c:if>
+            <c:if test="${isEnCours}">
+                <div style="font-size: 0.75em; color: #0d6efd; margin-top: 4px; font-weight: bold;">À renseigner</div>
+            </c:if>
+        </button>
+    </c:forEach>
+</div>
 
             <div class="card">
                 <h3 style="margin-top: 0;">Contraintes actives requises</h3>
