@@ -21,7 +21,6 @@ public class EmailService {
         } else {
             contenu += "\nMerci de consulter ces demandes.";
         }
-
         // Appel du MailSender unifié
         MailSender.send(user.getMail(), "Demandes quotidiennes", contenu);
     }

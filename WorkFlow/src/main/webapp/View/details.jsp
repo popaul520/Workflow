@@ -194,11 +194,9 @@
                         boolean isValidated = etapesValidees.contains(iValue);
                         boolean isLocked = false;
                         
-                        //  Si le dossier est clos, on ne verrouille que les étapes qui n'ont pas été faites.
                         if (isFinalise) {
                             isLocked = !isValidated; 
                         } else {
-                            // Logique normale si le dossier est toujours actif
                             if (iValue >= 2 && iValue <= 6) {
                                 isLocked = false; 
                             } else if (iValue == 7) {
@@ -271,41 +269,11 @@
                 </table>
             </div>
 
-            <%--On laisse le bloc de détails accessible dans tous les cas pour afficher les étapes validées --%>
             <h3 id="titre-etape" style="color: var(--primary); margin-top: 0;">Détails de l'étape</h3>
             <div id="contenu-etape"></div>
         </div>
 
         <div class="visualisation-donnees" style="margin-top: 50px;">
-            <h3 style="border-left: 5px solid var(--accent); padding-left: 15px;">Récapitulatif des données saisies</h3>
-            <c:choose>
-                <c:when test="${not empty historique}">
-                    <table class="table-recap">
-                        <thead>
-                            <tr>
-                                <th class="col-xs">Étape</th>
-                                <th class="col-md">Type / Libellé</th>
-                                <th class="col-lg">Valeur saisie</th>
-                                <th class="col-sm">Date de saisie</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="d" items="${historique}">
-                                <tr>
-                                    <td><strong>#${d.etape.nbEtape}</strong></td>
-                                    <td>${d.type}</td>
-                                    <td>${d.attribut}</td>
-                                    <td><fmt:formatDate value="${d.date}" pattern="dd/MM/yyyy" /></td>
-                                </tr>
-                            </c:forEach>
-                        </tbody>
-                    </table>
-                </c:when>
-                <c:otherwise>
-                    <p style="background: #fff3cd; padding: 15px; border-radius: 8px; color: #856404;">Aucune donnée enregistrée pour le moment.</p>
-                </c:otherwise>
-            </c:choose>
-            
             <a href="${pageContext.request.contextPath}/downloadPdf?id=${wf.id}" class="btn-pdf">
                 Télécharger le récapitulatif PDF
             </a>
@@ -314,7 +282,6 @@
 
     <script>
         let etapeOuverte = null;
-
         function chargerEtape(n, idWf, forceSaisie = false) {
             const zone = document.getElementById('affichage-dynamique-etape');
             const contenu = document.getElementById('contenu-etape');
@@ -326,15 +293,12 @@
                 etapeOuverte = null;
                 return;
             }
-
             zone.style.display = 'block';
-            
             if (n === 7 || n === 10) {
                 panneauAvis.style.display = 'block';
             } else {
                 panneauAvis.style.display = 'none';
             }
-
             if(contenu) {
                 contenu.innerHTML = "<p>Chargement des données en cours...</p>";
                 etapeOuverte = n;
@@ -347,14 +311,28 @@
                 .then(html => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Récupération de la structure HTML globale
                     const formRecu = doc.querySelector('form');
                     contenu.innerHTML = formRecu ? formRecu.outerHTML : doc.body.innerHTML;
+
+                    // CORRECTION TECHNIQUE : On extrait et on force l'évaluation de tous les <script> reçus
+                    const scripts = doc.querySelectorAll("script");
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement("script");
+                        newScript.type = "text/javascript";
+                        if (oldScript.src) {
+                            newScript.src = oldScript.src;
+                        } else {
+                            newScript.textContent = oldScript.textContent;
+                        }
+                        document.body.appendChild(newScript).parentNode.removeChild(newScript);
+                    });
                 });
             }
         }
 
         function activerEdition() {
-            // L'édition ne s'active pas du tout si le dossier est clos
             if (<%= isFinalise %>) return;
             const container = document.getElementById('affichage-dynamique-etape');
             if (container) {

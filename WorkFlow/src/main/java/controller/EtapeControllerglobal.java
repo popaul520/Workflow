@@ -173,7 +173,38 @@ public class EtapeControllerglobal extends HttpServlet {
                     donneeDao.insertDonnee(d, idWorkflow, nbEtape);
                 }
             }
+         // [... Fin de ta boucle while (parameterNames.hasMoreElements()) qui traite les blocs 1, 2, 3 ...]
+        } // <--- Fermeture de ton bloc while existant
+
+        // =========================================================================
+        // NOUVEAU COUPLAGE DYNAMIQUE : Traitement des données tabulaires du Bloc 4
+        // =========================================================================
+        String[] servicesAjoutes = request.getParameterValues("prod_service_nom[]");
+        if (servicesAjoutes != null && servicesAjoutes.length > 0) {
+            String[] qtes = request.getParameterValues("prod_qte[]");
+            String[] cadences = request.getParameterValues("prod_cadence[]");
+            String[] mods = request.getParameterValues("prod_mod[]");
+            String[] comms = request.getParameterValues("prod_comm[]");
+
+            for (int i = 0; i < servicesAjoutes.length; i++) {
+                model.Donnee dProd = new model.Donnee();
+                
+                // On formate le type pour l'historique (ex: "Production (Hachage)")
+                dProd.setType("Production (" + servicesAjoutes[i] + ")");
+                dProd.setRefTypeContraint("Données de Production");
+                
+                // Concaténation propre ou restructuration de l'attribut principal
+                dProd.setAttribut("Qté: " + qtes[i] + " | Cadence: " + cadences[i] + " | MOD: " + mods[i]);
+                
+                // On conserve les notes annexes dans le commentaire
+                dProd.setCommentaire(comms[i]);
+                dProd.setDate(new java.sql.Date(System.currentTimeMillis()));
+
+                // Insertion à la volée dans l'étape 8
+                donneeDao.insertDonnee(dProd, idWorkflow, nbEtape);
+            }
         }
+        
 
         // Validation fonctionnelle de l'étape et clôture
         try {

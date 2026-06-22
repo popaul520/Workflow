@@ -8,6 +8,8 @@ import model.Workflow;
 import model.WorkflowDisplay;
 
 public class WorkflowDAO {
+	
+	
 	public List<Workflow> getAll() {
 		List<Workflow> list = new ArrayList<>();
 		String sql = "SELECT id, titre FROM workflow";
@@ -28,6 +30,31 @@ public class WorkflowDAO {
 		return list;
 	}
 
+	
+	public static String getTitre(int id) {
+	    // 1. On initialise à null ou vide pour éviter l'erreur de non-initialisation
+	    String titre = null; 
+	    String sql = "SELECT titre FROM workflow where id = ?";
+	    
+	    // 2. On déclare uniquement les ressources (con, ps, rs) dans le try-with-resources
+	    try (Connection con = DBConnection.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	        ps.setInt(1, id);
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                titre = rs.getString("titre");
+	                System.out.println("DAO DEBUG: Titre trouvé -> " + titre);
+	            } else {
+	                System.out.println("DAO DEBUG: Aucun workflow trouvé avec l'id " + id);
+	            }
+	        }
+	    } catch (Exception e) {
+	        System.err.println("ERREUR DAO: " + e.getMessage());
+	        e.printStackTrace();
+	    }
+	    return titre;
+	}
+	
 	public boolean save(String titre) {
 		String sql = "INSERT INTO workflow (titre) VALUES (?)";
 		try (Connection con = DBConnection.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {

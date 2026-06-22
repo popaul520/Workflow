@@ -3,12 +3,15 @@ package security;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+
+import dao.WorkflowDAO;
 import model.Donnee;
 import model.Utilisateur;
 
@@ -21,24 +24,28 @@ public class PdfDocument {
     private PDPageContentStream contentStream;
     private int y;
 
-    // Utilisation des polices standards (Zéro fichier ou dépendance externe requis)
+    // Utilisation des polices standards
     private final PDFont fontRegular = PDType1Font.HELVETICA;
     private final PDFont fontBold = PDType1Font.HELVETICA_BOLD;
     private final PDFont fontItalic = PDType1Font.HELVETICA_OBLIQUE;
 
     public byte[] creationPdf(int idWorkflow, List<Donnee> toutesDonnees) throws IOException {
         document = new PDDocument();
+        String titre = null;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-
+        try {
+        	titre = WorkflowDAO.getTitre(idWorkflow);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
         try {
             // 1. Initialisation de la première page
             nouvellePage();
-
             // ================= TITRE PRINCIPAL =================
             contentStream.beginText();
             contentStream.setFont(fontBold, 18);
             contentStream.newLineAtOffset(50, y);
-            contentStream.showText("Rapport de Synthese - Workflow #" + idWorkflow);
+            contentStream.showText("Rapport de Synthese - "+ titre +" id : #" + idWorkflow);
             contentStream.endText();
             y -= 35;
 
@@ -56,12 +63,6 @@ public class PdfDocument {
                     String type = (d.getType() != null) ? d.getType() : "";
                     
                     if (type.toLowerCase().startsWith("avis")) {
-                        verifierEspaceEtSauter(20);
-                        
-                        contentStream.beginText();
-                        contentStream.setFont(fontBold, 10);
-                        contentStream.newLineAtOffset(65, y); // Léger retrait vers la droite
-                        
                         int numEtape = (d.getEtape() != null) ? d.getEtape().getNbEtape() : 0;
                         String nomGroupe = Utilisateur.getRole(numEtape);
                         if (nomGroupe == null) nomGroupe = type;
@@ -69,9 +70,8 @@ public class PdfDocument {
                         String valeurAvis = (d.getAttribut() != null) ? d.getAttribut() : "Non renseigne";
                         String ligneAvis = "• " + nomGroupe + " -> " + valeurAvis;
                         
-                        contentStream.showText(purgerTexte(ligneAvis));
-                        contentStream.endText();
-                        y -= 15;
+                        // Découpage strict par nombre de caractères (Marge gauche de 65)
+                        ecrireTexteMultiLignes(purgerTexte(ligneAvis), fontBold, 10, 65, 15);
                     }
                 }
             }
@@ -113,7 +113,7 @@ public class PdfDocument {
                         y -= 20;
                     }
 
-                    // Écriture d'une ligne de donnée classique
+                    // Écriture d'une ligne de donnée classique (Date d'abord)
                     verifierEspaceEtSauter(20);
 
                     contentStream.beginText();
@@ -121,30 +121,24 @@ public class PdfDocument {
                     contentStream.newLineAtOffset(50, y);
                     String strDate = (d.getDate() != null) ? dateFormat.format(d.getDate()) : "          "; 
                     contentStream.showText(strDate);
+                    contentStream.endText();
 
-                    contentStream.setFont(fontBold, 10);
-                    contentStream.newLineAtOffset(70, 0); // Décale à droite après la date
-                    
+                    // Affichage décalé du type et de la valeur
                     String type = (d.getType() != null) ? d.getType() : "Champ";
                     String valeur = (d.getAttribut() != null) ? d.getAttribut() : "";
                     String ligneTexte = "- " + type + " : " + valeur;
                     
-                    contentStream.showText(purgerTexte(ligneTexte)); 
-                    contentStream.endText();
+                    // On écrit le texte principal à partir de X = 120
+                    ecrireTexteMultiLignes(purgerTexte(ligneTexte), fontBold, 10, 120, 15);
 
                     // Traitement et affichage du commentaire si existant
                     if (d.getCommentaire() != null && !d.getCommentaire().trim().isEmpty() && !d.getCommentaire().equalsIgnoreCase("null")) {
-                        verifierEspaceEtSauter(15);
-                        y -= 12;
-                        
-                        contentStream.beginText();
-                        contentStream.setFont(fontItalic, 9);
-                        contentStream.newLineAtOffset(135, y); // Aligné sous la valeur du champ
-                        contentStream.showText(purgerTexte(d.getCommentaire()));
-                        contentStream.endText();
+                        String commentaire = d.getCommentaire();
+                        // Affichage en retrait sous le champ (X = 135) avec interligne de 12
+                        ecrireTexteMultiLignes(purgerTexte(commentaire), fontItalic, 9, 135, 12);
                     }
                     
-                    y -= 15; // Marge entre les lignes de données
+                    y -= 10; // Espacement de sécurité après le bloc complet d'une donnée
                 }
             }
 
@@ -156,17 +150,28 @@ public class PdfDocument {
 
             document.save(out);
             
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException("Erreur lors de la generation du document PDF", e);
         } finally {
-            // Le bloc finally s'exécute TOUJOURS et sécurise les fermetures
             if (contentStream != null) {
-                contentStream.close();
+                try {
+                    contentStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             if (document != null) {
-                document.close();
+                try {
+                    document.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return out.toByteArray();
     }
+    
     private void nouvellePage() throws IOException {
         if (contentStream != null) {
             contentStream.close(); 
@@ -174,18 +179,64 @@ public class PdfDocument {
         currentPage = new PDPage();
         document.addPage(currentPage);
         contentStream = new PDPageContentStream(document, currentPage);
-        y = 750; // Positionnement en haut de la nouvelle feuille
+        y = 750; // Réinitialisation de la hauteur de page
     }
 
     private void verifierEspaceEtSauter(int espaceNecessaire) throws IOException {
-        if ((y - espaceNecessaire) < 60) { // Zone de sécurité pour éviter d'écrire dans la marge basse
+        if ((y - espaceNecessaire) < 60) { 
             nouvellePage();
         }
     }
 
     /**
-     * Purge le texte des sauts de lignes et remplace les caractères accentués français
-     * pour empêcher la bibliothèque Apache PDFBox de lever une exception "unmappable character".
+     * Reçoit le texte purifié et force le saut de ligne de manière séquentielle 
+     * en recalculant continuellement l'ordonnée Y globale.
+     */
+    private void ecrireTexteMultiLignes(String texte, PDFont font, int fontSize, int margeGauche, int interLigne) throws IOException {
+        // Fixe une limite de sécurité stricte : max 65 caractères par sous-ligne
+        int limiteCaracteres = 65; 
+        
+        List<String> lignesDeTexte = diviserParNombreCaracteres(texte, limiteCaracteres);
+        
+        for (String ligne : lignesDeTexte) {
+            verifierEspaceEtSauter(interLigne + 5);
+            
+            contentStream.beginText();
+            contentStream.setFont(font, fontSize);
+            contentStream.newLineAtOffset(margeGauche, y);
+            contentStream.showText(ligne);
+            contentStream.endText();
+            
+            // On descend l'ordonnée Y globale pour la ligne suivante
+            y -= interLigne;
+        }
+    }
+
+    /**
+     * Découpe mathématiquement une chaîne de caractères tous les 'tailleMax' caractères.
+     * Évite définitivement l'extension à l'infini à l'écran.
+     */
+    private List<String> diviserParNombreCaracteres(String texte, int tailleMax) {
+        List<String> fragments = new ArrayList<>();
+        if (texte == null || texte.isEmpty()) {
+            return fragments;
+        }
+
+        int longueur = texte.length();
+        int index = 0;
+        
+        while (index < longueur) {
+            // Extrait un sous-bloc d'au maximum 'tailleMax' caractères
+            int finIndex = Math.min(index + tailleMax, longueur);
+            fragments.add(texte.substring(index, finIndex));
+            index += tailleMax;
+        }
+        
+        return fragments;
+    }
+
+    /**
+     * Purge le texte des sauts de lignes internes et remplace les caractères accentués français.
      */
     private String purgerTexte(String texte) {
         if (texte == null) return "";

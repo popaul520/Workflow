@@ -172,11 +172,6 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Marge attendue (%) *</label>
-                            <input type="text" name="attr_marge" placeholder="Ex: 15%" required>
-                        </div>
-
-                        <div class="form-group">
                             <label>Code référence équivalente</label>
                             <input type="text" name="attr_code_ref_similaire" placeholder="Code interne">
                         </div>

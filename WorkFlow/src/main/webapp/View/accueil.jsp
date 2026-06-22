@@ -56,7 +56,6 @@
             </c:if>
         </ul>
     </div>
-
     <div class="main-container">
         <div class="header-flex">
             <h1>Accueil de demande de faisabilité</h1>

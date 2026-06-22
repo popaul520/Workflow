@@ -89,7 +89,7 @@ public class EmailTask implements Runnable {
                 for (Workflow w : terminesGlobaux) {
                     WorkflowDAO.marquerAnnonceTerminee(w.getId()); 
                 }
-                System.out.println("🔒 " + terminesGlobaux.size() + " annonces de fin définitivement verrouillées en BDD.");
+                System.out.println(" " + terminesGlobaux.size() + " annonces de fin définitivement verrouillées en BDD.");
             }
 
         } catch (Exception e) {
