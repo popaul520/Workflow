@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import model.Role;
 import model.Utilisateur;
 
 public class UtilisateurDAO {
@@ -235,6 +236,27 @@ public class UtilisateurDAO {
 
         return list;
     }
+    public List<Utilisateur> getTousLesUtilisateurs() throws Exception {
+        List<Utilisateur> liste = new ArrayList<>();
+        String sql = "SELECT id, login, nom, mail, role FROM utilisateur ORDER BY id ASC";
+        
+        try (Connection conn = DBConnection.getConnection(); // méthode de connexion
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                Utilisateur u = new Utilisateur();
+                u.setId(rs.getInt("id"));
+                u.setLogin(rs.getString("login"));
+                u.setNom(rs.getString("nom"));
+                u.setMail(rs.getString("mail"));
+                u.setRole(rs.getInt("role")); // Contient l'ID du rôle
+                
+                liste.add(u);
+            }
+        }
+        return liste;
+    }
     
     public static Map<Integer, List<Utilisateur>> getAllUsersGroupedByRole() {
         Map<Integer, List<Utilisateur>> map = new HashMap<>();
@@ -262,6 +284,36 @@ public class UtilisateurDAO {
             e.printStackTrace();
         }
         return map;
+    }
+    
+    public boolean modifierRole(int idUtilisateur, int idRole) throws Exception {
+        String sql = "UPDATE utilisateur SET role = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idRole);
+            ps.setInt(2, idUtilisateur);
+            
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    // Récupère tous les rôles pour la liste déroulante
+    public List<Role> getListeRoles() throws Exception {
+        List<Role> roles = new ArrayList<>();
+        String sql = "SELECT id, role FROM role ORDER BY id";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                Role r = new Role();
+                r.setId(rs.getInt("id"));
+                r.setRole(rs.getString("role"));
+                roles.add(r);
+            }
+        }
+        return roles;
     }
 
 }
