@@ -26,7 +26,6 @@ public class EmailTask implements Runnable {
                 if (destinataires == null || destinataires.isEmpty()) {
                     continue; 
                 }
-
                 // ------------------------------------------------------------------
                 // PARTICULE 1 : DOSSIERS EN ATTENTE DE VALIDATION POUR CE RÔLE
                 // ------------------------------------------------------------------

@@ -9,7 +9,7 @@ import model.TypeContraint;
 public class TypeContraintDAO {
 
     // Récupérer toutes les contraintes ordonnées par type
-    public List<TypeContraint> getAll() {
+    public static List<TypeContraint> getAll() {
         List<TypeContraint> liste = new ArrayList<>();
         String sql = "SELECT id, type, valeur FROM type_contraint ORDER BY type ASC, valeur ASC";
         

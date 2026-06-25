@@ -14,7 +14,7 @@
 .btn-etape:hover:not(.etape-bloquee) { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08); }
 .etape-validee { background-color: #d1e7dd !important; color: #0f5132 !important; border-left: 6px solid #198754 !important; font-weight: bold; }
 .etape-non-faite { background-color: #cfe2ff !important; color: #084298 !important; border-left: 6px solid #0d6efd !important; }
-.etape-bloquee { background-color: #e2e8f0 !important; color: #94a3b8 !important; opacity: 0.5; cursor: not-allowed !important; border-left: 6px solid #cbd5e0 !important; }
+.etape-bloquee { background-color: #e2e8f0 !important; color: #94a3b8 !important; opacity: 0.6; cursor: not-allowed !important; border-left: 6px solid #cbd5e0 !important; }
 .state-active-focus { outline: 3px solid #0d6efd !important; outline-offset: 2px; font-weight: bold; }
 .visu-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); margin-top: 30px; }
 .visu-row { display: flex; align-items: center; padding: 15px 12px; border-bottom: 1px solid #edf2f7; }
@@ -68,89 +68,73 @@
 				</div>
 			</div>
 		</div>
-
+		
 		<div class="navigation-etapes" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);">
 			<h3 style="border-left: 5px solid #3498db; padding-left: 15px; margin-top: 0;">Cycle de validation du modèle</h3>
 
-<div class="grid-boutons">
-    <c:forEach var="etape" items="${etapesTemplate}">
-        
-        <%-- 1. Est-ce que l'étape elle-même est déjà validée ? --%>
-        <c:set var="cleEtape" value="[${etape.place}]" />
-        <c:set var="isValidee" value="${fn:contains(etapesValideesChaine, cleEtape)}" />
+			<div class="grid-boutons">
+				<c:forEach var="etape" items="${etapesTemplate}">
+					<c:set var="etatDeLEtape" value="${etatsEtapesMap[etape.place]}" />
+					<c:set var="cleEtape" value="[${etape.place}]" />
+					<c:set var="isValidee" value="${fn:contains(etapesValideesChaine, cleEtape)}" />
+					<c:set var="isBloquee" value="${etatDeLEtape == 'BLOQUE'}" />
 
-        <%-- 2. APPLICATION STRICTE DE TA RÈGLE DE DÉBLOCAGE SUR ATTENTE_PLACE --%>
-        <c:choose>
-            <%-- Cas A : Pas de prérequis configuré (NULL ou <= 0) -> Débloquée d'office --%>
-            <c:when test="${empty etape.attentePlace || etape.attentePlace <= 0}">
-                <c:set var="parentFait" value="true" />
-            </c:when>
-            
-            <%-- Cas B : Un prérequis existe -> On vérifie s'il est présent dans la chaîne des étapes validées --%>
-            <c:otherwise>
-                <c:set var="cleAttente" value="[${etape.attentePlace}]" />
-                <c:set var="parentFait" value="${fn:contains(etapesValideesChaine, cleAttente)}" />
-            </c:otherwise>
-        </c:choose>
-        
-        <%-- 3. Déduction des états d'affichage --%>
-        <c:set var="isEnCours" value="${!isValidee && parentFait}" />
-        <c:set var="isBloquee" value="${!isValidee && !parentFait}" />
+					<c:choose>
+						<c:when test="${isValidee}"><c:set var="colorClass" value="etape-validee" /></c:when>
+						<c:when test="${isBloquee}"><c:set var="colorClass" value="etape-bloquee" /></c:when>
+						<c:otherwise><c:set var="colorClass" value="etape-non-faite" /></c:otherwise>
+					</c:choose>
 
-        <%-- 4. Attribution des classes CSS --%>
-        <c:choose>
-            <c:when test="${isValidee}"><c:set var="colorClass" value="etape-validee" /></c:when>
-            <c:when test="${isEnCours}"><c:set var="colorClass" value="etape-non-faite" /></c:when>
-            <c:otherwise><c:set var="colorClass" value="etape-bloquee" /></c:otherwise>
-        </c:choose>
+					<c:set var="activeFocusClass" value="${etape.place == numEtapeActive ? 'state-active-focus' : ''}" />
 
-        <c:set var="activeFocusClass" value="${etape.place == numEtapeActive ? 'state-active-focus' : ''}" />
-
-        <%-- 5. Rendu du bouton --%>
-        <button type="button"
-            <c:if test="${!isBloquee}">onclick="window.location.href='saisie-etape?id_workflow=${workflow.id}&num_etape=${etape.place}'"</c:if>
-            class="btn-etape ${colorClass} ${activeFocusClass}"
-            <c:if test="${isBloquee}">disabled="disabled" style="cursor: not-allowed;"</c:if>>
-            <div style="font-size: 0.85em; font-weight: bold; opacity: 0.8;">Étape ${etape.place}</div>
-            <div class="step-role" style="font-size: 0.95em; text-align: center;">${etape.nomEtape}</div>
-            
-            <c:if test="${isBloquee}">
-                <div style="font-size: 0.75em; color: #e53e3e; margin-top: 4px; font-weight: bold;">Bloqué</div>
-            </c:if>
-            <c:if test="${isEnCours}">
-                <div style="font-size: 0.75em; color: #0d6efd; margin-top: 4px; font-weight: bold;">À renseigner</div>
-            </c:if>
-        </button>
-    </c:forEach>
-</div>
+					<button type="button"
+						<c:if test="${!isBloquee}">onclick="window.location.href='saisie-etape?id_workflow=${workflow.id}&num_etape=${etape.place}'"</c:if>
+						class="btn-etape ${colorClass} ${activeFocusClass}"
+						<c:if test="${isBloquee}">disabled="disabled" style="cursor: not-allowed; opacity: 0.55;"</c:if>>
+						
+						<div style="font-size: 0.85em; font-weight: bold; opacity: 0.8;">Étape ${etape.place}</div>
+						<div class="step-role" style="font-size: 0.95em; text-align: center;">${etape.nomEtape}</div>
+						
+						<c:choose>
+							<c:when test="${isBloquee}">
+								<div style="font-size: 0.75em; color: #718096; margin-top: 4px; font-weight: bold;">🔒 Bloqué</div>
+							</c:when>
+							<c:when test="${isValidee}">
+								<div style="font-size: 0.75em; color: #198754; margin-top: 4px; font-weight: bold;"> Validée</div>
+							</c:when>
+							<c:otherwise>
+								<div style="font-size: 0.75em; color: #0d6efd; margin-top: 4px; font-weight: bold;">À renseigner</div>
+							</c:otherwise>
+						</c:choose>
+					</button>
+				</c:forEach>
+			</div>
+		</div>
+		
 		<div class="visu-container">
 			<c:if test="${isClosed}">
 				<div class="status-banner" style="background-color: #fff5f5; border: 1px solid #feb2b2;">
 					<span style="font-size: 24px; margin-right: 15px;">🔒</span>
 					<div>
 						<strong style="color: #c53030;">Dossier Clôturé</strong><br>
-						<small style="color: #4a5568;">Finalisé le : <fmt:formatDate value="${workflow.dateFinalisation}" pattern="dd/MM/yyyy" /></small>
+						<small style="color: #4a5568;">L'ensemble du dossier est passé en mode consultation (Lecture seule).</small>
 					</div>
 				</div>
 			</c:if>
 
 			<c:choose>
-				<c:when test="${empty donneesEtape && !canEdit && !currentEtape.estFinale}">
-					<div class="info-box" style="text-align: center; padding: 40px; color: #718096; background: #f7fafc; border-radius: 6px;">
-						<p>Cette étape n'a pas encore de données renseignées ou vous n'avez pas le rôle requis pour y accéder.</p>
+				<c:when test="${modeAffichage == 'BLOQUE'}">
+					<div class="info-box" style="text-align: center; padding: 40px; color: #e53e3e; background: #fff5f5; border: 1px dashed #feb2b2; border-radius: 6px;">
+						<span style="font-size: 40px;">🔒</span>
+						<h3>Étape Indisponible</h3>
+						<p>Les conditions d'enchaînement ou les habilitations liées à votre rôle ne vous permettent pas d'accéder à cette étape.</p>
 					</div>
 				</c:when>
 
 				<c:otherwise>
-					<c:set var="modeEditionForce" value="true" />
-					<c:forEach var="d" items="${donneesEtape}">
-						<c:if test="${not empty d.attribut}">
-							<c:set var="modeEditionForce" value="false" />
-						</c:if>
-					</c:forEach>
-					<c:if test="${isClosed}">
-						<c:set var="modeEditionForce" value="false" />
-					</c:if>
+					<c:set var="isInitialSaisie" value="${modeAffichage == 'SAISIE'}" />
+					<c:set var="isEditionMode" value="${modeAffichage == 'EDITION'}" />
+					<c:set var="isPureVisualisation" value="${modeAffichage == 'VISUALISATION' || isClosed}" />
 
 					<form action="${pageContext.request.contextPath}/saisie-etape" method="post">
 						<input type="hidden" name="id_workflow" value="${workflow.id}">
@@ -159,111 +143,135 @@
 						<input type="hidden" name="is_etape_finale" value="${currentEtape.estFinale}">
 
 						<div class="step-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #edf2f7; padding-bottom: 15px;">
-							<h2 style="margin: 0; color: #2d3748;">Saisie : ${currentEtape.nomEtape} (Étape ${numEtapeActive})</h2>
+							<h2 style="margin: 0; color: #2d3748;">
+								Gestion : ${currentEtape.nomEtape} (Étape ${numEtapeActive})
+							</h2>
 
 							<div>
 								<c:choose>
-									<c:when test="${canEdit && !isClosed}">
-										<button type="button" id="btn-modifier" onclick="activerEdition()" class="btn-action" 
-												style="background: #3182ce; color: white; ${modeEditionForce ? 'display: none;' : ''}">Modifier</button>
-										<button type="submit" id="btn-enregistrer" class="btn-action" 
-												style="background: #38a169; color: white; ${modeEditionForce ? 'display: inline-block;' : 'display: none;'}">Enregistrer et Valider</button>
+									<c:when test="${isPureVisualisation}">
+										<span style="color: #4a5568; font-weight: bold; font-size: 0.9em; background: #edf2f7; padding: 6px 12px; border-radius: 4px;">👁️ Mode Visualisation</span>
 									</c:when>
-									<c:otherwise>
-										<span style="color: #e53e3e; font-weight: bold; font-size: 0.9em;">🔒 Consultation uniquement</span>
-									</c:otherwise>
+									
+									<c:when test="${isEditionMode}">
+										<button type="button" id="btn-modifier" onclick="activerEdition()" class="btn-action" style="background: #3182ce; color: white;">Modifier l'étape</button>
+										<button type="submit" id="btn-enregistrer" class="btn-action" style="background: #38a169; color: white; display: none;">Enregistrer les modifications</button>
+									</c:when>
+
+									<c:when test="${isInitialSaisie}">
+										<button type="submit" id="btn-enregistrer" class="btn-action" style="background: #38a169; color: white; display: inline-block;">Enregistrer et Valider</button>
+									</c:when>
 								</c:choose>
 							</div>
 						</div>
 
-						<fieldset id="fs-edition" ${canEdit && modeEditionForce ? '' : 'disabled'} style="border: none; padding: 0; margin: 0;">
+						<fieldset id="fs-edition" ${isInitialSaisie && !isPureVisualisation ? '' : 'disabled="disabled"'} style="border: none; padding: 0; margin: 0;">
 							
 							<c:forEach var="d" items="${donneesEtape}" varStatus="status">
-								<c:set var="isChampConditionnel" value="${d.hasContrainte && d.etapeMaitre == numEtapeActive}" />
-								<c:set var="doitEtreMasque" value="${isChampConditionnel && d.valeurActuelleMaitre != d.valeurCible}" />
-
-								<div class="visu-row row-champ" 
-									 id="row-${d.idTemplateDonnee}"
-									 style="${doitEtreMasque ? 'display: none;' : 'display: flex;'}"
-									 <c:if test="${isChampConditionnel}">
-										data-depend-de="${d.idTemplateMaitre}"
-										data-valeur-cible="${d.valeurCible}"
-									 </c:if>>
-									 
-									<input type="hidden" name="id_donne_${status.index}" value="${d.idDonne}"> 
-									<input type="hidden" name="id_template_donnee_${status.index}" value="${d.idTemplateDonnee}"> 
-									<input type="hidden" name="type_${status.index}" value="${d.nomChamp}"> 
-									<input type="hidden" name="ref_${status.index}" value="${d.refContrainte}">
-
-									<div style="flex: 1; font-weight: 600; color: #4a5568; padding-right: 15px;">
-										${d.nomChamp}
-										<c:if test="${d.estObligatoire}">
-											<span class="required-star">*</span>
-										</c:if>
-									</div>
-
-									<div style="flex: 1.5; padding-right: 15px;">
-										<span class="view-mode" style="font-size: 15px; color: #2d3748; ${modeEditionForce ? 'display: none;' : ''}">
-											${not empty d.attribut ? d.attribut : '<em>(Vide)</em>'}
-										</span>
-
-										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
-											<c:choose>
-												<c:when test="${d.refContrainte == 'Bool'}">
-													<select name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire ? 'required' : ''}>
-														<option value="">-- Sélectionner --</option>
-														<option value="Oui" ${d.attribut == 'Oui' ? 'selected' : ''}>OUI</option>
-														<option value="Non" ${d.attribut == 'Non' ? 'selected' : ''}>NON</option>
-													</select>
-												</c:when>
-
-												<c:when test="${not empty d.refContrainte && not empty mapCatalogues[d.refContrainte]}">
-													<select name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire ? 'required' : ''}>
-														<option value="">-- Sélectionner un(e) ${d.refContrainte} --</option>
-														<c:forEach var="optionValeur" items="${mapCatalogues[d.refContrainte]}">
-															<option value="${optionValeur}" ${d.attribut == optionValeur ? 'selected' : ''}>${optionValeur}</option>
-														</c:forEach>
-													</select>
-												</c:when>
-
-												<c:otherwise>
-													<c:choose>
-														<c:when test="${d.typeComposant == 'textarea'}">
-															<textarea name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire ? 'required' : ''} placeholder="Saisir...">${d.attribut}</textarea>
-														</c:when>
-														<c:otherwise>
-															<input type="${not empty d.typeComposant ? d.typeComposant : 'text'}"
-																name="attr_${status.index}" value="${d.attribut}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}"
-																${d.estObligatoire ? 'required' : ''} placeholder="Saisir...">
-														</c:otherwise>
-													</c:choose>
-												</c:otherwise>
-											</c:choose>
-										</div>
-									</div>
-
-									<div style="flex: 1.5; display: flex; flex-direction: column; gap: 6px;">
-										<c:if test="${d.aCommentaire}">
-											<div>
-												<div class="view-mode" style="color: #718096; font-size: 0.85em; font-style: italic; ${modeEditionForce ? 'display: none;' : ''}">
-													Com. : ${not empty d.commentaire ? d.commentaire : '(Aucun)'}
-												</div>
-												<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
-													<input type="text" name="comm_${status.index}" value="${d.commentaire}" class="form-control-dyn" placeholder="Ajouter une remarque...">
-												</div>
-											</div>
-										</c:if>
-
-										<c:if test="${d.aDate}">
-											<div style="margin-top: 4px;">
-												<div class="view-mode" style="font-size: 0.8em; color: #4a5568; ${modeEditionForce ? 'display: none;' : ''}">Date : ${not empty d.date ? d.date : '(Non renseignée)'}</div>
-												<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
-													<input type="date" name="date_${status.index}" value="${d.date}" class="form-control-dyn">
-												</div>
-											</div>
-										</c:if>
-									</div>
-								</div>
+    
+							    <%-- Préparation du JSON des contraintes si le maître est sur la même étape --%>
+							    <c:set var="jsonContraintes" value="[" />
+							    <c:if test="${d.hasContrainte && d.etapeMaitre == numEtapeActive}">
+							        <c:set var="jsonContraintes" value='${jsonContraintes}{"idMaitre": "${d.idTemplateMaitre}", "operateur": "${d.operateurContrainte}", "valeurCible": "${d.valeurCible}"}' />
+							    </c:if>
+							    <c:set var="jsonContraintes" value="${jsonContraintes}]" />
+							    
+							    <%-- Détermination du blocage côté serveur (si le maître est en amont et sa valeur ne correspond pas) --%>
+									<c:set var="doitEtreMasque" value="false" />
+									<c:if test="${d.hasContrainte && d.etapeMaitre != numEtapeActive}">
+									    <c:choose>
+									        <%-- Si l'opérateur est l'égalité et que les valeurs NE correspondent PAS -> On masque --%>
+									        <c:when test="${(d.operateurContrainte == '=' || d.operateurContrainte == '==') && d.valeurActuelleMaitre != d.valeurCible}">
+									            <c:set var="doitEtreMasque" value="true" />
+									        </c:when>
+									        <%-- Si l'opérateur est la différence (!=) et que les valeurs SONT égales -> On masque --%>
+									        <c:when test="${(d.operateurContrainte == '!=' || d.operateurContrainte == '≠') && d.valeurActuelleMaitre == d.valeurCible}">
+									            <c:set var="doitEtreMasque" value="true" />
+									        </c:when>
+									    </c:choose>
+									</c:if>							    <%-- MODIFICATION CRITIQUE : Si doitEtreMasque est vrai, on ne génère pas du tout l'élément HTML en sortie --%>
+							    <c:if test="${!doitEtreMasque}">
+								    <div class="visu-row row-champ"
+								        id="row-${d.idTemplateDonnee}"
+								        data-contraintes='${jsonContraintes}'
+								        data-obligatoire-origine="${d.estObligatoire}">
+								        
+								        <input type="hidden" name="id_donne_${status.index}" value="${d.idDonne}"> 
+								        <input type="hidden" name="id_template_donnee_${status.index}" value="${d.idTemplateDonnee}"> 
+								        <input type="hidden" name="type_${status.index}" value="${d.nomChamp}"> 
+								        <input type="hidden" name="ref_${status.index}" value="${d.refContrainte}">
+								
+								        <div style="flex: 1; font-weight: 600; color: #4a5568; padding-right: 15px;">
+								            ${d.nomChamp}
+								            <span class="required-star" style="${d.estObligatoire ? 'display: inline;' : 'display: none;'}">*</span>
+								        </div>
+								
+								        <div style="flex: 1.5; padding-right: 15px;">
+								            <c:if test="${!isInitialSaisie}">
+								                <span class="view-mode" style="font-size: 15px; color: #2d3748;">
+								                    ${not empty d.attribut ? d.attribut : '<em>(Vide)</em>'}
+								                </span>
+								                <input type="hidden" class="champ-declencheur" data-id-template="${d.idTemplateDonnee}" value="${d.attribut}">
+								            </c:if>
+								
+								            <div class="edit-mode" style="${isInitialSaisie ? 'display: block;' : 'display: none;'}">
+								                <c:choose>
+								                    <c:when test="${d.refContrainte == 'Bool'}">
+								                        <select name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire && isInitialSaisie ? 'required' : ''}>
+								                            <option value="">-- Sélectionner --</option>
+								                            <option value="Oui" ${d.attribut == 'Oui' ? 'selected' : ''}>OUI</option>
+								                            <option value="Non" ${d.attribut == 'Non' ? 'selected' : ''}>NON</option>
+								                        </select>
+								                    </c:when>
+								
+								                    <c:when test="${not empty d.refContrainte && not empty mapCatalogues[d.refContrainte]}">
+								                        <select name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire && isInitialSaisie ? 'required' : ''}>
+								                            <option value="">-- Sélectionner un(e) ${d.refContrainte} --</option>
+								                            <c:forEach var="optionValeur" items="${mapCatalogues[d.refContrainte]}">
+								                                <option value="${optionValeur}" ${d.attribut == optionValeur ? 'selected' : ''}>${optionValeur}</option>
+								                            </c:forEach>
+								                        </select>
+								                    </c:when>
+								
+								                    <c:otherwise>
+								                        <c:choose>
+								                            <c:when test="${d.typeComposant == 'textarea'}">
+								                                <textarea name="attr_${status.index}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}" ${d.estObligatoire && isInitialSaisie ? 'required' : ''} placeholder="Saisir...">${d.attribut}</textarea>
+								                            </c:when>
+								                            <c:otherwise>
+								                                <input type="${not empty d.typeComposant ? d.typeComposant : 'text'}"
+								                                    name="attr_${status.index}" value="${d.attribut}" class="form-control-dyn champ-declencheur" data-id-template="${d.idTemplateDonnee}"
+								                                    ${d.estObligatoire && isInitialSaisie ? 'required' : ''} placeholder="Saisir...">
+								                            </c:otherwise>
+								                        </c:choose>
+								                    </c:otherwise>
+								                </c:choose>
+							                </div>
+								        </div>
+								
+								        <div style="flex: 1.5; display: flex; flex-direction: column; gap: 6px;">
+								            <c:if test="${d.aCommentaire}">
+								                <div>
+								                    <div class="view-mode" style="color: #718096; font-size: 0.85em; font-style: italic;">
+								                        Com. : ${not empty d.commentaire ? d.commentaire : '(Aucun)'}
+								                    </div>
+								                    <div class="edit-mode" style="${isInitialSaisie ? 'display: block;' : 'display: none;'}">
+								                        <input type="text" name="comm_${status.index}" value="${d.commentaire}" class="form-control-dyn" placeholder="Ajouter une remarque...">
+								                    </div>
+								                </div>
+								            </c:if>
+								
+								            <c:if test="${d.aDate}">
+								                <div style="margin-top: 4px;">
+								                    <div class="view-mode" style="font-size: 0.8em; color: #4a5568;">Date : ${not empty d.date ? d.date : '(Non renseignée)'}</div>
+								                    <div class="edit-mode" style="${isInitialSaisie ? 'display: block;' : 'display: none;'}">
+								                        <input type="date" name="date_${status.index}" value="${d.date}" class="form-control-dyn">
+								                    </div>
+								                </div>
+								            </c:if>
+								        </div>
+								    </div>
+							    </c:if>
 							</c:forEach>
 
 							<c:if test="${currentEtape.estFinale}">
@@ -275,15 +283,15 @@
 									</div>
 
 									<div style="flex: 1.5; padding-right: 15px;">
-										<span class="view-mode" style="font-weight: bold; color: #2c5282; ${modeEditionForce ? 'display: none;' : ''}">
+										<span class="view-mode" style="font-weight: bold; color: #2c5282; ${isInitialSaisie ? 'display: none;' : 'display: inline;'}">
 											<c:choose>
 												<c:when test="${not empty workflow.dateFinalisation}">Dossier Traité / Clôturé</c:when>
 												<c:otherwise><em>Clôture en attente de saisie</em></c:otherwise>
 											</c:choose>
 										</span>
 										
-										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
-											<select name="decision_finale" class="form-control-dyn" required>
+										<div class="edit-mode" style="${isInitialSaisie ? 'display: block;' : 'display: none;'}">
+											<select name="decision_finale" class="form-control-dyn" ${isInitialSaisie ? 'required' : ''}>
 												<option value="">-- Choisir le verdict final --</option>
 												<option value="Faisable">Faisable (Validation)</option>
 												<option value="Non Faisable">Non Faisable (Refus global)</option>
@@ -293,13 +301,13 @@
 									</div>
 
 									<div style="flex: 1.5; display: flex; flex-direction: column; gap: 8px;">
-										<div class="view-mode" style="font-size: 0.9em; color: #4a5568; ${modeEditionForce ? 'display: none;' : ''}">
+										<div class="view-mode" style="font-size: 0.9em; color: #4a5568; ${isInitialSaisie ? 'display: none;' : 'display: block;'}">
 											${not empty workflow.commentaire ? workflow.commentaire : ''}
 										</div>
-										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'}">
-											<textarea name="commentaire_final" class="form-control-dyn" rows="2" placeholder="Renseigner le motif de clôture obligatoire..." required></textarea>
+										<div class="edit-mode" style="${isInitialSaisie ? 'display: block;' : 'display: none;'}">
+											<textarea name="commentaire_final" class="form-control-dyn" rows="2" placeholder="Renseigner le motif de clôture obligatoire..." ${isInitialSaisie ? 'required' : ''}></textarea>
 										</div>
-										<div class="edit-mode" style="${modeEditionForce ? 'display: block;' : 'display: none;'} margin-top: 4px;">
+										<div class="edit-mode" style="${isInitialSaisie ? 'display: block;' : 'display: none;'} margin-top: 4px;">
 											<span style="font-size: 0.8em; color: #718096; font-weight: bold;">Date de Clôture (Système) :</span>
 											<input type="date" name="date_finalisation" value="${currentDateIso}" class="form-control-dyn" readonly style="background: #e2e8f0; color: #4a5568;">
 										</div>
@@ -312,10 +320,9 @@
 				</c:otherwise>
 			</c:choose>
 		</div>
-		
 		<div style="margin-top: 20px;">
 			<a href="${pageContext.request.contextPath}/downloadPdf?id=${workflow.id}" class="btn-pdf">
-				📄 Télécharger le récapitulatif PDF
+				Télécharger le récapitulatif PDF
 			</a>
 		</div>
 	</div>
@@ -324,36 +331,91 @@
         function activerEdition() {
             document.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'block');
+            
             document.getElementById('btn-modifier').style.display = 'none';
             document.getElementById('btn-enregistrer').style.display = 'inline-block';
+            
             const fs = document.getElementById('fs-edition');
-            if(fs) fs.removeAttribute('disabled');
+            if(fs) {
+                fs.removeAttribute('disabled');
+                document.querySelectorAll('.row-champ:not([style*="display: none"]) .form-control-dyn[data-id-template]').forEach(el => {
+                     const row = el.closest('.row-champ');
+                     if(row && row.getAttribute('data-obligatoire-origine') === 'true') {
+                         el.setAttribute('required', 'required');
+                     }
+                });
+            }
+            evaluerDependances();
+        }
+
+        function evaluerDependances() {
+            document.querySelectorAll('.row-champ[data-contraintes]').forEach(function(row) {
+                const attrContraintes = row.getAttribute('data-contraintes');
+                if (!attrContraintes || attrContraintes === "[]") return; 
+
+                const contraintes = JSON.parse(attrContraintes);
+                const isObligatoireOrigine = row.getAttribute('data-obligatoire-origine') === 'true';
+                const fs = document.getElementById('fs-edition');
+                const extendsEditionActive = fs && !fs.hasAttribute('disabled');
+                
+                let toutesLesConditionsRemplies = true;
+
+                contraintes.forEach(function(c) {
+                    const champMaitre = document.querySelector('.champ-declencheur[data-id-template="' + c.idMaitre + '"]');
+                    
+                    if (champMaitre) {
+                        const valSaisie = champMaitre.value;
+                        let cRespectee = false;
+
+                        if (c.operateur === ">" || c.operateur === "<" || c.operateur === ">=" || c.operateur === "<=") {
+                            const numSaisi = parseFloat(valSaisie);
+                            const numCible = parseFloat(c.valeurCible);
+                            if (!isNaN(numSaisi) && !isNaN(numCible)) {
+                                if (c.operateur === ">") cRespectee = numSaisi > numCible;
+                                if (c.operateur === "<") cRespectee = numSaisi < numCible;
+                                if (c.operateur === ">=") cRespectee = numSaisi >= numCible;
+                                if (c.operateur === "<=") cRespectee = numSaisi <= numCible;
+                            }
+                        } else if (c.operateur === "==" || c.operateur === "=") {
+                            cRespectee = (valSaisie === c.valeurCible);
+                        } else if (c.operateur === "!=") {
+                            cRespectee = (valSaisie !== c.valeurCible && valSaisie !== "");
+                        }
+
+                        if (!cRespectee) {
+                            toutesLesConditionsRemplies = false;
+                        }
+                    } else {
+                        toutesLesConditionsRemplies = false;
+                    }
+                });
+
+                const elementsFormulaire = row.querySelectorAll('input, select, textarea');
+                const etoileObligatoire = row.querySelector('.required-star');
+                
+                if (toutesLesConditionsRemplies) {
+                    row.style.setProperty('display', 'flex', 'important');
+                    elementsFormulaire.forEach(el => {
+                        el.removeAttribute('disabled');
+                        if (isObligatoireOrigine && extendsEditionActive) el.setAttribute('required', 'required');
+                    });
+                    if (etoileObligatoire && isObligatoireOrigine) etoileObligatoire.style.display = 'inline';
+                } else {
+                    row.style.setProperty('display', 'none', 'important');
+                    elementsFormulaire.forEach(el => {
+                        el.setAttribute('disabled', 'disabled');
+                        el.removeAttribute('required');
+                    });
+                    if (etoileObligatoire) etoileObligatoire.style.display = 'none';
+                }
+            });
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-            function evaluerDependances() {
-                document.querySelectorAll('.row-champ[data-depend-de]').forEach(function(row) {
-                    const idMaitre = row.getAttribute('data-depend-de');
-                    const valeurCible = row.getAttribute('data-valeur-cible');
-                    const champMaitre = document.querySelector('.champ-declencheur[data-id-template="' + idMaitre + '"]');
-                    
-                    if (champMaitre) {
-                        if (champMaitre.value === valeurCible) {
-                            row.style.display = 'flex';
-                            row.querySelectorAll('input, select, textarea').forEach(el => el.removeAttribute('disabled'));
-                        } else {
-                            row.style.setProperty('display', 'none', 'important');
-                            row.querySelectorAll('input, select, textarea').forEach(el => el.setAttribute('disabled', 'disabled'));
-                        }
-                    }
-                });
-            }
-
             document.querySelectorAll('.champ-declencheur').forEach(function(champ) {
                 champ.addEventListener('change', evaluerDependances);
                 champ.addEventListener('input', evaluerDependances);
             });
-
             evaluerDependances();
         });
     </script>

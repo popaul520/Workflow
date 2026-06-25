@@ -154,6 +154,7 @@ public class TemplateDAO {
     }
     
     // 7. Récupérer la configuration d'une étape précise
+ // 7. Récupérer la configuration d'une étape précise
     public template_etape getEtapeConfig(int idTemplate, int numEtape) {
         template_etape etape = null;
         String sql = "SELECT * FROM template_etape WHERE id_template_workflow = ? AND place = ?";
@@ -170,14 +171,16 @@ public class TemplateDAO {
                     etape.setId(rs.getInt("id"));
                     etape.setIdTemplateWorkflow(rs.getInt("id_template_workflow"));
                     etape.setNomEtape(rs.getString("nom_etape"));
-                    etape.setPlace(rs.getInt("place")); 
+                    
+                    etape.setPlace(rs.getInt("place"));         
+                    etape.setAttentePlace(rs.getInt("attente_place"));
                     
                     etape.setRoleAssocie(rs.getInt("role_associe")); 
                     etape.setEstFinale(rs.getBoolean("est_finale"));
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) { 
+            ex.printStackTrace(); 
         }
         return etape;
     }
@@ -198,9 +201,12 @@ public class TemplateDAO {
                     etape.setIdTemplateWorkflow(rs.getInt("id_template_workflow"));
                     etape.setNomEtape(rs.getString("nom_etape"));
                     
-                    // 🛠️ FIX ICI : Utilise setPlace pour que ${etape.place} fonctionne dans la JSP
+                    // FIX ICI : Utilise setPlace pour que ${etape.place} fonctionne dans la JSP
                     etape.setPlace(rs.getInt("place")); 
-                    
+                 // Dans getEtapesByTemplate(int idTemplate) :
+                    etape.setPlace(rs.getInt("place")); 
+                    etape.setAttentePlace(rs.getInt("attente_place")); 
+                    etape.setEstFinale(rs.getBoolean("est_finale")); 
                     etape.setRoleAssocie(rs.getInt("role_associe"));
                     liste.add(etape);
                 }
@@ -217,16 +223,34 @@ public class TemplateDAO {
     public List<Map<String, Object>> getChampsEtDonnees(int idWorkflow, int idTemplateWorkflow, int numEtape) {
         List<Map<String, Object>> liste = new ArrayList<>();
         
-        String sql = "SELECT " +
-                     "  dt.id AS id_template_donnee, dt.nom_champ, dt.type_composant, " +
-                     "  dt.a_commentaire, dt.a_date, dt.est_obligatoire, dt.ref_contrainte, " +
-                     "  d.id_donne, d.attribut, d.commentaire, d.date " +
-                     "FROM template_donnee dt " +
-                     "LEFT JOIN donnee d ON dt.id = d.id_template_donnee AND d.id_workflow = ? " +
-                     "WHERE dt.id_template_etape = (" +
-                     "    SELECT te.id FROM template_etape te WHERE te.id_template_workflow = ? AND te.place = ?" +
-                     ") " +
-                     "ORDER BY dt.ordre_affichage";
+        // Utilisation d'alias en minuscules (snake_case) pour éviter les caprices du driver JDBC PostgreSQL
+        String sql = "SELECT "
+                + "    td.id AS id_template_donnee, "
+                + "    td.nom_champ AS nom_champ, "
+                + "    td.type_composant AS type_composant, "
+                + "    td.a_commentaire AS a_commentaire, "
+                + "    td.a_date AS a_date, "
+                + "    td.est_obligatoire AS est_obligatoire, "
+                + "    td.ref_contrainte AS ref_contrainte, "
+                + "    d.id_donne AS id_donne, " 
+                + "    d.attribut AS attribut, "
+                + "    d.commentaire AS commentaire, "
+                + "    d.date AS date_saisie, " 
+                + "    CASE WHEN cd.id_donnee IS NOT NULL THEN true ELSE false END AS has_contrainte, "
+                + "    c.id_donnee AS id_template_maitre, " 
+                + "    c.contrainte AS valeur_cible, "   
+                + "    cond.condition AS operateur_contrainte, " 
+                + "    td_maitre.id_template_etape AS etape_maitre " 
+                + "FROM public.template_donnee td "
+                + "LEFT JOIN public.donnee d ON d.id_template_donnee = td.id AND d.id_workflow = ? "
+                + "LEFT JOIN public.contrainte_donnee cd ON cd.id_donnee = td.id " 
+                + "LEFT JOIN public.contrainte c ON c.id = cd.id_contrainte " 
+                + "LEFT JOIN public.condition cond ON cond.id = c.id_condition " 
+                + "LEFT JOIN public.template_donnee td_maitre ON td_maitre.id = c.id_donnee "
+                + "LEFT JOIN public.template_etape te ON te.id = td.id_template_etape "
+                + "WHERE te.id_template_workflow = ? "
+                + "  AND te.place = ? " 
+                + "ORDER BY td.ordre_affichage ASC;";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -239,6 +263,7 @@ public class TemplateDAO {
                 while (rs.next()) {
                     Map<String, Object> row = new HashMap<>();
                     
+                    // Récupération via les alias en minuscules stables, puis conversion en clés CamelCase attendues par ton service
                     row.put("idTemplateDonnee", rs.getInt("id_template_donnee"));
                     row.put("nomChamp", rs.getString("nom_champ"));
                     row.put("typeComposant", rs.getString("type_composant"));
@@ -250,7 +275,14 @@ public class TemplateDAO {
                     row.put("idDonne", rs.getInt("id_donne")); 
                     row.put("attribut", rs.getString("attribut"));
                     row.put("commentaire", rs.getString("commentaire"));
-                    row.put("date", rs.getString("date"));
+                    row.put("date", rs.getString("date_saisie"));
+                    
+                    row.put("hasContrainte", rs.getBoolean("has_contrainte"));
+                    row.put("idTemplateMaitre", rs.getObject("id_template_maitre") != null ? rs.getInt("id_template_maitre") : null);
+                    row.put("valeurCible", rs.getString("valeur_cible"));
+                    row.put("operateurContrainte", rs.getString("operateur_contrainte"));
+                    row.put("etapeMaitre", rs.getInt("etape_maitre"));
+                    
                     liste.add(row);
                 }
             }
@@ -259,7 +291,6 @@ public class TemplateDAO {
         }
         return liste;
     }
-    
 
     public List<templateWorkflow> getTemplatesActifs() {
         List<templateWorkflow> list = new ArrayList<>();
@@ -352,7 +383,5 @@ public class TemplateDAO {
         }
         return row;
     }
-
-
     
 }

@@ -10,7 +10,6 @@ import jakarta.servlet.ServletContextListener;
 @jakarta.servlet.annotation.WebListener
 public class AppContextListener implements ServletContextListener {
     private ScheduledExecutorService scheduler;
-
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         scheduler = Executors.newSingleThreadScheduledExecutor();

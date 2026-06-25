@@ -11,7 +11,7 @@
     <style>
         .main-container { padding: 40px; font-family: 'Segoe UI', sans-serif; max-width: 1300px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .grid-split { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; }
+        .grid-split { display: grid; grid-template-columns: 1fr 1.3fr; gap: 30px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
         label { font-weight: 600; margin-bottom: 5px; color: #4a5568; font-size: 0.9em; }
         input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 14px; background-color: #fff; }
@@ -25,80 +25,101 @@
         .info-metier { font-size: 0.95em; color: #2d3748; line-height: 1.5; }
         .info-etape { font-size: 0.8em; font-weight: bold; color: #718096; text-transform: uppercase; }
         .expression-logique { font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 1.1em; color: #2b6cb0; margin-top: 4px; }
+        .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+        .grid-boutons { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .btn-etape { padding: 15px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; cursor: pointer; text-align: left; transition: all 0.2s ease; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .btn-etape:hover:not([disabled]) { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .etape-validee { border-left: 4px solid #38a169; background: #f0fff4; }
+        .etape-non-faite { border-left: 4px solid #3182ce; background: #ebf8ff; }
+        .etape-bloquee { border-left: 4px solid #e53e3e; background: #fff5f5; opacity: 0.7; }
+        .state-active-focus { border: 2px solid #3182ce !important; font-weight: bold; }
     </style>
 </head>
 <body class="bg-light">
 
     <div class="main-container">
         <div class="card" style="border-left: 5px solid #3182ce;">
-            <h2>Configuration des règles sur le champ : <span style="color: #3182ce;">${donneeActive.nomChamp}</span></h2>
-            <p class="text-muted" style="margin: 5px 0 0 0;">Étape Actuelle : <strong>Étape ${etapeActive.place}</strong> | Ordre d'affichage : <strong>${donneeActive.ordreAffichage}</strong></p>
+            <div class="actions-bar">
+                <div>
+                    <h2 style="margin: 0;">Configuration des règles sur le champ : <span style="color: #3182ce;">${donneeActive.nomChamp}</span></h2>
+                    <p class="text-muted" style="margin: 5px 0 0 0;">Étape Actuelle : <strong>Étape ${etapeActive.place}</strong> | Ordre d'affichage : <strong>${donneeActive.ordreAffichage}</strong></p>
+                </div>
+                <div>
+                    <a href="saisie-etape?id_workflow=${idWorkflow}&num_etape=${etapeActive.place}" class="btn btn-secondary" style="text-decoration: none;">
+                        ← Retour à la saisie
+                    </a>
+                </div>
+            </div>
         </div>
 
-<div class="grid-boutons">
-    <c:forEach var="etape" items="${etapesTemplate}">
-        
-        <%-- Construit la clé de recherche, ex: "[1]" ou "[2]" --%>
-        <c:set var="cleEtape" value="[${etape.place}]" />
-        
-        <%-- 1. Une étape est validée UNIQUEMENT si son identifiant de place est présent dans l'historique BDD --%>
-        <c:set var="isValidee" value="${fn:contains(etapesValideesChaine, cleEtape)}" />
 
-        <%-- 2. GESTION DU DÉBLOCAGE STRICT (attente_place) --%>
-        <c:choose>
-            <%-- L'étape 1 est toujours accessible au départ --%>
-            <c:when test="${etape.place == 1}">
-                <c:set var="parentFait" value="true" />
-            </c:when>
+        <div class="grid-split">
             
-            <%-- Pas de contrainte d'attente spécifiée -> Dépend de la validation de l'étape précédente (ex: place - 1) --%>
-            <c:when test="${empty etape.attentePlace || etape.attentePlace == 0}">
-                <c:set var="clePrecedente" value="[${etape.place - 1}]" />
-                <c:set var="parentFait" value="${fn:contains(etapesValideesChaine, clePrecedente)}" />
-            </c:when>
-            
-            <%-- Contrainte présente -> Débloqué uniquement si l'étape attendue spécifique est validée en BDD --%>
-            <c:otherwise>
-                <c:set var="cleAttente" value="[${etape.attentePlace}]" />
-                <c:set var="parentFait" value="${fn:contains(etapesValideesChaine, cleAttente)}" />
-            </c:otherwise>
-        </c:choose>
+            <div class="card">
+                <h3 id="form-title" style="margin-top: 0; color: #2d3748;">Ajouter une contrainte de validation</h3>
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 20px;">
+                
+                <form id="regleForm" action="action-contrainte" method="POST">
+                    <input type="hidden" name="action" id="form-action" value="POST">
+                    <input type="hidden" name="id_donnee_cible" value="${donneeActive.id}">
+                    <input type="hidden" name="id_jointure" id="id_jointure" value="">
+                    
+                    <input type="hidden" name="select_etape_actuelle" value="${etapeActive.id}">
+                    
+                    <input type="hidden" id="place_etape_actuelle" value="${etapeActive.place}">
 
-        <%-- 3. Déduction de l'état visuel et des verrous d'accès --%>
-        <c:set var="isEnCours" value="${!isValidee && parentFait}" />
-        <c:set var="isBloquee" value="${!isValidee && !parentFait}" />
+                    <div class="form-group">
+                        <label for="select_etape">1. Étape contenant le champ maître :</label>
+                        <select name="select_etape" id="select_etape" onchange="filtrerDonnees()" required>
+                            <option value="" disabled selected>-- Choisir l'étape --</option>
+                            <c:forEach var="et" items="${etapesTemplate}">
+                                <c:if test="${et.place <= etapeActive.place}">
+                                    <option value="${et.id}" data-place="${et.place}">Étape ${et.place} - ${et.nomEtape}</option>
+                                </c:if>
+                            </c:forEach>
+                        </select>
+                    </div>
 
-        <c:choose>
-            <c:when test="${isValidee}"><c:set var="colorClass" value="etape-validee" /></c:when>
-            <c:when test="${isEnCours}"><c:set var="colorClass" value="etape-non-faite" /></c:when>
-            <c:otherwise><c:set var="colorClass" value="etape-bloquee" /></c:otherwise>
-        </c:choose>
+                    <div class="form-group">
+                        <label for="select_donnee">2. Champ maître (Pilote de la règle) :</label>
+                        <select name="id_donnee_source" id="select_donnee" onchange="filtrerConditionsEtInputs()" disabled required>
+                            <option value="" disabled selected>-- Choisir la donnée --</option>
+                        </select>
+                    </div>
 
-        <c:set var="activeFocusClass" value="${etape.place == numEtapeActive ? 'state-active-focus' : ''}" />
+                    <div class="form-group">
+                        <label for="select_condition">3. Opérateur logique / Condition :</label>
+                        <select name="id_condition" id="select_condition" disabled required>
+                            <option value="" disabled selected>-- Choisir la condition --</option>
+                        </select>
+                    </div>
 
-        <button type="button"
-            <c:if test="${!isBloquee}">onclick="window.location.href='saisie-etape?id_workflow=${workflow.id}&num_etape=${etape.place}'"</c:if>
-            class="btn-etape ${colorClass} ${activeFocusClass}"
-            <c:if test="${isBloquee}">disabled="disabled" style="cursor: not-allowed;"</c:if>>
-            <div style="font-size: 0.85em; font-weight: bold; opacity: 0.8;">Étape ${etape.place}</div>
-            <div class="step-role" style="font-size: 0.95em; text-align: center;">${etape.nomEtape}</div>
-            
-            <c:if test="${isBloquee}">
-                <div style="font-size: 0.75em; color: #e53e3e; margin-top: 4px; font-weight: bold;">Bloqué</div>
-            </c:if>
-            <c:if test="${isEnCours}">
-                <div style="font-size: 0.75em; color: #0d6efd; margin-top: 4px; font-weight: bold;">À renseigner</div>
-            </c:if>
-        </button>
-    </c:forEach>
-</div>
+                    <div class="form-group">
+                        <label for="input_valeur">4. Valeur attendue :</label>
+                        <div id="conteneur_input_dynamique">
+                            <input type="text" name="valeur_contrainte" id="input_valeur" required placeholder="Saisir une valeur...">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 25px;">
+                        <button type="submit" id="btn-submit" class="btn btn-success" style="flex: 1;">
+                            Valider la contrainte
+                        </button>
+                        <button type="button" id="btn-cancel" class="btn btn-secondary" onclick="annulerModif()" style="display: none;">
+                            Annuler
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <div class="card">
-                <h3 style="margin-top: 0;">Contraintes actives requises</h3>
+                <h3 style="margin-top: 0; color: #2d3748;">Contraintes actives requises</h3>
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 20px;">
                 
                 <c:choose>
                     <c:when test="${empty contraintesAssociees}">
-                        <div style="text-align: center; padding: 30px; color: #a0aec0; border: 1px dashed #cbd5e0; border-radius: 6px;">
+                        <div style="text-align: center; padding: 50px 30px; color: #a0aec0; border: 1px dashed #cbd5e0; border-radius: 6px; background: #fafafa;">
                             Aucune règle de contrainte définie pour ce champ.
                         </div>
                     </c:when>
@@ -109,7 +130,7 @@
                                     <span class="info-etape">Étape ${c.placeEtapeSource}</span><br>
                                     Champ : <strong>${c.nomChampSource}</strong>
                                     <div class="expression-logique">
-                                        ${donneeActive.nomChamp} doit être ${c.symboleCondition} ${c.valeurAttendue}
+                                        ${donneeActive.nomChamp} doit être visible si ${c.nomChampSource} ${c.symboleCondition} "${c.valeurAttendue}"
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 8px;">
@@ -128,11 +149,11 @@
                     </c:otherwise>
                 </c:choose>
             </div>
+            
         </div>
     </div>
 
     <script>
-        // 1. Récupération et tri du référentiel des conditions
         const conditionsBrutes = [
             <c:forEach var="cond" items="${conditionsReferentiel}" varStatus="status">
                 { id: "${cond.id}", symbole: "${cond.condition}" }${!status.last ? ',' : ''}
@@ -148,14 +169,12 @@
             })
             .sort((a, b) => ordreSouhaite.indexOf(a.id) - ordreSouhaite.indexOf(b.id));
 
-        // 2. Base de données des champs du workflow
         const baseDonnees = [
             <c:forEach var="d" items="${toutesDonnees}" varStatus="status">
                 { id: "${d.id}", idEtape: "${d.id_template_etape}", nom: "${d.nom_champ}", composant: "${d.type_composant}", ordre: ${d.ordre_affichage}, ref: "${d.ref_contrainte}" }${!status.last ? ',' : ''}
             </c:forEach>
         ];
 
-        // 3. Catalogues de contraintes physiques
         const cataloguesContraintes = {
             <c:forEach var="entry" items="${mapCatalogues}" varStatus="status">
                 "${entry.key}": [ <c:forEach var="val" items="${entry.value}" varStatus="vStatus">"${val}"${!vStatus.last ? ',' : ''}</c:forEach> ]${!status.last ? ',' : ''}
@@ -165,17 +184,29 @@
         const idEtActuelle = "${etapeActive.id}";
         const ordreActuel = Number("${donneeActive.ordreAffichage}");
 
-        // 4. Moteur de filtrage des données sources
         function filtrerDonnees() {
             const selectEtape = document.getElementById('select_etape');
             const selectDonnee = document.getElementById('select_donnee');
             const etapeSelectionnee = selectEtape.value;
             
+            const optionEtape = selectEtape.options[selectEtape.selectedIndex];
+            if (!optionEtape || etapeSelectionnee === "") return;
+            
+            const placeEtapeSource = Number(optionEtape.getAttribute('data-place'));
+            const placeEtapeActuelle = Number(document.getElementById('place_etape_actuelle').value);
+            
             selectDonnee.innerHTML = '<option value="" disabled selected>-- Choisir la donnée --</option>';
             
             const donneesFiltrees = baseDonnees.filter(d => {
                 if (String(d.idEtape) === String(etapeSelectionnee)) {
-                    if (String(etapeSelectionnee) === String(idEtActuelle)) {
+                    // Restriction sur les types requis : ref_contrainte non nulle OU type === "number"
+                    const aUneRef = (d.ref && d.ref !== "" && d.ref !== "null");
+                    const estUnNombre = (d.composant && d.composant.toLowerCase() === "number");
+                    
+                    if (!aUneRef && !estUnNombre) return false;
+
+                    // Si c'est l'étape actuelle, filtrer sur l'ordre d'affichage
+                    if (placeEtapeSource === placeEtapeActuelle) {
                         return Number(d.ordre) < ordreActuel;
                     }
                     return true;
@@ -186,7 +217,7 @@
             donneesFiltrees.forEach(d => {
                 let opt = document.createElement('option');
                 opt.value = d.id;
-                opt.innerText = d.nom;
+                opt.innerText = d.nom + " (" + d.composant + ")";
                 selectDonnee.appendChild(opt);
             });
 
@@ -195,17 +226,13 @@
             } else {
                 selectDonnee.disabled = true;
                 let opt = document.createElement('option');
-                opt.value = "";
-                opt.disabled = true;
-                opt.selected = true;
-                opt.innerText = "-- Aucune donnée valide trouvée --";
+                opt.value = ""; opt.disabled = true; opt.selected = true;
+                opt.innerText = "-- Aucune donnée éligible trouvée --";
                 selectDonnee.appendChild(opt);
             }
-            
             document.getElementById('select_condition').disabled = true;
         }
 
-        // 5. Moteur de filtrage des opérateurs et génération des inputs
         function filtrerConditionsEtInputs() {
             const idDonneeSel = document.getElementById('select_donnee').value;
             const donneeObj = baseDonnees.find(d => String(d.id) === String(idDonneeSel));
@@ -213,14 +240,12 @@
             const conteneurInput = document.getElementById('conteneur_input_dynamique');
             
             selectCondition.innerHTML = '<option value="" disabled selected>-- Choisir la condition --</option>';
-            
             if (!donneeObj) return;
 
             let estTexte = (donneeObj.composant.toLowerCase().includes('text') || donneeObj.composant.toLowerCase().includes('select'));
             
             conditionsRef.forEach(c => {
                 if (estTexte && c.id !== "1" && c.id !== "2") return; 
-                
                 let opt = document.createElement('option');
                 opt.value = c.id;
                 opt.innerText = c.symbole;
