@@ -75,5 +75,23 @@ public class ValidationDAO {
 		}
 		return etapes;
 	}
-
+	
+	public static int getTotalEtapesValidees(int idWorkflow) {
+        String sql = "SELECT COUNT(*) AS total FROM public.validation WHERE id_workflow = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, idWorkflow);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

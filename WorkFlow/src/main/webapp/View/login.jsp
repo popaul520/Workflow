@@ -72,21 +72,13 @@
         <input type="text" name="login" placeholder="Identifiant" required>
         <input type="password" name="mdp" placeholder="Mot de passe" required>
         
-        <select name="roleId" required style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dddfe2; border-radius: 6px;">
-            <c:forEach var="r" items="${listeRoles}">
-                <option value="${r.key}">${r.value}</option>
-            </c:forEach>
-        </select>
-
         <button type="submit" name="action" value="connect">Se connecter</button>
-        
         <button type="submit" name="action" value="guest" 
                 style="margin-top: 10px; background: #6c757d; border: none;" 
                 formnovalidate>
             Accéder en tant qu'invité
         </button>
     </form>
-
     <div class="error">${error}</div>
 </div>
 

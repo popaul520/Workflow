@@ -54,6 +54,11 @@
                     <a href="creer-workflow" style="color: var(--success); font-weight: bold;">➕ Créer demande de faisabilité</a>
                 </li>
             </c:if>
+            <c:if test="${roleDAO.canAccessEtape(user.role, 11)}">
+                <li style="background: #2d3748; margin-top: 10px; border-radius: 4px;">
+                    <a href="modifierRole" style="color: #63b3ed; font-weight: bold;">Modifier role des Utilisateur</a>
+                </li>
+            </c:if>
         </ul>
     </div>
     <div class="main-container">

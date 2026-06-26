@@ -9,7 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import dao.RoleDAO; 
+import dao.RoleDAO;
+import dao.ValidationDAO;
 import dao.WorkflowDAO;
 import model.Workflow;
 import model.WorkflowDisplay;
@@ -71,38 +72,65 @@ public class accueilController extends HttpServlet {
     }
 
     private void computeBadgeStyle(WorkflowDisplay wd) {
-        String cleanAvis = wd.getRawAvis().trim();
-        int etape = wd.getEtapeActuelle();
+        String cleanAvis = (wd.getRawAvis() != null) ? wd.getRawAvis().trim() : "";
+        int etapeActuelle = wd.getEtapeActuelle();
+        
+        // CORRECTION : On utilise l'instance injectée validationDao au lieu de la classe
+        // Et on récupère directement l'ID du workflow depuis wd
+        int totalEtapesValidees = ValidationDAO.getTotalEtapesValidees(wd.getWorkflow().getId()); 
+        
         boolean isRefuse = "Non faisable".equalsIgnoreCase(cleanAvis) || "Défavorable".equalsIgnoreCase(cleanAvis);
 
-        String badgeBg = "#ebf8ff"; 
-        String badgeText = "#2c5282";
-        String libelleEtape = "Étape " + etape + "/9";
+        String badgeBg = "#edf2f7"; 
+        String badgeText = "#718096";
+        String libelleEtape = "";
 
-        if ("Favorable".equalsIgnoreCase(cleanAvis)) {
-            badgeBg = "#c6f6d5"; badgeText = "#22543d";
-            libelleEtape = (etape >= 10) ? "Terminé" : "Favorable";
+        // 1. SI LE NOMBRE TOTAL DE LIGNES VALIDÉES EST INFÉRIEUR OU ÉGAL À 7
+        if (totalEtapesValidees <= 7) {
+            badgeBg = "#ebf8ff"; 
+            badgeText = "#2c5282";
+            
+            // Calcul : nb_etape_validation - 1
+            int etapesMoinsUn = (totalEtapesValidees > 0) ? (totalEtapesValidees - 1) : 0;
+            
+            // Affichage demandé : nb_etape-1 / 9
+            libelleEtape = etapesMoinsUn + " / 9" + " étape";
         } 
-        else if ("Faisable sous condition".equalsIgnoreCase(cleanAvis) || "Faisable s.c.".equalsIgnoreCase(cleanAvis)) {
-            badgeBg = "#feebc8"; badgeText = "#744210";
-            libelleEtape = "Faisable s.c.";
-        } 
-        else if (isRefuse) {
-            badgeBg = "#fed7d7"; badgeText = "#822727";
-            libelleEtape = (etape >= 10) ? "Refusé" : "Non Faisable";
-        }
-        else if (cleanAvis.isEmpty()) {
-            if (etape >= 7) {
-                badgeBg = "#e2e8f0"; badgeText = "#4a5568"; libelleEtape = "Décision...";
-            } else {
-                badgeBg = "#edf2f7"; badgeText = "#718096"; libelleEtape = "Étape " + etape + " en cours";
+        // 2. SI LE TOTAL EST SUPÉRIEUR À 7 : ON APPLIQUE LA LOGIQUE FINALE
+        else {
+            if ("Favorable".equalsIgnoreCase(cleanAvis)) {
+                badgeBg = "#c6f6d5"; 
+                badgeText = "#22543d";
+                libelleEtape = "Favorable";
+            }
+            else if ("Faisable sous condition".equalsIgnoreCase(cleanAvis) || "Faisable s.c.".equalsIgnoreCase(cleanAvis)) {
+                badgeBg = "#feebc8"; 
+                badgeText = "#744210";
+                libelleEtape = "Faisable sous condition";
+            } 
+            else if (isRefuse) {
+                badgeBg = "#fed7d7"; 
+                badgeText = "#822727";
+                libelleEtape = "Non Faisable";
+            }
+            // Si aucun avis final n'est encore enregistré (Avis vide)
+            else if (cleanAvis.isEmpty()) {
+                if (etapeActuelle >= 7 && etapeActuelle < 10) {
+                    badgeBg = "#e2e8f0"; 
+                    badgeText = "#4a5568"; 
+                    libelleEtape = "Décision...";
+                } else {
+                    libelleEtape = "Étape " + etapeActuelle;
+                }
             }
         }
 
+        // Assignation des styles calculés à l'objet
         wd.setBadgeBg(badgeBg);
         wd.setBadgeText(badgeText);
         wd.setLibelleEtape(libelleEtape);
     }
+
     protected void javaPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doGet(request, response);
     }

@@ -57,18 +57,23 @@ public class loginController extends HttpServlet {
             // --- LOGIQUE CONNEXION CLASSIQUE (LDAP) ---
             String login = request.getParameter("login");
             String mdp = request.getParameter("mdp");
+            
             String roleIdStr = request.getParameter("roleId");
 
             // Authentification LDAP
             Map<String, Object> adData = LdapService.authenticate(login, mdp);
             Utilisateur user = LdapUserMapper.toUtilisateur(adData);
             UtilisateurDAO modifie = new UtilisateurDAO();
-            int chosenRoleId = Integer.parseInt(roleIdStr);
+            /*
+            if( !(roleIdStr == null) && !roleIdStr.isEmpty()) {
+                int chosenRoleId = Integer.parseInt(roleIdStr);
+                user.setRole(chosenRoleId);
+                modifie.updateUserRole(login,chosenRoleId );
+            }
+            */
             // Vérification des droits en base
             RoleDAO roleDao = new RoleDAO();
             if (true) {
-                user.setRole(chosenRoleId);
-                modifie.updateUserRole(login,chosenRoleId );
                 session.setAttribute("user", user);
                 response.sendRedirect(request.getContextPath() + "/home");
             } /*else {
