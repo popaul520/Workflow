@@ -76,7 +76,7 @@ public class EmailTask implements Runnable {
                         try {
                             MailSender.send(u.getMail(), sujet, msgPerso);
                         } catch (Exception e) {
-                            System.err.println("❌ Échec d'envoi à " + u.getMail() + " : " + e.getMessage());
+                            System.err.println("Échec d'envoi à " + u.getMail() + " : " + e.getMessage());
                         }
                     }
                 }

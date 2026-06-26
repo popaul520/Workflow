@@ -8,7 +8,7 @@ public class EmailService {
 
     public static void envoyerEmail(Utilisateur user, List<Demande> demandes, int role) throws Exception {
 
-        String contenu = "Bonjour " + user.getPrenom() + " " + user.getNom() + ",\n\n";
+        String contenu = "Bonjour "  + user.getNom() + ",\n\n";
         contenu += "Voici vos demandes du jour :\n\n";
 
         for (Demande d : demandes) {
